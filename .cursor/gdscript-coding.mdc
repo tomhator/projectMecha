@@ -1,0 +1,33 @@
+---
+description: GDScript 파일 작업 시 Godot 4 문법·API 제약
+globs: ["**/*.gd"]
+---
+
+# GDScript 코딩 규칙
+
+## Godot 4 문법
+- Godot 4.x 공식 API 기준으로만 설명 (Godot 3 문법 사용 금지)
+- 시그널: `signal my_signal`, `my_signal.emit()` 사용 (`emit_signal` 금지)
+- 노드 참조: `@onready`, `$`, `%` 구분하여 적절한 것 사용
+
+## 금지 사항
+- 전체 씬(Scene) 구조 자동 생성 제안
+- Godot 3 레거시 문법 (`yield`, `connect("signal", self, "method")` 등)
+
+## 이 문서의 갱신 트리거
+- Godot 엔진 메이저 버전 업그레이드 시 (API 변경 반영)
+- 프로젝트 코딩 컨벤션 추가·변경 시
+
+## 네이밍 규칙
+
+- bool: `is_조건` -> 예) `is_dragging`, `is_snapped`
+- Godot 제공 메서드가 아닌 임의 메서드는 이름 앞에 `_`를 붙이지 않는다. 단, 시그널에 연결된 슬롯은 `_`를 붙인다. 예) `_on_piece_clicked()`, `_on_area_entered()`
+- method는 동사형. 예) `start_dragging()`, `merge_into()`
+
+## 연산자 규칙
+
+- 변수 선언 시 `:=` 연산자는 사용하지 않는다.
+
+## 변수 선언 규칙
+
+- 변수 선언 시 타입을 함께 선언한다. 예) `var name: String = "char_name"`
