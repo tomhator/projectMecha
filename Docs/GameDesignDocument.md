@@ -3,13 +3,13 @@ tags: [project/project-mecha, document/gdd, status/in-progress]
 status: in-progress
 version: 1.0
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-04-29
 ---
 
 # ⚙️ PROJECT MECHA(가제) — Game Design Document
 
 > [!info] 관련 문서
-> - 조각 시스템 명세: [[PieceSystem]]
+> - 파츠 시스템 명세: [[PartsSystem]]
 > - 전투 시스템 명세: [[CombatSpecification]]
 > - 적 시스템 명세: [[EnemySystem]]
 
@@ -95,10 +95,10 @@ updated: 2026-04-28
 
 ---
 
-## 4. 부품 시스템 (Piece System)
+## 4. 파츠 시스템 (Parts System)
 
 > [!info] 상세 명세
-> [[PieceSystem]] 참고
+> [[PartsSystem]] 참고
 
 ### 4.1 슬롯 구조
 

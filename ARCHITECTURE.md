@@ -4,66 +4,60 @@
 
 ## 1. 설계 원칙 (Architectural Principles)
 
-### 1.1 상속보다는 조합 (Composition over Inheritance)
-- 깊은 상속 계층 구조 대신 작고 재사용 가능한 컴포넌트(Node)를 지향합니다.
-- 동작(Behavior)을 정의하기 위해 **컴포넌트**(예: `HealthComponent`, `WeaponComponent`, `MovementComponent`)를 사용합니다.
+### 1.1 데이터 중심 설계 (Data-Driven Design)
+- 모든 게임 데이터는 **Resource (`.gd` 상속 스크립트 및 `.tres`)**로 정의합니다.
+- 메카의 코어, 부품, 스킬 정보는 코드가 아닌 데이터로 관리하여 확장성을 확보합니다.
 
-### 1.2 데이터 중심 설계 (Data-Driven Design)
-- 설정, 스탯 및 데이터 저장을 위해 **Resource (`.tres`)**를 적극 활용합니다.
-- 메카의 부품(무기, 다리, 몸체 등)은 Resource로 정의하여 쉽게 교체하고 커스텀할 수 있도록 합니다.
+### 1.2 상속보다는 조합 (Composition over Inheritance)
+- 복잡한 상속 계층 대신 작고 명확한 책임을 가진 컴포넌트를 사용합니다.
+- 메카는 코어(Core)를 중심으로 4개의 부품 슬롯(팔 2, 등 1, 다리 1)이 조합되는 구조입니다.
 
-### 1.3 통신 방식 (Signals & Events)
-- **Call Down, Signal Up:** 부모 노드는 자식의 메서드를 호출하고, 자식은 신호(Signal)를 통해 부모나 전역 이벤트 버스에 알립니다.
-- 시스템 간 통신(예: UI 업데이트, 게임 상태 변경)을 위해 전역 **EventBus** (Autoload)를 사용합니다.
-
-### 1.4 유한 상태 머신 (Finite State Machines, FSM)
-- 메카나 AI와 같이 복잡한 엔티티는 상태 관리(예: `Idle`, `Moving`, `Boosting`, `Attacking`)를 위해 FSM을 사용합니다.
+### 1.3 신호 기반 통신 (Signals & Events)
+- 시스템 간 결합도를 낮추기 위해 Godot의 신호(Signal)와 전역 `EventBus`를 활용합니다.
+- UI 업데이트, 전투 로그 처리 등 전역적인 알림은 `EventBus`를 통해 수행합니다.
 
 ---
 
 ## 2. 디렉토리 구조 (Directory Structure)
 
-- `Asset/`: 원본 및 임포트된 에셋 (모델, 텍스처, 오디오).
+- `Asset/`: 모델, 텍스처, 오디오 등 리소스 파일.
 - `Docs/`: 기획서 및 기술 문서.
-- `Resources/`: 데이터 전용 리소스(`.tres`) 및 커스텀 리소스 스크립트(`.gd`).
-    - `Parts/`: 메카 부품 데이터.
-    - `Stats/`: 밸런싱 및 설정 데이터.
-- `Scenes/`: Godot 씬(`.tscn`)과 해당 씬의 스크립트(`.gd`).
-    - `Core/`: 전역 시스템 (카메라, UI, 게임 매니저).
-    - `Entities/`: 메카, 파일럿, 적 유닛.
-    - `Levels/`: 게임 레벨 및 환경.
-    - `UI/`: HUD, 메뉴, 커스터마이징 화면.
-- `Scripts/`: 전역 스크립트, 유틸리티 및 정적 클래스.
-    - `Autoload/`: 싱글톤 (EventBus, GameState, SaveSystem).
+    - `WorkNote/`: 작업 일지.
+- `Resources/`: 데이터 모델 스크립트(`.gd`) 및 인스턴스(`.tres`).
+- `Scenes/`: 게임의 각 화면 및 시스템 씬.
+    - `Game/`: 게임 메인 루프 및 전투가 진행되는 핵심 씬.
+    - `Entities/`: 메카 및 적 엔티티 관련 스크립트.
+- `Scripts/`: 전역 유틸리티 및 싱글톤(AutoLoad).
+    - `Autoload/`: `EventBus`, `GameState` 등 전역 시스템.
 
 ---
 
 ## 3. 핵심 시스템 (Core Systems)
 
-### 3.1 메카 컨트롤러 (Mecha Controller)
-메카는 게임의 핵심 엔티티이며 다음으로 구성됩니다:
-- **MechaBase:** 물리, 입력 처리 및 상태 관리를 담당합니다.
-- **MechaParts:** 베이스에 부착되는 시각적/기능적 노드들입니다.
-- **WeaponSystem:** 발사 로직과 탄약 관리를 담당합니다.
+### 3.1 메카 조립 시스템 (Mecha Assembly)
+메카는 하나의 **코어(CoreData)**와 4개의 **부품(PartsData)** 슬롯으로 구성됩니다.
+- **슬롯 구성:** 팔(Arm) 2개, 등(Back) 1개, 다리(Leg) 1개.
+- **능력치 합산:** 장착된 부품의 무게, 공격력, 방어력 등의 스탯이 코어의 기본 스탯에 합산되어 메카의 최종 성능을 결정합니다.
 
-### 3.2 커스터마이징 시스템 (Customization System)
-`MechaPart` 리소스를 교체하는 시스템입니다. 각 부품은 다음 정보를 포함합니다:
-- 시각적 메쉬 (Visual Mesh).
-- 스탯 보정치 (무게, 에너지, 방어력 등).
-- 부착 지점 (Hardpoints).
+### 3.2 턴제 전투 시스템 (Turn-based Combat)
+- **교대식 턴제:** 플레이어 턴과 적 턴이 번갈아 진행됩니다.
+- **스킬 기반 행동:** 각 코어와 부품에 할당된 **SkillData**를 사용하여 적을 공격하거나 자신을 보호합니다.
+- **행동 횟수:** 코어의 종류에 따라 턴당 스킬 사용 횟수가 결정됩니다 (예: 경량형 코어는 2회).
 
-### 3.3 물리 및 상호작용 (Physics & Interaction)
-- 견고한 3D 충돌 및 상호작용을 위해 **Jolt Physics**를 사용합니다.
-- 레이어 구성:
-    - `1`: 환경 (Environment)
-    - `2`: 플레이어 (Player)
-    - `3`: 적 (Enemies)
-    - `4`: 투사체 (Projectiles)
+### 3.3 전역 시스템 (Global Systems)
+- **EventBus:** 게임 내 전역 이벤트를 중개합니다 (전투 시작/종료, 부품 장착, 스탯 변경 등).
+- **GameState:** 현재 런의 상태(층수, 크레딧, 메카의 현재 HP 및 장착 부품)를 유지하고 관리합니다.
+
+### 3.4 데이터 모델 (Data Models)
+현재 프로젝트에서 사용 중인 핵심 데이터 구조는 다음과 같습니다:
+- **CoreData:** 메카의 기본 HP, 하중 제한, 행동 횟수 등을 정의.
+- **PartsData:** 부품의 종류(팔/등/다리), 등급, 스탯 보정치 및 할당된 스킬을 정의.
+- **SkillData:** 피해량, 쿨다운, 대상 지정(자기/적), 부가 효과(버프/디버프)를 정의.
 
 ---
 
 ## 4. 코딩 표준 (Coding Standards)
 
-- **정적 타이핑:** GDScript 사용 시 항상 정적 타이핑을 적용합니다 (`var x: int = 5`).
-- **명명 규칙:** 클래스 명은 **PascalCase**, 변수 및 함수 명은 **snake_case**를 사용합니다.
-- **문서화:** 공개 함수나 복잡한 로직에는 독스트링(docstrings)을 작성합니다.
+- **정적 타이핑:** 모든 GDScript 변수 및 함수 리턴 타입에 정적 타이핑을 적용합니다.
+- **명명 규칙:** 클래스는 **PascalCase**, 변수 및 함수는 **snake_case**를 사용합니다.
+- **리소스 활용:** 반복되는 상수나 테이블 형태의 데이터는 스크립트 내 하드코딩 대신 `.tres` 리소스를 활용합니다.
