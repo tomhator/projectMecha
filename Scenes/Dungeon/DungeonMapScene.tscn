@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://cl3l7uwk2rxqr"]
+
+[ext_resource type="Script" uid="uid://okq06ihwqwtc" path="res://Scenes/Dungeon/DungeonMapScene.gd" id="1_ma8fo"]
+
+[node name="DungeonMapScene" type="Control" unique_id=1136238236]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ma8fo")
+
+[node name="FloorLabel" type="Label" parent="." unique_id=964988864]
+layout_mode = 1
+offset_right = 59.0
+offset_bottom = 23.0
+text = "3층 / 10"
+
+[node name="HPLabel" type="Label" parent="." unique_id=2122259285]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -45.5
+offset_right = 45.5
+offset_bottom = 23.0
+grow_horizontal = 2
+text = "HP: 85 / 100"
+
+[node name="ChoiceContainer" type="HBoxContainer" parent="." unique_id=616075671]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HintLabel" type="Label" parent="." unique_id=2063938002]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -203.0
+offset_top = -23.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "호버 시 힌트 표시 (선택사항)"

@@ -15,10 +15,10 @@ var current_action_count: int = 0
 # 부품 장착 상태
 # key: CoreData.CoreSlot, value: PartsData (null이면 빈 슬롯)
 var equipped_parts: Dictionary = {
-    CoreData.CoreSlot.ARM_L: null,
-    CoreData.CoreSlot.ARM_R: null,
-    CoreData.CoreSlot.BACK: null,
-    CoreData.CoreSlot.LEG: null
+	CoreData.CoreSlot.ARM_L: null,
+	CoreData.CoreSlot.ARM_R: null,
+	CoreData.CoreSlot.BACK: null,
+	CoreData.CoreSlot.LEG: null
 }
 
 # 재화
@@ -28,70 +28,72 @@ var credits: int = 0
 
 
 func start_run(core: CoreData) -> void:
-    is_run_active = true
-    current_floor = 1
-    current_core = core
-    current_hp = current_core.core_hp
-    current_shield = current_core.core_shield
-    current_payload = 0.0 # 시작 시 장착된 부품 없음
-    current_action_count = current_core.core_action_count
-    equipped_parts = {
-        CoreData.CoreSlot.ARM_L: null,
-        CoreData.CoreSlot.ARM_R: null,
-        CoreData.CoreSlot.BACK: null,
-        CoreData.CoreSlot.LEG: null
-    }
-    credits = 0
+	is_run_active = true
+	current_floor = 1
+	current_core = core
+	current_hp = current_core.core_hp
+	current_shield = current_core.core_shield
+	current_payload = 0.0 # 시작 시 장착된 부품 없음
+	current_action_count = current_core.core_action_count
+	equipped_parts = {
+		CoreData.CoreSlot.ARM_L: null,
+		CoreData.CoreSlot.ARM_R: null,
+		CoreData.CoreSlot.BACK: null,
+		CoreData.CoreSlot.LEG: null
+	}
+	credits = 0
+	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
+	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
 
 func end_run() -> void:
-    is_run_active = false
+	is_run_active = false
 
 func advance_floor() -> void:
-    current_floor += 1
+	current_floor += 1
 
 # 부품 장착/해제
 func equip_part(part: PartsData, slot: CoreData.CoreSlot) -> void:
-    var prev: PartsData = equipped_parts[slot]
-    if prev != null:
-        current_payload -= prev.parts_weight
-    equipped_parts[slot] = part
-    current_payload += part.parts_weight
-    EventBus.parts_equipped.emit(part, slot)
-    EventBus.payload_changed.emit(self, current_payload, current_core.core_max_payload)
+	var prev: PartsData = equipped_parts[slot]
+	if prev != null:
+		current_payload -= prev.parts_weight
+	equipped_parts[slot] = part
+	current_payload += part.parts_weight
+	EventBus.parts_equipped.emit(part, slot)
+	EventBus.payload_changed.emit(self, current_payload, current_core.core_max_payload)
 
 func unequip_part(slot: CoreData.CoreSlot) -> void:
-    var prev: PartsData = equipped_parts[slot]
-    if prev != null:
-        current_payload -= prev.parts_weight
-    equipped_parts[slot] = null
-    EventBus.parts_unequipped.emit(null, slot)
-    EventBus.payload_changed.emit(self, current_payload, current_core.core_max_payload)
+	var prev: PartsData = equipped_parts[slot]
+	if prev != null:
+		current_payload -= prev.parts_weight
+	equipped_parts[slot] = null
+	EventBus.parts_unequipped.emit(null, slot)
+	EventBus.payload_changed.emit(self, current_payload, current_core.core_max_payload)
 
 # 재화 추가/차감
 func add_credits(amount: int) -> void:
-    credits += amount
-    EventBus.credits_changed.emit(credits)
+	credits += amount
+	EventBus.credits_changed.emit(credits)
 
 func spend_credits(amount: int) -> bool:
-    if credits < amount:
-        return false
-    credits -= amount
-    EventBus.credits_changed.emit(credits)
-    return true
+	if credits < amount:
+		return false
+	credits -= amount
+	EventBus.credits_changed.emit(credits)
+	return true
 
 # HP/Shield
 func take_damage(amount: float) -> void:
-    var absorbed: float = minf(current_shield, amount)
-    current_shield -= absorbed
-    current_hp -= amount - absorbed
-    current_hp = maxf(current_hp, 0.0)
-    EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
-    EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
+	var absorbed: float = minf(current_shield, amount) # 방어력 적용
+	current_shield -= absorbed
+	current_hp -= amount - absorbed # 피해 적용
+	current_hp = maxf(current_hp, 0.0) # HP가 0 이하가 되지 않도록 함
+	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
+	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
 
 func heal_hp(amount: float) -> void:
-    current_hp = minf(current_hp + amount, current_core.core_hp)
-    EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
+	current_hp = minf(current_hp + amount, current_core.core_hp)
+	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
 
 func heal_shield(amount: float) -> void:
-    current_shield = minf(current_shield + amount, current_core.core_shield)
-    EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
+	current_shield = minf(current_shield + amount, current_core.core_shield)
+	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)

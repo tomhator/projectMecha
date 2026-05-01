@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="SkillData" format=3 uid="uid://h887pes5fmc1"]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_3oxkf"]
+
+[resource]
+script = ExtResource("1_3oxkf")
+skill_name = "ATK!"
+skill_damage = 20.0
+skill_target = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

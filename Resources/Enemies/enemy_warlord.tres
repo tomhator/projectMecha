@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" path="res://Resources/EnemyData.gd" id="2_enemy"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_cannon_shot.tres" id="3_cannon"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_iron_shield.tres" id="4_shield"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_scatter_shot.tres" id="5_scatter"]
+
+[resource]
+script = ExtResource("2_enemy")
+enemy_id = 101
+enemy_name = "워로드"
+enemy_tier = 1
+enemy_description = "엘리트 지휘관 메카. 캐논과 산탄을 번갈아 쏘며 공세를 이어간다. 쉴드도 두껍다."
+enemy_max_hp = 150.0
+enemy_max_shield = 40.0
+attack_multiplier = 1.2
+skills = Array[ExtResource("1_skill_type")]([ExtResource("3_cannon"), ExtResource("4_shield"), ExtResource("5_scatter")])

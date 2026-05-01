@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" path="res://Resources/EnemyData.gd" id="2_enemy"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_rapid_fire.tres" id="3_rapid_fire"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_heavy_punch.tres" id="4_punch"]
+
+[resource]
+script = ExtResource("2_enemy")
+enemy_id = 1
+enemy_name = "스크래퍼"
+enemy_tier = 0
+enemy_description = "고철을 주워 만든 단순한 전투 메카. 코어만 있는 단순한 구조지만 멈추지 않는다."
+enemy_max_hp = 60.0
+enemy_max_shield = 0.0
+attack_multiplier = 1.0
+skills = Array[ExtResource("1_skill_type")]([ExtResource("3_rapid_fire"), ExtResource("4_punch")])

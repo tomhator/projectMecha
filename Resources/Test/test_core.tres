@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="CoreData" format=3 uid="uid://dbitt5hf4ddhn"]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_8yajx"]
+[ext_resource type="Script" uid="uid://csie4yk7lg32n" path="res://Resources/CoreData.gd" id="2_0so5d"]
+[ext_resource type="Resource" uid="uid://h887pes5fmc1" path="res://Resources/Test/test_skill_attack.tres" id="2_arqvj"]
+
+[resource]
+script = ExtResource("2_0so5d")
+core_slots = Array[int]([0, 1, 2, 3])
+core_skills = Array[ExtResource("1_8yajx")]([ExtResource("2_arqvj")])
+core_hp = 100.0
+core_shield = 50.0
+core_action_count = 1
+metadata/_custom_type_script = "uid://csie4yk7lg32n"

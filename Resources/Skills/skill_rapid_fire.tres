@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_rf001"]
+
+[resource]
+script = ExtResource("1_rf001")
+skill_id = 101
+skill_name = "연사"
+skill_type = 0
+skill_description = "빠르게 탄환을 퍼붓는다. 위력은 낮지만 쿨다운이 없다."
+skill_damage = 12.0
+skill_cooldown = 0
+skill_target = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

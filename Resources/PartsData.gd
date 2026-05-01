@@ -13,8 +13,6 @@ enum PartsGrade { COMMON, RARE, EPIC }
 @export var parts_description: String = ""
 
 # 부품 능력치 정보
-@export var parts_attack: float = 0.0
-@export var parts_defense: float = 0.0
 @export var parts_weight: float = 0.0
 
 # 부품 스킬 정보

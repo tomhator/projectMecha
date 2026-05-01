@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_hp001"]
+
+[resource]
+script = ExtResource("1_hp001")
+skill_id = 103
+skill_name = "헤비 펀치"
+skill_type = 0
+skill_description = "중장갑 팔로 적을 강타한다."
+skill_damage = 22.0
+skill_cooldown = 1
+skill_target = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

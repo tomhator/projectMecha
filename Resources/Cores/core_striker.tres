@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="CoreData" format=3 uid="uid://cw52mvn5tu22x"]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_yiefb"]
+[ext_resource type="Script" uid="uid://csie4yk7lg32n" path="res://Resources/CoreData.gd" id="2_cc0vt"]
+
+[resource]
+script = ExtResource("2_cc0vt")
+core_id = 1
+core_name = "StrikerTest"
+core_type = 1
+core_slots = Array[int]([0, 1, 3])
+core_hp = 70.0
+core_shield = 10.0
+core_action_count = 2
+metadata/_custom_type_script = "uid://csie4yk7lg32n"

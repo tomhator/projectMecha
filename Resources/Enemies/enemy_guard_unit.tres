@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" path="res://Resources/EnemyData.gd" id="2_enemy"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_heavy_punch.tres" id="3_punch"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_iron_shield.tres" id="4_shield"]
+
+[resource]
+script = ExtResource("2_enemy")
+enemy_id = 2
+enemy_name = "가드 유닛"
+enemy_description = "코어에 방어 팔 하나를 달고 경비를 서는 일반 메카. 쉴드를 올리며 버티는 패턴이 있다."
+enemy_tier = 0
+enemy_max_hp = 80.0
+enemy_max_shield = 20.0
+attack_multiplier = 1.0
+skills = Array[ExtResource("1_skill_type")]([ExtResource("3_punch"), ExtResource("4_shield")])

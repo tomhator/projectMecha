@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_cs001"]
+
+[resource]
+script = ExtResource("1_cs001")
+skill_id = 102
+skill_name = "캐논 샷"
+skill_type = 0
+skill_description = "대구경 포탄을 발사한다. 위력이 강하지만 재장전이 필요하다."
+skill_damage = 35.0
+skill_cooldown = 2
+skill_target = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

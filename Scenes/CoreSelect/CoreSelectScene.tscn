@@ -1,0 +1,78 @@
+[gd_scene format=3 uid="uid://bn66x0r7a8eu"]
+
+[ext_resource type="Script" uid="uid://cuvp58fs8u56" path="res://Scenes/CoreSelect/CoreSelectScene.gd" id="1_nxjew"]
+
+[node name="CoreSelectScene" type="Control" unique_id=443485308]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nxjew")
+
+[node name="TitleLabel" type="Label" parent="." unique_id=1424239316]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 45.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 32
+text = "코어 선택"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CoreContainer" type="HBoxContainer" parent="." unique_id=1834378760]
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -133.0
+offset_bottom = 133.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VanguardPanel" type="VBoxContainer" parent="CoreContainer" unique_id=739089168]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VanguardButton" type="Button" parent="CoreContainer/VanguardPanel" unique_id=1031471035]
+layout_mode = 2
+
+[node name="VanguardDesc" type="Label" parent="CoreContainer/VanguardPanel" unique_id=231208785]
+layout_mode = 2
+
+[node name="StrikerPanel" type="VBoxContainer" parent="CoreContainer" unique_id=289020830]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StrikerButton" type="Button" parent="CoreContainer/StrikerPanel" unique_id=1713510138]
+layout_mode = 2
+
+[node name="StrikerDesc" type="Label" parent="CoreContainer/StrikerPanel" unique_id=314074637]
+layout_mode = 2
+
+[node name="BulwarkPanel" type="VBoxContainer" parent="CoreContainer" unique_id=643803702]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BulwarkButton" type="Button" parent="CoreContainer/BulwarkPanel" unique_id=2052485588]
+layout_mode = 2
+
+[node name="BulwarkDesc" type="Label" parent="CoreContainer/BulwarkPanel" unique_id=1402227437]
+layout_mode = 2
+
+[node name="SeletedLabel" type="Label" parent="." unique_id=672334357]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -57.0
+offset_top = -23.0
+offset_right = 57.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "선택된 코어: ___"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CoreData" format=3 uid="uid://pko1sp15wg6p"]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_viog7"]
+[ext_resource type="Script" uid="uid://csie4yk7lg32n" path="res://Resources/CoreData.gd" id="2_1ay2a"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_scatter_shot.tres" id="2_6jcbo"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_rapid_fire.tres" id="3_s26wq"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_repair.tres" id="4_bu11o"]
+
+[resource]
+script = ExtResource("2_1ay2a")
+core_name = "VanguardTest"
+core_slots = Array[int]([0, 1, 2, 3])
+core_skills = Array[ExtResource("1_viog7")]([ExtResource("2_6jcbo"), ExtResource("3_s26wq"), ExtResource("4_bu11o")])
+core_hp = 100.0
+core_shield = 20.0
+core_action_count = 1
+metadata/_custom_type_script = "uid://csie4yk7lg32n"

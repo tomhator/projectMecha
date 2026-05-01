@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="PartsData" format=3 uid="uid://c73yb0kmnk10b"]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_4dsxs"]
+[ext_resource type="Resource" uid="uid://b4odosjcph2li" path="res://Resources/Test/test_skill_heal.tres" id="2_5lvsd"]
+[ext_resource type="Script" uid="uid://c2b3j3p3cjckn" path="res://Resources/PartsData.gd" id="2_8ade7"]
+
+[resource]
+script = ExtResource("2_8ade7")
+parts_skills = Array[ExtResource("1_4dsxs")]([ExtResource("2_5lvsd")])
+metadata/_custom_type_script = "uid://c2b3j3p3cjckn"

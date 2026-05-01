@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://maluvomao3s2"]
+
+[ext_resource type="Script" uid="uid://b3j675wbfc1os" path="res://Scenes/Combat/CombatScene.gd" id="1_exby7"]
+[ext_resource type="Script" uid="uid://bru2vtjjxenuw" path="res://Scenes/Combat/TurnManager.gd" id="2_x1lw5"]
+[ext_resource type="Script" uid="uid://cte0bvp82kmrh" path="res://Scenes/Entities/MechaEntity.gd" id="3_t6fkv"]
+[ext_resource type="Script" uid="uid://cxnbb7gy6mmmf" path="res://Scenes/Entities/EnemyEntity.gd" id="4_paack"]
+[ext_resource type="PackedScene" uid="uid://chgm1bqkkw7xl" path="res://Scenes/UI/CombatUi.tscn" id="5_exby7"]
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="5_t6fkv"]
+[ext_resource type="Resource" uid="uid://h887pes5fmc1" path="res://Resources/Test/test_skill_attack.tres" id="6_paack"]
+[ext_resource type="Resource" uid="uid://b4odosjcph2li" path="res://Resources/Test/test_skill_heal.tres" id="7_paack"]
+
+[node name="CombatScene" type="Node" unique_id=305605823]
+script = ExtResource("1_exby7")
+
+[node name="TurnManager" type="Node" parent="." unique_id=1276776450]
+script = ExtResource("2_x1lw5")
+
+[node name="MechaEntity" type="Node" parent="." unique_id=1450122490]
+script = ExtResource("3_t6fkv")
+
+[node name="EnemyEntity" type="Node" parent="." unique_id=50072404]
+script = ExtResource("4_paack")
+enemy_name = "김아무개"
+enemy_max_hp = 100.0
+enemy_max_shield = 50.0
+skills = Array[ExtResource("5_t6fkv")]([ExtResource("6_paack"), ExtResource("7_paack")])
+
+[node name="CombatUI" parent="." unique_id=254291114 instance=ExtResource("5_exby7")]
