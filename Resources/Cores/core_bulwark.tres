@@ -2,6 +2,9 @@
 
 [ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_77our"]
 [ext_resource type="Script" uid="uid://csie4yk7lg32n" path="res://Resources/CoreData.gd" id="2_gqj5s"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_cannon_shot.tres" id="2_wcckb"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_heavy_punch.tres" id="3_1cw4c"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_iron_shield.tres" id="4_oewgf"]
 
 [resource]
 script = ExtResource("2_gqj5s")
@@ -9,7 +12,9 @@ core_id = 2
 core_name = "TestBulwark"
 core_type = 2
 core_slots = Array[int]([0, 1, 2, 3])
+core_skills = Array[ExtResource("1_77our")]([ExtResource("2_wcckb"), ExtResource("3_1cw4c"), ExtResource("4_oewgf")])
 core_hp = 150.0
 core_shield = 40.0
+core_max_payload = 150.0
 core_action_count = 1
 metadata/_custom_type_script = "uid://csie4yk7lg32n"

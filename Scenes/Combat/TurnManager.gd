@@ -11,7 +11,6 @@ signal combat_ended(player_won: bool) # 씬 전환용
 var current_phase: TurnPhase = TurnPhase.PLAYER_TURN
 var player_mecha: MechaEntity = null
 var enemies: Array[EnemyEntity] = []
-var skills_used_this_turn: int = 0
 var actions_left: int = 0
 
 func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:

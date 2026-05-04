@@ -7,7 +7,7 @@ const CORE_BULWARK_PATH := "res://Resources/Cores/Core_Bulwark.tres"
 @onready var vanguard_button: Button = $CoreContainer/VanguardPanel/VanguardButton
 @onready var striker_button: Button = $CoreContainer/StrikerPanel/StrikerButton
 @onready var bulwark_button: Button = $CoreContainer/BulwarkPanel/BulwarkButton
-@onready var selected_label: Label = $SelectedLabel
+# @onready var selected_label: Label = $SelectedLabel
 
 func _ready() -> void:
 	vanguard_button.pressed.connect(_on_core_selected.bind(CORE_VANGUARD_PATH))

@@ -7,9 +7,13 @@ extends Node
 var enemies: Array[EnemyEntity] = []
 
 func _ready() -> void:
-	for child: Node in get_children():
-		if child is EnemyEntity:
-			enemies.append(child)
+	var enemy_data_list: Array[EnemyData] = DungeonManager.get_enemies_for_current_room()
+	for data: EnemyData in enemy_data_list:
+		var entity := EnemyEntity.new()
+		entity.name = data.enemy_name
+		add_child(entity)
+		entity.setup_from_data(data)
+		enemies.append(entity)
 
 	combat_ui.skill_selected.connect(turn_manager.on_skill_selected)
 	turn_manager.player_action_required.connect(combat_ui.on_player_action_required)
@@ -24,4 +28,4 @@ func _on_combat_ended(player_won: bool) -> void:
 		DungeonManager.on_room_cleared()
 	else:
 		print("Player lost")
-		DungeonManager.on_room_cleared()
+		DungeonManager.on_run_failed()

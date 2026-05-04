@@ -7,6 +7,20 @@ const CHEST_SCENE: String = "res://Scenes/Dungeon/ChestScene.tscn"
 const ENCOUNTER_SCENE: String = "res://Scenes/Dungeon/EncounterScene.tscn"
 const WORKSHOP_SCENE: String = "res://Scenes/Dungeon/WorkshopScene.tscn"
 const RUN_END_SCENE: String = "res://Scenes/Dungeon/RunEndScene.tscn"
+const REWARD_SCENE: String = "res://Scenes/Dungeon/RewardScene.tscn"
+
+# 적 풀
+const ENEMY_POOL_NORMAL: Array[String] = [
+    "res://Resources/Enemies/enemy_scrapper.tres",
+    "res://Resources/Enemies/enemy_guard_unit.tres",
+]
+const ENEMY_POOL_ELITE: Array[String] = [
+    "res://Resources/Enemies/enemy_warlord.tres",
+]
+const ENEMY_POOL_BOSS: Array[String] = [
+    "res://Resources/Enemies/enemy_warlord.tres",
+]
+
 
 var _floors: Array = [] # 10층 * 각 층의 선택지 목록
 var _current_choice: RoomData = null #현재 층에서 플레이어가 선택한 방
@@ -27,6 +41,15 @@ func select_room(room: RoomData) -> void:
     _transition_to_room(room)
 
 func on_room_cleared() -> void:
+    if _should_give_reward(_current_choice):
+        get_tree().change_scene_to_file(REWARD_SCENE)
+    else:
+        _advance_to_next_floor()
+
+func continue_after_reward() -> void:
+    _advance_to_next_floor()
+
+func _advance_to_next_floor() -> void:
     GameState.advance_floor()
     if GameState.current_floor > 10:
         get_tree().change_scene_to_file(RUN_END_SCENE)
@@ -34,8 +57,24 @@ func on_room_cleared() -> void:
     else:
         get_tree().change_scene_to_file(DUNGEON_MAP_SCENE)
 
+func _should_give_reward(room: RoomData) -> bool:
+    if room == null:
+        return false
+    match room.room_type:
+        RoomData.RoomType.BATTLE_NORMAL, \
+        RoomData.RoomType.BATTLE_ELITE, \
+        RoomData.RoomType.BOSS, \
+        RoomData.RoomType.CHEST:
+            return true
+        _:
+            return false
+
 func get_current_room() -> RoomData:
     return _current_choice
+
+func on_run_failed() -> void:
+    GameState.end_run()
+    get_tree().change_scene_to_file(RUN_END_SCENE)
 
 # ----------------------------------
 
@@ -78,7 +117,6 @@ func _make_room(room_type: RoomData.RoomType) -> RoomData:
 
 func _make_hint(room_type: RoomData.RoomType) -> String:
     match room_type:
-        _: return "알 수 없는 방"
         RoomData.RoomType.BATTLE_NORMAL:
             return "일반 전투 - 일반 부품 보상"
         RoomData.RoomType.BATTLE_ELITE:
@@ -91,6 +129,7 @@ func _make_hint(room_type: RoomData.RoomType) -> String:
             return "작업대 - 크레딧 소모 서비스"
         RoomData.RoomType.BOSS:
             return "보스 전투"
+        _: return "알 수 없는 방"
 
 func _transition_to_room(room: RoomData) -> void:
     match room.room_type:
@@ -102,3 +141,24 @@ func _transition_to_room(room: RoomData) -> void:
             get_tree().change_scene_to_file(ENCOUNTER_SCENE)
         RoomData.RoomType.WORKSHOP:
             get_tree().change_scene_to_file(WORKSHOP_SCENE)
+
+func get_enemies_for_current_room() -> Array[EnemyData]:
+    if _current_choice == null:
+        return []
+    match _current_choice.room_type:
+        RoomData.RoomType.BATTLE_NORMAL:
+            return _pick_enemies(ENEMY_POOL_NORMAL, 1)
+        RoomData.RoomType.BATTLE_ELITE:
+            return _pick_enemies(ENEMY_POOL_ELITE, 1)
+        RoomData.RoomType.BOSS:
+            return _pick_enemies(ENEMY_POOL_BOSS, 1)
+        _:
+            return []
+
+func _pick_enemies(pool: Array[String], count: int) -> Array[EnemyData]:
+    var shuffled: Array[String] = pool.duplicate()
+    shuffled.shuffle()
+    var result: Array[EnemyData] = []
+    for i: int in mini(count, shuffled.size()):
+        result.append(load(shuffled[i]) as EnemyData)
+    return result

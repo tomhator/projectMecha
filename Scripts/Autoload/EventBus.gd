@@ -18,3 +18,5 @@ signal skill_debuff_applied(entity: Node, skill: SkillData, debuff_type: SkillDa
 signal skill_target_changed(entity: Node, skill: SkillData, target: SkillData.SkillTarget)
 signal skill_damage_changed(entity: Node, skill: SkillData, new_damage: float)
 signal skill_defense_changed(entity: Node, skill: SkillData, new_defense: float)
+
+signal inventory_changed(inventory: Array)

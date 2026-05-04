@@ -49,3 +49,16 @@ offset_top = -23.0
 grow_horizontal = 0
 grow_vertical = 0
 text = "호버 시 힌트 표시 (선택사항)"
+
+[node name="AssemblyButton" type="Button" parent="." unique_id=1653031046]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -28.0
+offset_right = 28.0
+offset_bottom = -20.0
+grow_vertical = 0
+text = "파츠 결합
+"

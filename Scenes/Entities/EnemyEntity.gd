@@ -18,6 +18,13 @@ func setup() -> void:
 	decide_next_action()
 	print("[%s] 등장 | HP: %.0f | 쉴드: %.0f" % [enemy_name, current_hp, current_shield])
 
+func setup_from_data(data: EnemyData) -> void:
+	enemy_name = data.enemy_name
+	enemy_max_hp = data.enemy_max_hp
+	enemy_max_shield = data.enemy_max_shield
+	attack_multiplier = data.attack_multiplier
+	skills = data.skills
+
 # 자체 HP 보유 — 전투 씬 한정 객체
 func take_damage(damage: float) -> void:
 	var absorbed: float = minf(current_shield, damage)

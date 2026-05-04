@@ -7,6 +7,7 @@ var skill_cooldowns: Dictionary = {}
 
 func setup() -> void: 
 	available_skills.clear()
+	skill_cooldowns.clear()
 	available_skills.append_array(GameState.current_core.core_skills)
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
 		var part: PartsData = GameState.equipped_parts[slot]

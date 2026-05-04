@@ -21,6 +21,10 @@ var equipped_parts: Dictionary = {
 	CoreData.CoreSlot.LEG: null
 }
 
+# 인벤토리 상태
+# 부품 데이터 배열
+var inventory: Array[PartsData] = []
+
 # 재화
 var credits: int = 0
 
@@ -44,6 +48,7 @@ func start_run(core: CoreData) -> void:
 	credits = 0
 	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
 	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
+	inventory = []
 
 func end_run() -> void:
 	is_run_active = false
@@ -66,7 +71,7 @@ func unequip_part(slot: CoreData.CoreSlot) -> void:
 	if prev != null:
 		current_payload -= prev.parts_weight
 	equipped_parts[slot] = null
-	EventBus.parts_unequipped.emit(null, slot)
+	EventBus.parts_unequipped.emit(prev, slot)
 	EventBus.payload_changed.emit(self, current_payload, current_core.core_max_payload)
 
 # 재화 추가/차감
@@ -97,3 +102,8 @@ func heal_hp(amount: float) -> void:
 func heal_shield(amount: float) -> void:
 	current_shield = minf(current_shield + amount, current_core.core_shield)
 	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
+
+# 인벤토리 관리
+func add_to_inventory(part: PartsData) -> void:
+	inventory.append(part)
+	EventBus.inventory_changed.emit(inventory)

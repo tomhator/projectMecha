@@ -1,11 +1,15 @@
 extends Control
 
+const ASSEMBLY_SCENE: String = "res://Scenes/Assembly/AssemblyScene.tscn"
+
 @onready var floor_label: Label = $FloorLabel
 @onready var hp_label: Label = $HPLabel
 @onready var choice_container: HBoxContainer = $ChoiceContainer
 @onready var hint_label: Label = $HintLabel
+@onready var assembly_button: Button = $AssemblyButton
 
 func _ready() -> void:
+	assembly_button.pressed.connect(_on_assembly_pressed)
 	_update_status()
 	_rebuild_choice()
 
@@ -45,3 +49,6 @@ func _room_type_label(room_type: RoomData.RoomType) -> String:
 		RoomData.RoomType.WORKSHOP:       return "작업대"
 		RoomData.RoomType.BOSS:           return "보스"
 		_:                                return "?"
+
+func _on_assembly_pressed() -> void:
+	get_tree().change_scene_to_file(ASSEMBLY_SCENE)

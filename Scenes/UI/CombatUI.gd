@@ -17,6 +17,12 @@ var _enemy_shield_bars: Dictionary = {}
 func _ready() -> void:
 	EventBus.hp_changed.connect(_on_hp_changed)
 	EventBus.shield_changed.connect(_on_shield_changed)
+	# 씬 로드 시점에 현재 GameState 값으로 초기화
+	if GameState.current_hp != null:
+		player_hp_bar.max_value = GameState.current_core.core_hp
+		player_hp_bar.value = GameState.current_hp
+		player_shield_bar.max_value = GameState.current_core.core_shield
+		player_shield_bar.value = GameState.current_shield
 
 func on_player_action_required(
 	available_skills: Array[SkillData],
