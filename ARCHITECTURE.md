@@ -23,6 +23,9 @@
 - `Asset/`: 모델, 텍스처, 오디오 등 리소스 파일.
 - `Docs/`: 기획서 및 기술 문서.
     - `WorkNote/`: 작업 일지.
+    - `SESSION_CONTEXT/`: 세션 인수인계 및 백업 문서.
+- `.cursor/`: Cursor AI 에이전트 관련 설정 및 규칙.
+    - `rules/`: AI 에이전트 동작 및 커밋 규칙 (`.mdc`).
 - `Resources/`: 데이터 모델 스크립트(`.gd`) 및 인스턴스(`.tres`).
     - `Cores/`: 코어 데이터 리소스 (`.tres`).
     - `Parts/`: 부품 데이터 리소스 (`.tres`).

@@ -1,19 +1,28 @@
-# Project Mecha — 세션 인수인계 문서
+---
+tags: [project/project-mecha, document/session-context, phase/12]
+status: in-progress
+created: 2026-05-10
+updated: 2026-05-10
+topic: Phase 1~12 완료 시점 프로젝트 전체 현황 및 인수인계
+---
 
+# ProjectMecha — Phase 12 인수인계 문서
+
+> [!important]
 > 새 세션 시작 시 이 파일을 먼저 읽을 것.
 > 마지막 업데이트: 2026-05-10 (Phase 12 완료)
 
----
-
 ## 프로젝트 개요
 
-- **장르:** 메카 빌더 턴제 로그라이크
-- **엔진:** Godot 4.x (GDScript)
-- **핵심 루프:** 코어 선택 → 던전 탐색(10층) → 전투 → 부품 획득 → 메카 조립 → 반복 → 보스 클리어
+| 항목 | 내용 |
+|------|------|
+| 장르 | 메카 빌더 턴제 로그라이크 |
+| 엔진 | Godot 4.x (GDScript) |
+| 핵심 루프 | 코어 선택 → 던전 탐색(10층) → 전투 → 부품 획득 → 메카 조립 → 반복 → 보스 클리어 |
 
 ---
 
-## 현재 구현 완료 상태 (Phase 1~11)
+## 현재 구현 완료 상태
 
 ### Phase 1 — 데이터 레이어
 - `Resources/CoreData.gd` — 코어 타입(VANGUARD/STRIKER/BULWARK), HP, 쉴드, 공격배율, 행동횟수, 슬롯
@@ -45,7 +54,7 @@
 
 ### Phase 6 — 부품 보상 시스템
 - `Scenes/Dungeon/RewardScene.gd` + `.tscn` — 파츠 3선택 UI, 크레딧 지급
-- 방 타입별 보상 등급 결정: NORMAL→COMMON, ELITE→RARE, BOSS→EPIC, CHEST→RARE/EPIC(25%)
+- 방 타입별 보상 등급: NORMAL→COMMON, ELITE→RARE, BOSS→EPIC, CHEST→RARE/EPIC(25%)
 - `DungeonManager.on_room_cleared()` → 보상 있는 방이면 RewardScene 경유 → `continue_after_reward()` → 다음 층
 
 ### Phase 7 — 메카 조립 UI
@@ -67,7 +76,14 @@
 - `GameState.attack_multiplier` 추가 (조우 이벤트 D/E에서 변동)
 - `MechaEntity.use_skill()` ATTACK에 `* GameState.attack_multiplier` 적용
 
-### Phase 12 — 데모 스코프 완성 (완료)
+### Phase 11 — 버그 정리 + 밸런싱
+- `CombatUi.gd` null 체크 수정 (`current_hp != null` → `current_core != null`)
+- `MechaEntity.gd` 공격 로그에 실제 데미지(attack_multiplier 반영) 출력
+- `TurnManager.player_action_required` 시그널에 `skill_cooldowns: Dictionary` 추가
+- `CombatUi._rebuild_skill_buttons()` — 쿨다운 중인 스킬 비활성 버튼 + "(N턴)" 표시
+- `TurnManager` ternary 타입 경고 수정 (`str(target.name)`)
+
+### Phase 12 — 데모 스코프 완성
 - **COMMON 파츠 12개 달성** — `part_arm_l_burst`, `part_arm_r_barrier`, `part_back_coolant`, `part_back_relay`, `part_leg_dampener`, `part_leg_sprint` 추가
 - **적 6종 달성** — `enemy_rusher`(NORMAL), `enemy_fortress`(ELITE), `enemy_colossus`(BOSS tier=2) 추가
 - **신규 스킬 3종** — `skill_railgun_shot`(RARE용), `skill_nano_repair`(EPIC BACK용), `skill_colossus_strike`(보스 전용)
@@ -75,16 +91,9 @@
 - **작업대 부품 업그레이드** — "부품 스킬 강화 (+20%)" 서비스 추가 (60 크레딧), UpgradePanel UI 추가
 - `MechaEntity.gd` — `_skill_to_part` 매핑으로 손상 파츠 판별
 
-### Phase 11 — 버그 정리 + 밸런싱 (완료)
-- `CombatUi.gd` null 체크 수정 (`current_hp != null` → `current_core != null`)
-- `MechaEntity.gd` 공격 로그에 실제 데미지(attack_multiplier 반영) 출력
-- `TurnManager.player_action_required` 시그널에 `skill_cooldowns: Dictionary` 추가
-- `CombatUi._rebuild_skill_buttons()` — 쿨다운 중인 스킬 비활성 버튼 + "(N턴)" 표시
-- `TurnManager` ternary 타입 경고 수정 (`str(target.name)`)
-
 ---
 
-## 프로젝트 파일 구조 (현재)
+## 프로젝트 파일 구조
 
 ```
 ProjectMecha/
@@ -96,12 +105,12 @@ ProjectMecha/
 │  │  │              arm_r_scatter, arm_r_shield, arm_r_barrier (3종)
 │  │  │              back_repair, back_coolant, back_relay (3종)
 │  │  │              leg_anchor, leg_dampener, leg_sprint (3종) = 12개
-│  │  ├─ rare/       arm_l_piercer, arm_l_railgun (레일건샷 스킬)
+│  │  ├─ rare/       arm_l_piercer, arm_l_railgun
 │  │  │              arm_r_interceptor, arm_r_rupture
 │  │  │              back_emergency_patch, back_overclock
 │  │  │              leg_reactive_plating, leg_thruster = 8개
 │  │  └─ epic/       arm_l_plasma_lance, arm_r_aegis_breaker
-│  │                 back_nano_forge (나노수복 스킬), leg_quantum_anchor = 4개
+│  │                 back_nano_forge, leg_quantum_anchor = 4개
 │  ├─ Skills/        skill_cannon_shot, skill_heavy_punch, skill_iron_shield,
 │  │                 skill_rapid_fire, skill_repair, skill_scatter_shot,
 │  │                 skill_railgun_shot(RARE), skill_nano_repair(EPIC),
@@ -126,7 +135,7 @@ ProjectMecha/
 └─ Docs/
    ├─ GameDesignDocument.md
    ├─ WorkNote/
-   └─ SESSION_CONTEXT.md  ← 이 파일
+   └─ SESSION_CONTEXT/  ← 이 파일 위치
 ```
 
 ---
@@ -134,6 +143,7 @@ ProjectMecha/
 ## 핵심 코드 구조 요약
 
 ### GameState 주요 변수
+
 ```gdscript
 var is_run_active: bool
 var current_floor: int
@@ -149,6 +159,7 @@ var attack_multiplier: float    # 조우이벤트 D/E에서 변동, 기본값 1.
 ```
 
 ### 씬 전환 흐름
+
 ```
 CoreSelectScene
   → GameState.start_run(core) + DungeonManager.start_dungeon()
@@ -164,18 +175,20 @@ CoreSelectScene
 ```
 
 ### DungeonManager 핵심 함수
+
 ```gdscript
-start_dungeon()               # 10층 생성 후 DungeonMapScene으로
-get_current_choices() → Array # 현재 층 선택지
-select_room(room)             # 방 선택 → 씬 전환
-on_room_cleared()             # 보상 분기 후 다음 층
-on_run_failed()               # 패배 처리 → RunEndScene
-continue_after_reward()       # 보상 선택 후 층 전진
-get_current_room() → RoomData # 현재 방 정보
+start_dungeon()                              # 10층 생성 후 DungeonMapScene으로
+get_current_choices() → Array               # 현재 층 선택지
+select_room(room)                            # 방 선택 → 씬 전환
+on_room_cleared()                            # 보상 분기 후 다음 층
+on_run_failed()                              # 패배 처리 → RunEndScene
+continue_after_reward()                      # 보상 선택 후 층 전진
+get_current_room() → RoomData               # 현재 방 정보
 get_enemies_for_current_room() → Array[EnemyData]
 ```
 
 ### TurnManager 시그널
+
 ```gdscript
 signal phase_changed(phase: TurnPhase)
 signal player_action_required(available_skills: Array[SkillData], skill_cooldowns: Dictionary, enemies: Array[EnemyEntity])
@@ -183,6 +196,7 @@ signal combat_ended(player_won: bool)
 ```
 
 ### EventBus 주요 시그널
+
 ```gdscript
 signal combat_started
 signal combat_ended(player_win: bool)
@@ -201,27 +215,40 @@ signal skill_cooldown_changed(entity: Node, skill: SkillData, new_cooldown: int)
 
 ## 알려진 미완성 항목
 
-1. **코어별 스탯 수치 미검증** — `core_vanguard.tres`, `core_striker.tres`, `core_bulwark.tres` Inspector 값이 GDD §3.1 기준으로 올바르게 설정되어 있는지 플레이테스트 필요.
+> [!warning]
+> 아래 항목들은 다음 세션에서 반드시 확인 필요
+
+1. **코어별 스탯 수치 미검증** — Inspector 값이 [[GameDesignDocument]] §3.1 기준과 일치하는지 플레이테스트 필요
    - VANGUARD: 평균 스탯, 행동 1회
-   - STRIKER: 공격력 x0.6, 행동 2회, 하중제한↓
+   - STRIKER: 공격력 ×0.6, 행동 2회, 하중제한↓
    - BULWARK: HP↑↑, 공격력↓, 행동 1회
 
 2. **전체 플레이 테스트 미완** — 10층 완주, 패배 재시작, 조우 이벤트 결과 A~E 각각 확인
 
 ---
 
-## 다음 세션에서 할 일 (우선순위)
+## 다음 세션 작업 목록
 
-1. **코어 3종 스탯 검증 및 밸런싱** — GDD §3.1 기준으로 Inspector 값 확인
-2. **전체 플레이 테스트 + 버그 수집** — 10층 완주, 패배 재시작, 조우이벤트 A~E
-3. **ARCHITECTURE.md 파일 구조 업데이트** — Phase 12에서 추가된 파일 반영
+- [ ] 코어 3종 스탯 검증 및 밸런싱 (GDD §3.1 기준)
+- [ ] 전체 플레이 테스트 + 버그 수집 (10층 완주, 패배 재시작, 조우이벤트 A~E)
+- [ ] ARCHITECTURE.md 파일 구조 업데이트 (Phase 12 추가 파일 반영)
 
 ---
 
-## Godot 4 주요 규칙 (이 프로젝트)
+## Godot 4 프로젝트 규칙
+
+> [!note]
+> 아래 규칙을 항상 준수할 것
 
 - Autoload 스크립트에 `class_name` 선언 금지 (전역 이름 충돌)
 - 씬 전환: `get_tree().change_scene_to_file("res://...")`
 - 신호 연결: `signal.connect(method)` (Godot 3 문법 혼용 금지)
-- `@onready var` 사용, `export var` 대신 `@export var`
+- `@onready var` 사용, `@export var` 사용 (`export var` 금지)
 - 모든 변수 타입 명시 권장
+
+---
+
+## 관련 문서
+
+- [[Docs/GameDesignDocument]]
+- [[Docs/WorkNote/2026-05-10]]
