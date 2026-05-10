@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(~/.claude/skills/gstack/bin/gstack-config set *)",
+      "Bash(touch ~/.claude/skills/gstack/.feature-prompted-continuous-checkpoint)",
+      "Bash(touch ~/.claude/skills/gstack/.feature-prompted-model-overlay)"
+    ]
+  }
+}
