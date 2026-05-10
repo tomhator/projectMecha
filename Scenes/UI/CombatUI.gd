@@ -18,7 +18,7 @@ func _ready() -> void:
 	EventBus.hp_changed.connect(_on_hp_changed)
 	EventBus.shield_changed.connect(_on_shield_changed)
 	# 씬 로드 시점에 현재 GameState 값으로 초기화
-	if GameState.current_hp != null:
+	if GameState.current_core != null:
 		player_hp_bar.max_value = GameState.current_core.core_hp
 		player_hp_bar.value = GameState.current_hp
 		player_shield_bar.max_value = GameState.current_core.core_shield
@@ -26,20 +26,28 @@ func _ready() -> void:
 
 func on_player_action_required(
 	available_skills: Array[SkillData],
+	skill_cooldowns: Dictionary,
 	enemies: Array[EnemyEntity]) -> void:
 
 	_current_enemies = enemies
-	_rebuild_skill_buttons(available_skills)
+	_rebuild_skill_buttons(available_skills, skill_cooldowns)
 	_rebuild_enemy_bars(enemies)
 	_update_enemy_preview()
 
-func _rebuild_skill_buttons(available_skills: Array[SkillData]) -> void:
+func _rebuild_skill_buttons(_available_skills: Array[SkillData], skill_cooldowns: Dictionary) -> void:
 	for child: Node in skill_container.get_children():
 		child.queue_free()
-	for skill: SkillData in available_skills:
+	for skill: SkillData in skill_cooldowns:
+		if skill.skill_type == SkillData.SkillType.PASSIVE:
+			continue
 		var btn: Button = Button.new()
-		btn.text = skill.skill_name
-		btn.pressed.connect(_on_skill_button_pressed.bind(skill))
+		var cd: int = skill_cooldowns.get(skill, 0)
+		if cd > 0:
+			btn.text = "%s (%d턴)" % [skill.skill_name, cd]
+			btn.disabled = true
+		else:
+			btn.text = skill.skill_name
+			btn.pressed.connect(_on_skill_button_pressed.bind(skill))
 		skill_container.add_child(btn)
 
 func _on_skill_button_pressed(skill: SkillData) -> void:

@@ -7,6 +7,7 @@ const ASSEMBLY_SCENE: String = "res://Scenes/Assembly/AssemblyScene.tscn"
 @onready var choice_container: HBoxContainer = $ChoiceContainer
 @onready var hint_label: Label = $HintLabel
 @onready var assembly_button: Button = $AssemblyButton
+@onready var credits_label: Label = $CreditsLabel
 
 func _ready() -> void:
 	assembly_button.pressed.connect(_on_assembly_pressed)
@@ -16,7 +17,8 @@ func _ready() -> void:
 func _update_status() -> void:
 	floor_label.text = "%d층 / 10" % GameState.current_floor
 	hp_label.text = "HP: %.0f / %.0f" % [GameState.current_hp, GameState.current_core.core_hp]
-
+	credits_label.text = "크레딧: %d" % GameState.credits
+	
 func _rebuild_choice() -> void:
 	for child: Node in choice_container.get_children():
 		child.queue_free()

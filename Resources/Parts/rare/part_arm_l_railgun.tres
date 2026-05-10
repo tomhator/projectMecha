@@ -2,15 +2,15 @@
 
 [ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
 [ext_resource type="Script" uid="uid://c2b3j3p3cjckn" path="res://Resources/PartsData.gd" id="2_parts"]
-[ext_resource type="Resource" path="res://Resources/Skills/skill_scatter_shot.tres" id="3_scatter"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_cannon_shot.tres" id="3_skill"]
 
 [resource]
 script = ExtResource("2_parts")
-parts_id = 1102
-parts_name = "산탄 팔 (우)"
-parts_type = 1
+parts_id = 1003
+parts_name = "레일건 팔 (좌)"
+parts_type = 0
 parts_grade = 1
-parts_description = "산탄을 흩뿌려 적의 공격력을 약화시키는 희귀 파츠."
-parts_weight = 18.0
-parts_skills = Array[ExtResource("1_skill_type")]([ExtResource("3_scatter")])
+parts_description = "전자 가속 포신으로 관통력을 높인 좌측 무장. 단발 화력이 높다."
+parts_weight = 24.0
+parts_skills = Array[ExtResource("1_skill_type")]([ExtResource("3_skill")])
 metadata/_custom_type_script = "uid://c2b3j3p3cjckn"

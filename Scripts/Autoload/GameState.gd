@@ -28,6 +28,9 @@ var inventory: Array[PartsData] = []
 # 재화
 var credits: int = 0
 
+# 공격 배율
+var attack_multiplier: float = 1.0
+
 # -----------------------------------
 
 
@@ -49,6 +52,7 @@ func start_run(core: CoreData) -> void:
 	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
 	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
 	inventory = []
+	attack_multiplier = 1.0
 
 func end_run() -> void:
 	is_run_active = false

@@ -11,17 +11,68 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_6qjyj")
 
-[node name="NextButton" type="Button" parent="." unique_id=1022411592]
+[node name="EventLabel" type="Label" parent="." unique_id=120428499]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_top = -11.5
+offset_right = 40.0
+offset_bottom = 11.5
+grow_vertical = 2
+
+[node name="ActionButton" type="Button" parent="." unique_id=532393164]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -40.0
+offset_top = -40.0
+offset_bottom = -9.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "한다"
+
+[node name="SkipButton" type="Button" parent="." unique_id=1115618721]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -72.0
+offset_top = -4.0
+offset_bottom = 27.0
+grow_horizontal = 0
+grow_vertical = 2
+text = "지나간다"
+
+[node name="ResultLabel" type="Label" parent="." unique_id=793548361]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -4.0
-offset_top = -4.0
-offset_right = 4.0
-offset_bottom = 4.0
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
 grow_horizontal = 2
 grow_vertical = 2
-text = "다음스테이지"
+
+[node name="ContinueButton" type="Button" parent="." unique_id=1139963704]
+visible = false
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -8.0
+offset_top = -8.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "계속"

@@ -25,8 +25,9 @@ func use_skill(skill: SkillData, target: Node) -> void:
 	match skill.skill_type:
 		SkillData.SkillType.ATTACK:
 			if target.has_method("take_damage"):
-				target.take_damage(skill.skill_damage)
-				print("  > 공격: %s (%.0f 데미지)" % [skill.skill_name, skill.skill_damage])
+				var actual_damage: float = skill.skill_damage * GameState.attack_multiplier
+				target.take_damage(actual_damage)
+				print("  > 공격: %s (%.0f 데미지)" % [skill.skill_name, actual_damage])
 		SkillData.SkillType.DEFENSE:
 			GameState.heal_shield(skill.skill_defense)
 			print("  > 방어: %s (쉴드 +%.0f)" % [skill.skill_name, skill.skill_defense])

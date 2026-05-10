@@ -5,7 +5,7 @@ class_name TurnManager
 enum TurnPhase { PLAYER_TURN, ENEMY_TURN, COMBAT_END }
 
 signal phase_changed(phase: TurnPhase) # UI상태 전환용
-signal player_action_required(available_skills: Array[SkillData], enemies: Array[EnemyEntity]) # CombatUI에 스킬 목록 전달
+signal player_action_required(available_skills: Array[SkillData], skill_cooldowns: Dictionary, enemies: Array[EnemyEntity]) # CombatUI에 스킬 목록 전달
 signal combat_ended(player_won: bool) # 씬 전환용
 
 var current_phase: TurnPhase = TurnPhase.PLAYER_TURN
@@ -35,12 +35,12 @@ func start_player_turn() -> void:
 		actions_left,
 		usable.map(func(s: SkillData) -> String: return s.skill_name)
 	])
-	player_action_required.emit(usable, enemies)
+	player_action_required.emit(usable, player_mecha.skill_cooldowns, enemies)
 
 func on_skill_selected(skill: SkillData, target: Node) -> void:
 	if current_phase != TurnPhase.PLAYER_TURN:
 		return
-	var target_name: String = target.name if target != null else "없음"
+	var target_name: String = "없음" if target == null else str(target.name)
 	print("[플레이어] '%s' 사용 → 타겟: %s" % [skill.skill_name, target_name])
 	player_mecha.use_skill(skill, target)
 	actions_left -= 1
@@ -49,7 +49,7 @@ func on_skill_selected(skill: SkillData, target: Node) -> void:
 	if actions_left <= 0:
 		start_enemy_turn()
 	else:
-		player_action_required.emit(player_mecha.get_available_skills(), enemies)
+		player_action_required.emit(player_mecha.get_available_skills(), player_mecha.skill_cooldowns, enemies)
 
 func start_enemy_turn() -> void:
 	current_phase = TurnPhase.ENEMY_TURN

@@ -6,7 +6,13 @@ extends Control
 func _ready() -> void:
 	var room: RoomData = DungeonManager.get_current_room()
 	var grade: PartsData.PartsGrade = _determine_grade(room)
-	title_label.text = "부품 획득 - %s 등급" % PartsData.PartsGrade.keys()[grade]
+
+	var credit_amount: int = _determine_credits(room)
+
+	title_label.text = "부품 획득 - %s 등급  |  크레딧 +%d" % [
+		PartsData.PartsGrade.keys()[grade], credit_amount
+	]
+	GameState.add_credits(credit_amount)
 
 	var choices: Array[PartsData] =  RewardManager.generate_choices(grade)
 	for part: PartsData in choices:
@@ -39,3 +45,12 @@ func _determine_grade(room: RoomData) -> PartsData.PartsGrade:
 		RoomData.RoomType.CHEST:
 			return PartsData.PartsGrade.EPIC if randf() < 0.25 else PartsData.PartsGrade.RARE
 		_: return PartsData.PartsGrade.COMMON
+
+func _determine_credits(room: RoomData) -> int:
+	if room == null:
+		return 0
+	match room.room_type:
+		RoomData.RoomType.BATTLE_NORMAL: return randi_range(20, 40)
+		RoomData.RoomType.BATTLE_ELITE: return randi_range(50, 80)
+		RoomData.RoomType.BOSS: return randi_range(80, 100)
+		_: return 0
