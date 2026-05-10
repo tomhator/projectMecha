@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" path="res://Resources/EnemyData.gd" id="2_enemy"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_colossus_strike.tres" id="3_strike"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_cannon_shot.tres" id="4_cannon"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_iron_shield.tres" id="5_shield"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_scatter_shot.tres" id="6_scatter"]
+
+[resource]
+script = ExtResource("2_enemy")
+enemy_id = 201
+enemy_name = "콜로서스"
+enemy_tier = 2
+enemy_description = "폐허 속에서 발굴된 고대 전쟁 메카. 압도적인 화력과 내구력으로 모든 것을 분쇄한다."
+enemy_max_hp = 350.0
+enemy_max_shield = 80.0
+attack_multiplier = 1.5
+skills = Array[ExtResource("1_skill_type")]([ExtResource("3_strike"), ExtResource("4_cannon"), ExtResource("5_shield"), ExtResource("6_scatter")])

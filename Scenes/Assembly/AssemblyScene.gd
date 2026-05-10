@@ -32,7 +32,8 @@ func _rebuild_slots() -> void:
 		var part: PartsData = GameState.equipped_parts[slot]
 		var btn := Button.new()
 		if part != null:
-			btn.text = part.parts_name + " [해제]"
+			var damage_tag: String = " ⚠" if part.is_damaged else ""
+			btn.text = part.parts_name + damage_tag + " [해제]"
 			btn.pressed.connect(_on_unequip_pressed.bind(slot))
 		else:
 			btn.text = "빈 슬롯"
@@ -52,12 +53,14 @@ func _rebuild_inventory() -> void:
 	
 	for part: PartsData in GameState.inventory:
 		var btn := Button.new()
-		btn.text = "[%s] %s\n%s" % [
+		var damage_tag: String = " ⚠손상" if part.is_damaged else ""
+		btn.text = "[%s] %s%s\n%s" % [
 			PartsData.PartsType.keys()[part.parts_type],
 			part.parts_name,
+			damage_tag,
 			part.parts_description,
 		]
-		btn.tooltip_text = part.parts_description
+		btn.tooltip_text = part.parts_description + (" (손상: 스킬 위력 -30%%)" if part.is_damaged else "")
 		btn.pressed.connect(_on_equip_pressed.bind(part))
 		inventory_panel.add_child(btn)
 

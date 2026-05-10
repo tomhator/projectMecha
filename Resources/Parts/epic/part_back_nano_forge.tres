@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
 [ext_resource type="Script" uid="uid://c2b3j3p3cjckn" path="res://Resources/PartsData.gd" id="2_parts"]
-[ext_resource type="Resource" path="res://Resources/Skills/skill_repair.tres" id="3_skill"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_nano_repair.tres" id="3_skill"]
 
 [resource]
 script = ExtResource("2_parts")

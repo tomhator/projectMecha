@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_nr001"]
+
+[resource]
+script = ExtResource("1_nr001")
+skill_id = 302
+skill_name = "나노 수복"
+skill_type = 2
+skill_description = "나노 봇을 방출해 코어 구조를 재구성한다. 대량의 HP를 회복한다."
+skill_heal = 60.0
+skill_cooldown = 3
+skill_target = 0
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

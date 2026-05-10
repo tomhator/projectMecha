@@ -15,5 +15,8 @@ enum PartsGrade { COMMON, RARE, EPIC }
 # 부품 능력치 정보
 @export var parts_weight: float = 0.0
 
+# 손상 여부 (조우이벤트 B 결과) — 스킬 데미지 30% 감소
+var is_damaged: bool = false
+
 # 부품 스킬 정보
 @export var parts_skills: Array[SkillData] = []

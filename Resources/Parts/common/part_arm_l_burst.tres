@@ -2,15 +2,15 @@
 
 [ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
 [ext_resource type="Script" uid="uid://c2b3j3p3cjckn" path="res://Resources/PartsData.gd" id="2_parts"]
-[ext_resource type="Resource" path="res://Resources/Skills/skill_railgun_shot.tres" id="3_skill"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_scatter_shot.tres" id="3_skill"]
 
 [resource]
 script = ExtResource("2_parts")
 parts_id = 1003
-parts_name = "레일건 팔 (좌)"
+parts_name = "버스트 포 (좌)"
 parts_type = 0
-parts_grade = 1
-parts_description = "전자 가속 포신으로 관통력을 높인 좌측 무장. 단발 화력이 높다."
-parts_weight = 24.0
+parts_grade = 0
+parts_description = "단거리에서 산탄을 폭발적으로 발사하는 좌측 팔. 근거리 전투에 유리하다."
+parts_weight = 18.0
 parts_skills = Array[ExtResource("1_skill_type")]([ExtResource("3_skill")])
 metadata/_custom_type_script = "uid://c2b3j3p3cjckn"

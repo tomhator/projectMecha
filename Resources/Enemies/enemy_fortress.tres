@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" path="res://Resources/EnemyData.gd" id="2_enemy"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_cannon_shot.tres" id="3_cannon"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_iron_shield.tres" id="4_shield"]
+
+[resource]
+script = ExtResource("2_enemy")
+enemy_id = 102
+enemy_name = "포트리스"
+enemy_tier = 1
+enemy_description = "중장갑을 두른 방어형 엘리트 메카. 쉴드를 겹겹이 쌓으며 강력한 캐논으로 반격한다."
+enemy_max_hp = 180.0
+enemy_max_shield = 60.0
+attack_multiplier = 1.1
+skills = Array[ExtResource("1_skill_type")]([ExtResource("3_cannon"), ExtResource("4_shield")])

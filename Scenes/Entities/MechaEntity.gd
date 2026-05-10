@@ -4,15 +4,19 @@ class_name MechaEntity
 
 var available_skills: Array[SkillData] = []
 var skill_cooldowns: Dictionary = {}
+var _skill_to_part: Dictionary = {}  # SkillData → PartsData (코어 스킬은 null)
 
-func setup() -> void: 
+func setup() -> void:
 	available_skills.clear()
 	skill_cooldowns.clear()
+	_skill_to_part.clear()
 	available_skills.append_array(GameState.current_core.core_skills)
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
 		var part: PartsData = GameState.equipped_parts[slot]
 		if part != null:
-			available_skills.append_array(part.parts_skills)
+			for skill: SkillData in part.parts_skills:
+				available_skills.append(skill)
+				_skill_to_part[skill] = part
 	for skill in available_skills:
 		skill_cooldowns[skill] = 0
 
@@ -22,12 +26,17 @@ func get_available_skills() -> Array[SkillData]:
 	)
 
 func use_skill(skill: SkillData, target: Node) -> void:
+	var damage_modifier: float = 1.0
+	if _skill_to_part.has(skill) and _skill_to_part[skill] != null:
+		if (_skill_to_part[skill] as PartsData).is_damaged:
+			damage_modifier = 0.7
 	match skill.skill_type:
 		SkillData.SkillType.ATTACK:
 			if target.has_method("take_damage"):
-				var actual_damage: float = skill.skill_damage * GameState.attack_multiplier
+				var actual_damage: float = skill.skill_damage * GameState.attack_multiplier * damage_modifier
 				target.take_damage(actual_damage)
-				print("  > 공격: %s (%.0f 데미지)" % [skill.skill_name, actual_damage])
+				var damage_note: String = " [손상-30%]" if damage_modifier < 1.0 else ""
+				print("  > 공격: %s (%.0f 데미지%s)" % [skill.skill_name, actual_damage, damage_note])
 		SkillData.SkillType.DEFENSE:
 			GameState.heal_shield(skill.skill_defense)
 			print("  > 방어: %s (쉴드 +%.0f)" % [skill.skill_name, skill.skill_defense])
