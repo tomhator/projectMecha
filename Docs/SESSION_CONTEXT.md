@@ -1,7 +1,7 @@
 # Project Mecha — 세션 인수인계 문서
 
 > 새 세션 시작 시 이 파일을 먼저 읽을 것.
-> 마지막 업데이트: 2026-05-10
+> 마지막 업데이트: 2026-05-10 (Phase 12 완료)
 
 ---
 
@@ -67,6 +67,14 @@
 - `GameState.attack_multiplier` 추가 (조우 이벤트 D/E에서 변동)
 - `MechaEntity.use_skill()` ATTACK에 `* GameState.attack_multiplier` 적용
 
+### Phase 12 — 데모 스코프 완성 (완료)
+- **COMMON 파츠 12개 달성** — `part_arm_l_burst`, `part_arm_r_barrier`, `part_back_coolant`, `part_back_relay`, `part_leg_dampener`, `part_leg_sprint` 추가
+- **적 6종 달성** — `enemy_rusher`(NORMAL), `enemy_fortress`(ELITE), `enemy_colossus`(BOSS tier=2) 추가
+- **신규 스킬 3종** — `skill_railgun_shot`(RARE용), `skill_nano_repair`(EPIC BACK용), `skill_colossus_strike`(보스 전용)
+- **조우이벤트 B 완성** — `PartsData.is_damaged` 필드 추가, 손상 파츠 스킬 데미지 ×0.7, 조립 씬에 ⚠ 표시
+- **작업대 부품 업그레이드** — "부품 스킬 강화 (+20%)" 서비스 추가 (60 크레딧), UpgradePanel UI 추가
+- `MechaEntity.gd` — `_skill_to_part` 매핑으로 손상 파츠 판별
+
 ### Phase 11 — 버그 정리 + 밸런싱 (완료)
 - `CombatUi.gd` null 체크 수정 (`current_hp != null` → `current_core != null`)
 - `MechaEntity.gd` 공격 로그에 실제 데미지(attack_multiplier 반영) 출력
@@ -83,13 +91,24 @@ ProjectMecha/
 ├─ Resources/
 │  ├─ CoreData.gd, PartsData.gd, SkillData.gd, EnemyData.gd, RoomData.gd
 │  ├─ Cores/         core_vanguard.tres, core_striker.tres, core_bulwark.tres
-│  ├─ Parts/         part_arm_l_cannon.tres, part_arm_l_gatling.tres,
-│  │                 part_arm_r_scatter.tres, part_arm_r_shield.tres,
-│  │                 part_back_repair.tres, part_leg_anchor.tres
-│  ├─ Skills/        skill_cannon_shot.tres, skill_heavy_punch.tres,
-│  │                 skill_iron_shield.tres, skill_rapid_fire.tres,
-│  │                 skill_repair.tres, skill_scatter_shot.tres
-│  ├─ Enemies/       enemy_scrapper.tres, enemy_guard_unit.tres, enemy_warlord.tres
+│  ├─ Parts/
+│  │  ├─ common/     arm_l_cannon, arm_l_gatling, arm_l_burst (3종)
+│  │  │              arm_r_scatter, arm_r_shield, arm_r_barrier (3종)
+│  │  │              back_repair, back_coolant, back_relay (3종)
+│  │  │              leg_anchor, leg_dampener, leg_sprint (3종) = 12개
+│  │  ├─ rare/       arm_l_piercer, arm_l_railgun (레일건샷 스킬)
+│  │  │              arm_r_interceptor, arm_r_rupture
+│  │  │              back_emergency_patch, back_overclock
+│  │  │              leg_reactive_plating, leg_thruster = 8개
+│  │  └─ epic/       arm_l_plasma_lance, arm_r_aegis_breaker
+│  │                 back_nano_forge (나노수복 스킬), leg_quantum_anchor = 4개
+│  ├─ Skills/        skill_cannon_shot, skill_heavy_punch, skill_iron_shield,
+│  │                 skill_rapid_fire, skill_repair, skill_scatter_shot,
+│  │                 skill_railgun_shot(RARE), skill_nano_repair(EPIC),
+│  │                 skill_colossus_strike(BOSS)
+│  ├─ Enemies/       enemy_scrapper(N), enemy_guard_unit(N), enemy_rusher(N)
+│  │                 enemy_warlord(E), enemy_fortress(E)
+│  │                 enemy_colossus(BOSS)
 │  └─ Test/          test_core.tres, test_parts_arm_l.tres, test_skill_attack.tres, test_skill_heal.tres
 ├─ Scripts/Autoload/
 │  ├─ EventBus.gd       (Autoload 1순위)
@@ -182,25 +201,20 @@ signal skill_cooldown_changed(entity: Node, skill: SkillData, new_cooldown: int)
 
 ## 알려진 미완성 항목
 
-1. **RARE/EPIC 파츠 미추가** — `RewardManager.PARTS_RARE`, `PARTS_EPIC` 배열이 비어있어 엘리트/보스 보상이 COMMON으로 폴백됨. Godot 에디터에서 파츠 `.tres` 파일 생성 후 경로 추가 필요.
-
-2. **코어별 스탯 수치 미검증** — `core_vanguard.tres`, `core_striker.tres`, `core_bulwark.tres` Inspector 값이 GDD §3.1 기준으로 올바르게 설정되어 있는지 플레이테스트 필요.
+1. **코어별 스탯 수치 미검증** — `core_vanguard.tres`, `core_striker.tres`, `core_bulwark.tres` Inspector 값이 GDD §3.1 기준으로 올바르게 설정되어 있는지 플레이테스트 필요.
    - VANGUARD: 평균 스탯, 행동 1회
    - STRIKER: 공격력 x0.6, 행동 2회, 하중제한↓
    - BULWARK: HP↑↑, 공격력↓, 행동 1회
 
-3. **전체 플레이 테스트 미완** — 10층 완주, 패배 재시작, 조우 이벤트 결과 A~E 각각 확인
-
-4. **GDD 미구현 항목** — 조우 이벤트 결과 B(부품 능력치↓), 작업대 "부품 스킬 강화" 서비스 (현재 HP/쉴드 회복만)
+2. **전체 플레이 테스트 미완** — 10층 완주, 패배 재시작, 조우 이벤트 결과 A~E 각각 확인
 
 ---
 
 ## 다음 세션에서 할 일 (우선순위)
 
-1. **RARE/EPIC 파츠 데이터 추가** (에디터 작업)
-2. **코어 3종 스탯 검증 및 밸런싱**
-3. **전체 플레이 테스트 + 버그 수집**
-4. **GDD 데모 스코프 달성 확인** — 적 6종, 파츠 24개 목표
+1. **코어 3종 스탯 검증 및 밸런싱** — GDD §3.1 기준으로 Inspector 값 확인
+2. **전체 플레이 테스트 + 버그 수집** — 10층 완주, 패배 재시작, 조우이벤트 A~E
+3. **ARCHITECTURE.md 파일 구조 업데이트** — Phase 12에서 추가된 파일 반영
 
 ---
 
