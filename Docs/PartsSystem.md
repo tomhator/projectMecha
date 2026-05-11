@@ -229,7 +229,7 @@ Affix는 파츠 생성 시 무작위로 추가되는 보너스 속성이다.
 
 | 파일명 | 이름 | 스킬 | 효과 | base weight | 가용 Affix |
 |--------|------|------|-----|------------|-----------|
-| `part_back_nano_forge` | 나노 포지 백팩 | 나노 복구 (대량 회복 + 파츠 손상 복구) | heal 50, 손상 해제 | 14 | COMMON + RARE + EPIC |
+| `part_back_nano_forge` | 나노 포지 백팩 | 나노 복구 (대량 회복 + 파츠 손상도 복구) | heal 50, 선택 파츠 손상도 max 복구 | 14 | COMMON + RARE + EPIC |
 | `part_back_phase_deflector` ⭐NEW | 위상 편향막 | 위상 편향 (패시브: 매 턴 회피율 +20%) | 회피율 +20% 패시브 | 11 | COMMON + RARE + EPIC |
 
 #### LEG — 다리 (2개)
@@ -257,11 +257,67 @@ Affix는 파츠 생성 시 무작위로 추가되는 보너스 속성이다.
 
 ---
 
-## 6. 손상 상태 (is_damaged)
+## 6. 손상도 (Durability)
 
-- 조우 이벤트 결과 B 발생 시 파츠에 `is_damaged = true` 설정
-- 손상된 파츠의 스킬 수치 **30% 감소** (rolled 수치 기준으로 재계산)
-- 수리: 나노 포지 백팩 스킬 또는 작업대 → 손상 해제
+### 6.1 기본 규칙
+
+파츠는 `durability: int`를 가진다. 스킬을 사용할 때마다 해당 파츠의 손상도가 **-1** 감소한다.  
+손상도가 0이 되면 파츠가 **파괴**되어 스킬 사용 불가 + Affix 비활성화.
+
+```
+스킬 사용 → 해당 파츠 durability -= 1 → durability == 0 이면 파괴 처리
+```
+
+### 6.2 등급별 초기 손상도
+
+등급이 높을수록 내구성이 높아 더 오래 운용할 수 있다.
+
+| 등급 | 초기 손상도 |
+|------|-----------|
+| COMMON | 3 |
+| RARE | 5 |
+| EPIC | 7 |
+
+### 6.3 손상도 0 — 파괴 상태
+
+| 항목 | 내용 |
+|------|------|
+| 스킬 | 사용 불가 (UI에서 잠금 표시) |
+| Affix | 모두 비활성화 |
+| 무게 | 여전히 하중에 포함 (비활성화해도 탈착 필요) |
+| 비고 | 전투 중 파괴 시 해당 턴 즉시 적용 |
+
+### 6.4 손상도 감소 트리거
+
+스킬 사용 외에 다음 상황에서도 손상도가 감소한다.
+
+| 트리거 | 감소량 |
+|--------|--------|
+| 내 스킬 사용 | -1 (해당 파츠) |
+| 적의 **파츠 저격** 스킬 | -1 (플레이어가 선택한 슬롯) |
+| 적의 **과부하 공격** 스킬 | -2 (피격 슬롯) |
+| 적의 **EMP 충격** 스킬 | -1 (장착된 모든 파츠) |
+| 조우 이벤트 결과 B | -1 (획득한 파츠) |
+
+#### 적 전용 스킬 — 손상도 파괴 계열
+
+| 스킬명 | 설명 | 적 티어 |
+|--------|------|--------|
+| **파츠 저격** | 플레이어의 특정 슬롯을 노려 손상도 -1. 다음 턴 행동 예고로 미리 공개. | 엘리트 |
+| **과부하 공격** | 일반 공격 + 피격 슬롯 손상도 -2. 대미지는 낮음. | 엘리트, 보스 |
+| **EMP 충격** | 대미지 없음. 장착된 모든 파츠 손상도 -1. | 보스 |
+
+> [!note]
+> 플레이어는 "다음 턴 행동 예고" 시스템으로 파츠 저격 대상 슬롯을 미리 확인할 수 있다.  
+> → 해당 슬롯 스킬을 아끼거나 다른 슬롯으로 전환하는 판단이 생김.
+
+### 6.5 수리
+
+| 수리 수단 | 효과 |
+|----------|------|
+| **나노 포지 백팩** 스킬 | 장착 파츠 중 선택 1개 → 손상도 max 복구 |
+| **작업대** | 크레딧 소모 → 선택한 파츠 손상도 max 복구 |
+| **조우 이벤트** | 이벤트에 따라 손상도 +1~max 복구 |
 
 ---
 
@@ -275,8 +331,12 @@ Affix는 파츠 생성 시 무작위로 추가되는 보너스 속성이다.
 # Resources/PartsData.gd 추가 예정
 @export var rolled_affixes: Array[String] = []  # affix ID 목록
 @export var stat_multiplier: float = 1.0         # 랜덤 롤 결과 계수
+@export var max_durability: int = 3              # 등급별 기본값: COMMON 3 / RARE 5 / EPIC 7
+var durability: int                              # 런타임 상태, .tres에 저장 안 함
 
-# 생성 시 자동 계산, 저장은 런타임 리소스에만
+# 파츠 파괴 여부
+func is_broken() -> bool:
+    return durability <= 0
 ```
 
 ### 7.2 파츠 생성 흐름
@@ -286,7 +346,8 @@ PartsFactory.generate(part_template: PartsData, grade: PartsGrade) -> PartsData:
     1. template.duplicate() → 인스턴스 복사
     2. roll_stat() → stat_multiplier 설정
     3. roll_affixes(grade) → rolled_affixes 배열 채움
-    4. 반환
+    4. durability = max_durability (등급별 초기값 적용)
+    5. 반환
 ```
 
 ### 7.3 .tres 파일 역할 변경
@@ -296,14 +357,17 @@ PartsFactory.generate(part_template: PartsData, grade: PartsGrade) -> PartsData:
 - 실제 수치는 런타임에서 롤
 
 > [!todo]
-> - [ ] `PartsData.gd`에 `stat_multiplier`, `rolled_affixes` 필드 추가
+> - [ ] `PartsData.gd`에 `stat_multiplier`, `rolled_affixes`, `max_durability`, `durability` 필드 추가
 > - [ ] `PartsFactory` 싱글톤 또는 autoload 설계
 > - [ ] Affix 효과 처리 로직 (CombatManager 또는 별도 AffixHandler)
+> - [ ] 스킬 사용 후 `durability -= 1` 처리 (CombatManager)
+> - [ ] 적 스킬 — 파츠 저격 / 과부하 공격 / EMP 충격 구현
+> - [ ] 파츠 파괴 시 스킬 잠금 + Affix 비활성화 처리
 > - [ ] `part_back_phase_deflector.tres` 신규 생성
 > - [ ] `part_leg_em_shock.tres` 신규 생성
 > - [ ] `part_back_overclock.tres` / `part_leg_thruster.tres` 제거 또는 미사용 처리
-> - [ ] PartCardUI에 rolled affix 표시 (Affix 목록 레이블)
-> - [ ] 손상 파츠 UI — 수치 재계산 표시
+> - [ ] PartCardUI에 손상도 게이지 / rolled affix 표시
+> - [ ] 파괴 파츠 UI — 잠금 오버레이 + 손상도 0 표시
 
 ---
 
@@ -313,3 +377,4 @@ PartsFactory.generate(part_template: PartsData, grade: PartsGrade) -> PartsData:
 |------|------|------|
 | 0.1 | 2026-04-28 | 초안 (GDD §4 기반) |
 | 0.2 | 2026-05-11 | 랜덤 롤 시스템 도입, RARE 8→6, EPIC 4→6, Affix 풀 설계, 신규 EPIC 2종 추가 |
+| 0.3 | 2026-05-11 | 손상도 시스템 재설계 — bool → int, 스킬 사용마다 -1, 적 파츠 파괴 스킬 3종 추가 |
