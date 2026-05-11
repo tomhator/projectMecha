@@ -1,10 +1,8 @@
 [gd_resource type="Resource" script_class="CoreData" format=3 uid="uid://cw52mvn5tu22x"]
 
 [ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_yiefb"]
-[ext_resource type="Resource" path="res://Resources/Skills/skill_scatter_shot.tres" id="2_agk1i"]
 [ext_resource type="Script" uid="uid://csie4yk7lg32n" path="res://Resources/CoreData.gd" id="2_cc0vt"]
-[ext_resource type="Resource" path="res://Resources/Skills/skill_repair.tres" id="3_2ee8i"]
-[ext_resource type="Resource" path="res://Resources/Skills/skill_rapid_fire.tres" id="4_o8q4d"]
+[ext_resource type="Resource" uid="uid://crparticlebeam1" path="res://Resources/Skills/skill_core_particle_beam.tres" id="3_st001"]
 
 [resource]
 script = ExtResource("2_cc0vt")
@@ -12,8 +10,10 @@ core_id = 1
 core_name = "StrikerTest"
 core_type = 1
 core_slots = Array[int]([0, 1, 3])
-core_skills = Array[ExtResource("1_yiefb")]([ExtResource("2_agk1i"), ExtResource("3_2ee8i"), ExtResource("4_o8q4d")])
+core_skills = Array[ExtResource("1_yiefb")]([ExtResource("3_st001")])
 core_hp = 70.0
 core_shield = 10.0
-core_action_count = 2
+core_attack_multiplier = 0.6
+core_max_payload = 80.0
+core_action_count = 4
 metadata/_custom_type_script = "uid://csie4yk7lg32n"

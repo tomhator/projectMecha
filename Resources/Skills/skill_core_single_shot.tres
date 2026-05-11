@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3 uid="uid://rjihc5818ld4"]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_ss001"]
+
+[resource]
+script = ExtResource("1_ss001")
+skill_id = 1
+skill_name = "단발 사격"
+skill_type = 0
+skill_description = "기본 화기로 단발을 발사한다."
+skill_damage = 8.0
+skill_action_cost = 2
+skill_target = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

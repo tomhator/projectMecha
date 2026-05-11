@@ -1,8 +1,9 @@
-[gd_scene format=3 uid="uid://eyek1ptwhuoh"]
+[gd_scene load_steps=3 format=3 uid="uid://eyek1ptwhuoh"]
 
-[ext_resource type="Script" uid="uid://c2edbdlcfd2ck" path="res://Scenes/Dungeon/ChestScene.gd" id="1_nh0vn"]
+[ext_resource type="Script" path="res://Scenes/Dungeon/ChestScene.gd" id="1_nh0vn"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/RunStatusStrip.tscn" id="2_strip"]
 
-[node name="ChestScene" type="Control" unique_id=569855898]
+[node name="ChestScene" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,17 +12,24 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_nh0vn")
 
-[node name="NextButton" type="Button" parent="." unique_id=264361759]
+[node name="RunStatusStrip" parent="." instance=ExtResource("2_strip")]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 56.0
+grow_horizontal = 2
+
+[node name="NextButton" type="Button" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -54.5
-offset_top = -15.5
-offset_right = 54.5
-offset_bottom = 15.5
+offset_left = -80.0
+offset_top = -20.0
+offset_right = 80.0
+offset_bottom = 24.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "다음 스테이지"
+text = "상자 열기 / 다음"

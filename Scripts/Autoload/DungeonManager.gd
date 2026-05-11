@@ -149,7 +149,7 @@ func get_enemies_for_current_room() -> Array[EnemyData]:
         return []
     match _current_choice.room_type:
         RoomData.RoomType.BATTLE_NORMAL:
-            return _pick_enemies(ENEMY_POOL_NORMAL, 1)
+            return _pick_enemies(ENEMY_POOL_NORMAL, 2)
         RoomData.RoomType.BATTLE_ELITE:
             return _pick_enemies(ENEMY_POOL_ELITE, 1)
         RoomData.RoomType.BOSS:

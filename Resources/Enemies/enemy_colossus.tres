@@ -15,5 +15,6 @@ enemy_tier = 2
 enemy_description = "폐허 속에서 발굴된 고대 전쟁 메카. 압도적인 화력과 내구력으로 모든 것을 분쇄한다."
 enemy_max_hp = 350.0
 enemy_max_shield = 80.0
-attack_multiplier = 1.5
+attack_multiplier = 1.3
+enemy_action_count = 6
 skills = Array[ExtResource("1_skill_type")]([ExtResource("3_strike"), ExtResource("4_cannon"), ExtResource("5_shield"), ExtResource("6_scatter")])

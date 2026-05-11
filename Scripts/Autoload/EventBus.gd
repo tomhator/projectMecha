@@ -5,6 +5,7 @@ signal combat_ended(player_win: bool)
 signal parts_equipped(parts: PartsData, slot: CoreData.CoreSlot)
 signal parts_unequipped(parts: PartsData, slot: CoreData.CoreSlot)
 signal credits_changed(new_amount: int)
+signal floor_changed(new_floor: int)
 
 signal hp_changed(entity: Node, new_hp: float, max_hp: float)
 signal shield_changed(entity: Node, new_shield: float, max_shield: float)

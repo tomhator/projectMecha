@@ -24,5 +24,6 @@ enum CoreSlot { ARM_L, ARM_R, BACK, LEG }
 
 @export var core_attack: float = 0.0 # 코어 공격력: 부품이 없을 떄 공격력
 
+@export var core_attack_multiplier: float = 1.0 # 공격력 배율 (경량: 0.6)
 @export var core_max_payload: float = 0.0 # 코어 최대 중량
-@export var core_action_count: int = 0 # 코어 턴당 행동 횟수
+@export var core_action_count: int = 0 # 코어 턴당 행동력 총량

@@ -22,6 +22,7 @@
 
 - `Asset/`: 모델, 텍스처, 오디오 등 리소스 파일.
 - `Docs/`: 기획서 및 기술 문서.
+    - `UI/`: UI 마스터 스펙 (`HUD.md` 등).
     - `WorkNote/`: 작업 일지.
     - `SESSION_CONTEXT/`: 세션 인수인계 및 백업 문서.
 - `.cursor/`: Cursor AI 에이전트 관련 설정 및 규칙.
@@ -33,8 +34,17 @@
     - `Enemies/`: 적 데이터 리소스 (`.tres`).
     - `Test/`: 개발용 테스트 리소스.
 - `Scenes/`: 게임의 각 화면 및 시스템 씬.
-    - `Game/`: 게임 메인 루프 및 전투가 진행되는 핵심 씬.
+    - `Assembly/`: 메카 조립 씬.
+        - `AssemblyScene.tscn` / `AssemblyScene.gd`: 조립 씬 루트. 좌6:우4 레이아웃, 인벤 5×6 그리드, `RunStatusStrip`, 소켓/카드 동적 생성 및 하중 표시.
+        - `PartSocketUI.gd`: 파츠 드롭 수신 소켓 컴포넌트. 호환/비호환 시각 피드백 포함.
+        - `PartCardUI.gd`: 인벤토리 파츠 카드 컴포넌트. 드래그 발신 및 등급별 색상 표시.
+    - `Combat/`: 전투 씬 및 턴 매니저.
+    - `CoreSelect/`: 코어 선택 씬.
+    - `Dungeon/`: 던전 맵, 보상, 런 종료 씬.
     - `Entities/`: 메카 및 적 엔티티 관련 스크립트.
+    - `UI/`: 공용 UI 컴포넌트.
+        - `RunStatusStrip.tscn` / `RunStatusStrip.gd`: 런 상단 HUD(층·HP/쉴드 바+현재값·크레딧·설정 스텁). 주요 런 씬에 인스턴스.
+        - `CombatUi.tscn` / `CombatUI.gd`: 전투 UI(좌 플레이어/우 적·행동력·스킬·다중 적 타겟팅).
 - `Scripts/`: 전역 유틸리티 및 싱글톤(AutoLoad).
     - `Autoload/`: `EventBus`, `GameState` 등 전역 시스템.
 
@@ -46,6 +56,7 @@
 메카는 하나의 **코어(CoreData)**와 4개의 **부품(PartsData)** 슬롯으로 구성됩니다.
 - **슬롯 구성:** 팔(Arm) 2개, 등(Back) 1개, 다리(Leg) 1개.
 - **능력치 합산:** 장착된 부품의 무게, 공격력, 방어력 등의 스탯이 코어의 기본 스탯에 합산되어 메카의 최종 성능을 결정합니다.
+- **드래그앤드롭 UI:** `PartCardUI`(인벤토리 카드)를 `PartSocketUI`(소켓)에 드롭하여 장착. Godot 4의 `_get_drag_data` / `_can_drop_data` / `_drop_data` 사용. 소켓 클릭으로 해제.
 
 ### 3.2 턴제 전투 시스템 (Turn-based Combat)
 - **교대식 턴제:** 플레이어 턴과 적 턴이 번갈아 진행됩니다.

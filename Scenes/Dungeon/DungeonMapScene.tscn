@@ -1,8 +1,9 @@
-[gd_scene format=3 uid="uid://cl3l7uwk2rxqr"]
+[gd_scene load_steps=3 format=3 uid="uid://cl3l7uwk2rxqr"]
 
-[ext_resource type="Script" uid="uid://okq06ihwqwtc" path="res://Scenes/Dungeon/DungeonMapScene.gd" id="1_ma8fo"]
+[ext_resource type="Script" path="res://Scenes/Dungeon/DungeonMapScene.gd" id="1_ma8fo"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/RunStatusStrip.tscn" id="2_strip"]
 
-[node name="DungeonMapScene" type="Control" unique_id=1136238236]
+[node name="DungeonMapScene" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,64 +12,90 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_ma8fo")
 
-[node name="FloorLabel" type="Label" parent="." unique_id=964988864]
+[node name="RunStatusStrip" parent="." instance=ExtResource("2_strip")]
 layout_mode = 1
-offset_right = 59.0
-offset_bottom = 23.0
-text = "3층 / 10"
-
-[node name="HPLabel" type="Label" parent="." unique_id=2122259285]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -45.5
-offset_right = 45.5
-offset_bottom = 23.0
-grow_horizontal = 2
-text = "HP: 85 / 100"
-
-[node name="ChoiceContainer" type="HBoxContainer" parent="." unique_id=616075671]
-layout_mode = 1
-anchors_preset = 14
-anchor_top = 0.5
+anchors_preset = 10
 anchor_right = 1.0
-anchor_bottom = 0.5
+offset_bottom = 56.0
+grow_horizontal = 2
+
+[node name="BodyHBox" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 12.0
+offset_top = 64.0
+offset_right = -12.0
+offset_bottom = -12.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 16
 
-[node name="HintLabel" type="Label" parent="." unique_id=2063938002]
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -203.0
-offset_top = -23.0
-grow_horizontal = 0
-grow_vertical = 0
-text = "호버 시 힌트 표시 (선택사항)"
+[node name="LeftArea" type="MarginContainer" parent="BodyHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 0
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 0
 
-[node name="AssemblyButton" type="Button" parent="." unique_id=1653031046]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 20.0
-offset_top = -28.0
-offset_right = 28.0
-offset_bottom = -20.0
-grow_vertical = 0
-text = "파츠 결합
-"
+[node name="MainColumn" type="VBoxContainer" parent="BodyHBox/LeftArea"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+alignment = 1
 
-[node name="CreditsLabel" type="Label" parent="." unique_id=2086555852]
-layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -40.0
-offset_bottom = 23.0
-grow_horizontal = 0
-text = "크레딧: 0"
+[node name="MapTitle" type="Label" parent="BodyHBox/LeftArea/MainColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "던전 맵 — 방을 선택하세요"
+horizontal_alignment = 1
+
+[node name="ChoiceContainer" type="HBoxContainer" parent="BodyHBox/LeftArea/MainColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+alignment = 1
+theme_override_constants/separation = 24
+
+[node name="FooterRow" type="HBoxContainer" parent="BodyHBox/LeftArea/MainColumn"]
+layout_mode = 2
+alignment = 1
+
+[node name="AssemblyButton" type="Button" parent="BodyHBox/LeftArea/MainColumn/FooterRow"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "메카 조립"
+
+[node name="RoomInfoPanel" type="PanelContainer" parent="BodyHBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 0)
+size_flags_horizontal = 0
+size_flags_vertical = 3
+
+[node name="RoomInfoMargin" type="MarginContainer" parent="BodyHBox/RoomInfoPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="RoomInfoVBox" type="VBoxContainer" parent="BodyHBox/RoomInfoPanel/RoomInfoMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="RoomInfoBody" type="RichTextLabel" parent="BodyHBox/RoomInfoPanel/RoomInfoMargin/RoomInfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+fit_content = false
+scroll_active = true
+text = "방 타일을 클릭하면 이곳에 설명이 표시됩니다."
+
+[node name="RoomEnterButton" type="Button" parent="BodyHBox/RoomInfoPanel/RoomInfoMargin/RoomInfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+disabled = true
+text = "진입하기"

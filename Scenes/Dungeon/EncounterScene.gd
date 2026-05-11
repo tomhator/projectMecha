@@ -23,32 +23,52 @@ const EVENTS: Array[Dictionary] = [
 	},
 ]
 
-@onready var event_label: Label = $EventLabel
-@onready var action_button: Button = $ActionButton
-@onready var skip_button: Button = $SkipButton
-@onready var result_label: Label = $ResultLabel
-@onready var continue_button: Button = $ContinueButton
+@onready var left_image: TextureRect = $MarginRoot/MainHBox/LeftImage
+@onready var event_label: Label = %EventLabel
+@onready var choices_row: HBoxContainer = %ChoicesRow
+@onready var result_block: VBoxContainer = %ResultBlock
+@onready var result_label: Label = %ResultLabel
+@onready var continue_button: Button = %ContinueButton
 
 var _current_event: Dictionary = {}
+var _action_button: Button
+var _skip_button: Button
+
 
 func _ready() -> void:
+	var img: Image = Image.create(320, 360, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0.18, 0.2, 0.26, 1.0))
+	left_image.texture = ImageTexture.create_from_image(img)
+
 	_current_event = EVENTS[randi() % EVENTS.size()]
 	event_label.text = _current_event["text"]
-	result_label.text = ""
-	continue_button.visible = false
+	result_block.visible = false
 
-	action_button.pressed.connect(_on_action_pressed)
-	skip_button.pressed.connect(_on_skip_pressed)
+	_action_button = Button.new()
+	_action_button.text = "진행한다"
+	_action_button.pressed.connect(_on_action_pressed)
+	choices_row.add_child(_action_button)
+
+	_skip_button = Button.new()
+	_skip_button.text = "지나간다"
+	_skip_button.pressed.connect(_on_skip_pressed)
+	choices_row.add_child(_skip_button)
+
 	continue_button.pressed.connect(func() -> void: DungeonManager.on_room_cleared())
 
+
 func _on_action_pressed() -> void:
-	action_button.disabled = true
-	skip_button.disabled = true
-	_apply_result(_current_event["result"])
-	continue_button.visible = true
+	_action_button.disabled = true
+	_skip_button.disabled = true
+	_apply_result(_current_event["result"] as String)
+	event_label.visible = false
+	choices_row.visible = false
+	result_block.visible = true
+
 
 func _on_skip_pressed() -> void:
 	DungeonManager.on_room_cleared()
+
 
 func _apply_result(result: String) -> void:
 	var max_hp: float = GameState.current_core.core_hp
@@ -57,12 +77,12 @@ func _apply_result(result: String) -> void:
 			var part: PartsData = RewardManager.generate_choices(PartsData.PartsGrade.COMMON)[0]
 			GameState.add_to_inventory(part)
 			GameState.take_damage(max_hp * 0.1)
-			result_label.text = "부품 [%s]을 획득했지만, 코어가 손상됐다. (HP -10%)" % part.parts_name
+			result_label.text = "부품 [%s]을 획득했지만, 코어가 손상됐다. (HP -10%%)" % part.parts_name
 		"B":
-			var part: PartsData = RewardManager.generate_choices(PartsData.PartsGrade.COMMON)[0]
-			part.is_damaged = true
-			GameState.add_to_inventory(part)
-			result_label.text = "손상된 부품 [%s]을 회수했다. 스킬 위력 -30%%" % part.parts_name
+			var part2: PartsData = RewardManager.generate_choices(PartsData.PartsGrade.COMMON)[0]
+			part2.is_damaged = true
+			GameState.add_to_inventory(part2)
+			result_label.text = "손상된 부품 [%s]을 회수했다. 스킬 위력 -30%%" % part2.parts_name
 		"C":
 			GameState.take_damage(max_hp * 0.15)
 			result_label.text = "아무것도 얻지 못하고 코어가 손상됐다. (HP -15%)"
@@ -74,3 +94,5 @@ func _apply_result(result: String) -> void:
 			GameState.take_damage(max_hp * 0.2)
 			GameState.attack_multiplier = minf(2.0, GameState.attack_multiplier + 0.3)
 			result_label.text = "성능이 강화됐지만, 코어에 부담이 생겼다. (HP -20%, 공격력 +30%)"
+		_:
+			result_label.text = "결과 없음"

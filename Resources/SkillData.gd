@@ -19,8 +19,8 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN }
 @export var skill_defense: float = 0.0
 @export var skill_heal: float = 0.0
 
-# 스킬 쿨다운 정보
-@export var skill_cooldown: int = 0
+# 스킬 행동력 비용
+@export var skill_action_cost: int = 1
 
 # 스킬 부가 효과: 버프/디버프
 @export var has_buff: bool = false

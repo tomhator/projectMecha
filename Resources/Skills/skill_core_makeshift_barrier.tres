@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3 uid="uid://dutq0hwc64mmf"]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_mb001"]
+
+[resource]
+script = ExtResource("1_mb001")
+skill_id = 3
+skill_name = "간이 방벽"
+skill_type = 1
+skill_description = "즉석 방벽을 전개해 충격을 흡수하고 적을 밀쳐낸다."
+skill_damage = 11.0
+skill_defense = 5.0
+skill_action_cost = 2
+skill_target = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

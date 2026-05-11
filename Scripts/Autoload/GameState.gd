@@ -38,10 +38,12 @@ func start_run(core: CoreData) -> void:
 	is_run_active = true
 	current_floor = 1
 	current_core = core
+	EventBus.floor_changed.emit(current_floor)
 	current_hp = current_core.core_hp
 	current_shield = current_core.core_shield
 	current_payload = 0.0 # 시작 시 장착된 부품 없음
 	current_action_count = current_core.core_action_count
+	attack_multiplier = current_core.core_attack_multiplier
 	equipped_parts = {
 		CoreData.CoreSlot.ARM_L: null,
 		CoreData.CoreSlot.ARM_R: null,
@@ -52,13 +54,13 @@ func start_run(core: CoreData) -> void:
 	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
 	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
 	inventory = []
-	attack_multiplier = 1.0
 
 func end_run() -> void:
 	is_run_active = false
 
 func advance_floor() -> void:
 	current_floor += 1
+	EventBus.floor_changed.emit(current_floor)
 
 # 부품 장착/해제
 func equip_part(part: PartsData, slot: CoreData.CoreSlot) -> void:

@@ -1,8 +1,9 @@
-[gd_scene format=3 uid="uid://ns8pfu42ictr"]
+[gd_scene load_steps=3 format=3 uid="uid://ns8pfu42ictr"]
 
-[ext_resource type="Script" uid="uid://b7hneacprc88h" path="res://Scenes/Dungeon/EncounterScene.gd" id="1_6qjyj"]
+[ext_resource type="Script" path="res://Scenes/Dungeon/EncounterScene.gd" id="1_6qjyj"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/RunStatusStrip.tscn" id="2_strip"]
 
-[node name="EncounterScene" type="Control" unique_id=1939235808]
+[node name="EncounterScene" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,68 +12,72 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_6qjyj")
 
-[node name="EventLabel" type="Label" parent="." unique_id=120428499]
+[node name="RunStatusStrip" parent="." instance=ExtResource("2_strip")]
 layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_top = -11.5
-offset_right = 40.0
-offset_bottom = 11.5
-grow_vertical = 2
-
-[node name="ActionButton" type="Button" parent="." unique_id=532393164]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
+anchors_preset = 10
 anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -40.0
-offset_top = -40.0
-offset_bottom = -9.0
-grow_horizontal = 0
-grow_vertical = 2
-text = "한다"
+offset_bottom = 56.0
+grow_horizontal = 2
 
-[node name="SkipButton" type="Button" parent="." unique_id=1115618721]
+[node name="MarginRoot" type="MarginContainer" parent="."]
 layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
+anchors_preset = 15
 anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -72.0
-offset_top = -4.0
-offset_bottom = 27.0
-grow_horizontal = 0
-grow_vertical = 2
-text = "지나간다"
-
-[node name="ResultLabel" type="Label" parent="." unique_id=793548361]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -11.5
-offset_right = 20.0
-offset_bottom = 11.5
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 64.0
+offset_right = -16.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="ContinueButton" type="Button" parent="." unique_id=1139963704]
+[node name="MainHBox" type="HBoxContainer" parent="MarginRoot"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="LeftImage" type="TextureRect" parent="MarginRoot/MainHBox"]
+custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 4.0
+expand_mode = 3
+stretch_mode = 5
+
+[node name="RightPanel" type="VBoxContainer" parent="MarginRoot/MainHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 5.0
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="EventLabel" type="Label" parent="MarginRoot/MainHBox/RightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+text = "이벤트 본문"
+autowrap_mode = 3
+
+[node name="ChoicesRow" type="HBoxContainer" parent="MarginRoot/MainHBox/RightPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="ResultBlock" type="VBoxContainer" parent="MarginRoot/MainHBox/RightPanel"]
+unique_name_in_owner = true
 visible = false
-layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -8.0
-offset_top = -8.0
-grow_horizontal = 0
-grow_vertical = 0
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="ResultLabel" type="Label" parent="MarginRoot/MainHBox/RightPanel/ResultBlock"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+autowrap_mode = 3
+
+[node name="ContinueButton" type="Button" parent="MarginRoot/MainHBox/RightPanel/ResultBlock"]
+unique_name_in_owner = true
+layout_mode = 2
 text = "계속"

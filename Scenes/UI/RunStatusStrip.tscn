@@ -1,0 +1,124 @@
+[gd_scene format=3 uid="uid://clggh1rlg1p7p"]
+
+[ext_resource type="Script" uid="uid://d33fimwhjbsi6" path="res://Scenes/UI/RunStatusStrip.gd" id="1_strip"]
+
+[node name="RunStatusStrip" type="Control" unique_id=853132493]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 56.0
+grow_horizontal = 2
+script = ExtResource("1_strip")
+
+[node name="Panel" type="PanelContainer" parent="." unique_id=2033311524]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="Panel" unique_id=68896375]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="HBox" type="HBoxContainer" parent="Panel/Margin" unique_id=1646842615]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="FloorLabel" type="Label" parent="Panel/Margin/HBox" unique_id=1027876125]
+unique_name_in_owner = true
+layout_mode = 2
+text = "층: —"
+vertical_alignment = 1
+
+[node name="HPCol" type="VBoxContainer" parent="Panel/Margin/HBox" unique_id=771840204]
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="HPBar" type="ProgressBar" parent="Panel/Margin/HBox/HPCol" unique_id=325907135]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 14)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="HPValue" type="Label" parent="Panel/Margin/HBox/HPCol/HPBar" unique_id=1680048466]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -60.0
+offset_top = -8.0
+offset_right = 60.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="ShieldCol" type="VBoxContainer" parent="Panel/Margin/HBox" unique_id=365420510]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="ShieldBar" type="ProgressBar" parent="Panel/Margin/HBox/ShieldCol" unique_id=184153785]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 14)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+show_percentage = false
+
+[node name="ShieldValue" type="Label" parent="Panel/Margin/HBox/ShieldCol/ShieldBar" unique_id=1407059644]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -3.5
+offset_top = -8.0
+offset_right = 3.5
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 11
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 2
+
+[node name="Spacer" type="Control" parent="Panel/Margin/HBox" unique_id=1865209255]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CreditsLabel" type="Label" parent="Panel/Margin/HBox" unique_id=1098867039]
+unique_name_in_owner = true
+layout_mode = 2
+text = "크레딧: 0"
+vertical_alignment = 1
+
+[node name="SettingsButton" type="Button" parent="Panel/Margin/HBox" unique_id=1578804728]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+text = "설정"
+
+[node name="SettingsDialog" type="AcceptDialog" parent="." unique_id=1716427355]
+unique_name_in_owner = true
+title = "설정 (준비 중)"
+size = Vector2i(320, 140)
+dialog_text = "추후 볼륨·화면 모드 등이 여기에 연결됩니다."

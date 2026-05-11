@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3 uid="uid://cpe8hxa65iyjq"]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_pb001"]
+
+[resource]
+script = ExtResource("1_pb001")
+skill_id = 2
+skill_name = "입자 광선"
+skill_type = 0
+skill_description = "고에너지 입자를 집속해 발사한다. 전 행동력을 소진한다."
+skill_damage = 13.0
+skill_action_cost = 4
+skill_target = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

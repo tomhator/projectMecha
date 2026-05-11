@@ -1,72 +1,130 @@
-[gd_scene format=3 uid="uid://chgm1bqkkw7xl"]
+[gd_scene load_steps=3 format=3 uid="uid://chgm1bqkkw7xl"]
 
-[ext_resource type="Script" uid="uid://bqq627b18g8he" path="res://Scenes/UI/CombatUI.gd" id="1_qy7fl"]
+[ext_resource type="Script" path="res://Scenes/UI/CombatUI.gd" id="1_qy7fl"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/RunStatusStrip.tscn" id="2_strip"]
 
-[node name="CombatUI" type="Control" unique_id=254291114]
+[node name="CombatUI" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 1
 script = ExtResource("1_qy7fl")
 
-[node name="SkillContainer" type="HBoxContainer" parent="." unique_id=1179393795]
+[node name="RunStatusStrip" parent="." instance=ExtResource("2_strip")]
 layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -157.0
-offset_top = -75.0
-offset_right = 157.0
-grow_horizontal = 2
-grow_vertical = 0
-
-[node name="PlayerHPBar" type="ProgressBar" parent="." unique_id=390325441]
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -27.0
-offset_right = 155.0
-grow_vertical = 0
-
-[node name="PlayerShieldBar" type="ProgressBar" parent="." unique_id=859259086]
-layout_mode = 1
-anchors_preset = -1
-anchor_top = 0.94400007
-anchor_bottom = 0.94400007
-offset_top = -28.120026
-offset_right = 155.0
-offset_bottom = -1.1200256
-grow_vertical = 0
-
-[node name="EnemyActionLabel" type="Label" parent="." unique_id=690188770]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -11.5
-offset_right = 20.0
-offset_bottom = 11.5
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="EnemyContainer" type="VBoxContainer" parent="." unique_id=130214387]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
+anchors_preset = 10
 anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -115.0
-offset_top = -20.0
-offset_right = -75.0
-offset_bottom = 20.0
-grow_horizontal = 0
+offset_bottom = 56.0
+grow_horizontal = 2
+
+[node name="BattleMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 64.0
+offset_right = -16.0
+offset_bottom = -104.0
+grow_horizontal = 2
 grow_vertical = 2
+
+[node name="BattleHBox" type="HBoxContainer" parent="BattleMargin"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 24
+
+[node name="PlayerColumn" type="VBoxContainer" parent="BattleMargin/BattleHBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="PlayerTitle" type="Label" parent="BattleMargin/BattleHBox/PlayerColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "내 메카"
+theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)
+
+[node name="CoreNameLabel" type="Label" parent="BattleMargin/BattleHBox/PlayerColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "코어"
+
+[node name="PartsLabels" type="VBoxContainer" parent="BattleMargin/BattleHBox/PlayerColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="EnemyColumn" type="VBoxContainer" parent="BattleMargin/BattleHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="EnemyTitle" type="Label" parent="BattleMargin/BattleHBox/EnemyColumn"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "적"
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.85, 0.65, 0.65, 1)
+
+[node name="EnemyContainer" type="HBoxContainer" parent="BattleMargin/BattleHBox/EnemyColumn"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="BottomBar" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -96.0
+offset_right = -16.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BottomHBox" type="HBoxContainer" parent="BottomBar"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="ActionBlock" type="VBoxContainer" parent="BottomBar/BottomHBox"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ActionTitle" type="Label" parent="BottomBar/BottomHBox/ActionBlock"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "행동력"
+
+[node name="ActionOrbsRow" type="HBoxContainer" parent="BottomBar/BottomHBox/ActionBlock"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="CenterSkills" type="CenterContainer" parent="BottomBar/BottomHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SkillContainer" type="HBoxContainer" parent="BottomBar/BottomHBox/CenterSkills"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1

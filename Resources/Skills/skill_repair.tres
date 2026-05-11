@@ -4,11 +4,11 @@
 
 [resource]
 script = ExtResource("1_rp001")
-skill_id = 301
+skill_id = 401
 skill_name = "수리"
 skill_type = 2
 skill_description = "내장된 수리 드론이 코어 손상을 복구한다."
 skill_heal = 20.0
-skill_cooldown = 2
+skill_action_cost = 2
 skill_target = 0
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

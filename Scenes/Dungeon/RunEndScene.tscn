@@ -1,8 +1,9 @@
-[gd_scene format=3 uid="uid://c4qo2bo8jn27c"]
+[gd_scene load_steps=3 format=3 uid="uid://c4qo2bo8jn27c"]
 
-[ext_resource type="Script" uid="uid://ckcqk1i0xprjo" path="res://Scenes/Dungeon/RunEndScene.gd" id="1_aofb8"]
+[ext_resource type="Script" path="res://Scenes/Dungeon/RunEndScene.gd" id="1_aofb8"]
+[ext_resource type="PackedScene" path="res://Scenes/UI/RunStatusStrip.tscn" id="2_strip"]
 
-[node name="RunEndScene" type="Control" unique_id=736205129]
+[node name="RunEndScene" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,31 +12,34 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_aofb8")
 
-[node name="ResultLabel" type="Label" parent="." unique_id=558459027]
+[node name="RunStatusStrip" parent="." instance=ExtResource("2_strip")]
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -20.0
-offset_top = 66.0
-offset_right = 20.0
-offset_bottom = 89.0
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 56.0
 grow_horizontal = 2
-text = "런 클리어"
-horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="RestartButton" type="Button" parent="." unique_id=1577529699]
+[node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -4.0
-offset_top = -4.0
-offset_right = 4.0
-offset_bottom = 4.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 56.0
 grow_horizontal = 2
 grow_vertical = 2
-text = "게임 재시작"
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="ResultLabel" type="Label" parent="Center/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "런 결과"
+horizontal_alignment = 1
+
+[node name="ReturnButton" type="Button" parent="Center/VBox"]
+custom_minimum_size = Vector2(220, 48)
+layout_mode = 2
+text = "은신처로 복귀"
