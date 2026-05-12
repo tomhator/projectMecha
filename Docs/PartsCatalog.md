@@ -105,7 +105,7 @@ updated: 2026-05-12
 | 파일명 | 이름 | 스킬 | base 수치 | base weight | 드롭 가중치 |
 |--------|------|------|----------|------------|-----------|
 | `arm_r_cp40` | CP-40 복합 방호판 (우) | 중장갑 전개 | defense 42 | 28 | 12 |
-| `arm_r_emf3` | EMF-3 에너지 배리어 (우) | EMF 배리어 | shield 35 | 16 | 11 |
+| `arm_r_emf3` | EMF-3 전자기 배리어 (우) | EMF 배리어 | shield 35 | 16 | 11 |
 | `arm_r_gdclaw` | 포식 집게팔 (우) | 요격 | defense 26, counter | 18 | 6 |
 | `arm_r_gdtendril` | 흡취 침지팔 (우) | 에너지 흡취 | damage 22, heal 40% | 15 | 5 |
 
