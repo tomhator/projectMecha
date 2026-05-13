@@ -1,8 +1,8 @@
 ---
-tags: [project/project-mecha, document/affix-system, status/todo]
-status: todo
+tags: [project/project-mecha, document/affix-system, status/in-progress]
+status: in-progress
 created: 2026-05-12
-updated: 2026-05-12
+updated: 2026-05-13
 ---
 
 # Affix 시스템 (Affix System)
@@ -13,7 +13,7 @@ updated: 2026-05-12
 
 > [!warning] 작업 전 읽기
 > 이 문서는 두 가지를 다룬다.
-> 1. **전체 Affix 목록** — ID·이름·효과·등급 요건
+> 1. **전체 Affix 목록** — ID·이름·효과
 > 2. **파츠별 Affix 가중치** — 어떤 파츠에 어떤 affix가 잘 붙는지
 
 ---
@@ -24,59 +24,40 @@ updated: 2026-05-12
 - 후보 내에서도 가중치가 달라 파츠마다 "잘 붙는 affix 경향"이 있다.
 - 같은 affix라도 수치가 있는 경우(예: 수치+X%) stat_multiplier와 무관하게 별도 고정값.
 - affix 중복 방지: 동일 ID 재롤 시 최대 3회 재시도 후 다른 ID로 교체.
+- 파츠별 가중치 합계는 100 기준. 후보 외 affix는 등장하지 않는다.
 
 ---
 
 ## 1. 전체 Affix 목록
 
-> 아래는 초안. PartsCatalog 설계와 병행해서 확정.
-
-### 1.1 공통 Affix (모든 파츠에 등장 가능)
-
-| ID | 이름 | 효과 |
-|----|------|------|
-| `atk_up` | 전투 집중 | 스킬 수치 +15% |
-| `weight_light` | 경량화 | 무게 -3, 행동력 비용 -1 |
-| `weight_heavy` | 중장갑화 | 무게 +5, 스킬 수치 +10% |
-| `durability_up` | 견고 | 초기 손상도 +2 |
-
-### 1.2 중급 Affix (파츠별 풀에 포함된 경우만 등장)
-
-| ID | 이름 | 효과 |
-|----|------|------|
-| `multi_target` | 다중 타겟 | 스킬 효과를 적 2명에게 60%씩 분산 |
-| `debuff_atk` | 약화 부가 | 스킬 적중 시 적 공격력↓ 1턴 |
-| `buff_def` | 강화 부가 | 스킬 사용 시 내 방어력↑ 1턴 |
-| `chain` | 연계 발화 | 같은 턴 다른 슬롯 스킬 먼저 사용 시 이 스킬 효과 +30% |
-| `cond_dmg_taken` | 조건: 피해 후 | 이번 턴 피해를 받은 경우 효과 +40% |
-| `cond_low_hp` | 조건: 저 HP | 코어 HP 50% 이하 시 효과 +50% |
-| `ap_refund` | 행동력 환급 | 스킬 사용 후 50% 확률로 행동력 1 환급 |
-
-### 1.3 고급 Affix (강력한 파츠에만 등장)
-
-| ID | 이름 | 효과 |
-|----|------|------|
-| `passive_regen` | 패시브: 재생 | 매 턴 시작 시 코어 HP +5 |
-| `passive_shield` | 패시브: 쉴드 | 매 턴 시작 시 쉴드 +8 |
-| `core_atk_up` | 코어 강화: 공격 | 코어 공격력 계수 +5% |
-| `core_def_up` | 코어 강화: 방어 | 코어 방어력 계수 +5% |
-| `lethal_resist` | 치명 내성 | 치명타 대미지 30% 감소 |
+| ID | 이름 | 효과 | 비고 |
+|----|------|------|------|
+| `evolution_lord` | 진화 군주 | 팔 슬롯 +1 | BACK·ARM 전용 |
+| `mindless` | 무지성 | 스킬 수치 -10%, 공격 횟수 +3, 공격마다 타겟 랜덤 | |
+| `greedy` | 과한 욕심 | 무게 +5, 스킬 수치 +10% | |
+| `productive` | 생산성 향상 | 무게 -3, 행동력 비용 -1 | |
+| `meticulous` | 꼼꼼한 설계 | 최대 손상도 +10% | |
+| `overload` | 과부하 모드 | 스킬 수치 +25%, 스킬 사용 시 손상도 -2 | |
+| `counter_instinct` | 반격 본능 | 피격 후 다음 스킬 수치 +20% (1턴) | |
+| `gambler` | 도박사 | 스킬 수치 0~+50% 랜덤 | |
+| `lifedrain` | 흡수 코팅 | 스킬로 준 피해의 15% HP 회복 | |
+| `momentum` | 탄력 | 같은 턴 두 번째 스킬 사용 시 행동력 비용 -1 | |
+| `serious_punch` | 진심펀치 | 1회용. 사용 시 다음 스킬 수치 +100% | |
+| `zombie_process` | 좀비 프로세스 | 파츠 파괴되어도 1턴 더 작동 후 소멸 | |
+| `kernel_panic` | 커널 패닉 | 코어 HP 30% 이하 시 스킬 수치 +30%, 행동력 비용 -1 | |
+| `undefined_behavior` | 개발자도 모름 | 매 턴 시작 시 스킬 수치 랜덤 (-20% ~ +60%) | |
+| `backdoor` | 백도어 | 적이 디버프 상태일 때 이 파츠 스킬 수치 +25% | |
 
 ---
 
-## 2. 파츠별 Affix 가중치 테이블
+## 2. Affix 등장 규칙
 
-<!-- TODO: PartsCatalog 30종 확정 후 작성 -->
-<!-- 
-각 파츠마다 아래 형식으로 작성:
+모든 파츠는 드롭 시 자신의 **affix_pool**에서 균등 랜덤으로 롤한다.
+affix_pool은 파츠마다 다르게 정의되며, [[PartsCatalog]]의 각 파츠 항목에 명시된다.
+pool 내에서 가중치 차이는 없다 — 후보에 있으면 동등한 확률로 등장.
 
-### 캐논 팔
-| affix ID | 가중치 |
-|----------|--------|
-| atk_up | 30 |
-| multi_target | 20 |
-| chain | 15 |
-| weight_heavy | 10 |
-| cond_low_hp | 10 |
-| ap_refund | 15 |
--->
+### 예외 제약
+
+| affix | 제약 |
+|-------|------|
+| `evolution_lord` (진화 군주) | BACK·ARM 슬롯 파츠에만 등장. 추가되는 팔 슬롯 종류는 자유 선택 |

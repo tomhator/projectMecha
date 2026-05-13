@@ -177,7 +177,7 @@ Affix 상세 설계는 [[AffixSystem]] 참고. 여기서는 개수 결정 규칙
 
 | 수단 | 효과 |
 |------|------|
-| 나노 포지 백팩 스킬 | 선택 파츠 1개 손상도 max 복구 |
+| 현장 수리 키트 | 선택 파츠 1개 손상도 max 복구 |
 | 작업대 | 크레딧 소모 → 선택 파츠 손상도 max 복구 |
 | 조우 이벤트 | 이벤트에 따라 손상도 +1~max 복구 |
 
@@ -190,8 +190,7 @@ Affix 상세 설계는 [[AffixSystem]] 참고. 여기서는 개수 결정 규칙
 ```gdscript
 # Resources/PartsData.gd 추가 예정
 @export var drop_weight: float = 1.0             # 드롭 가중치 (PartsCatalog 기준)
-@export var affix_pool: Array[String] = []       # 이 파츠의 affix 후보 ID 목록
-@export var affix_weights: Array[float] = []     # affix_pool과 1:1 대응 가중치
+@export var affix_pool: Array[String] = []       # 이 파츠의 affix 후보 ID 목록 (균등 확률)
 
 @export var stat_multiplier: float = 1.0         # 롤 결과 계수 (런타임)
 @export var rolled_affixes: Array[String] = []   # 실제 붙은 affix 목록 (런타임)
@@ -215,7 +214,7 @@ PartsFactory.generate(template: PartsData) -> PartsData:
     1. template.duplicate()
     2. stat_multiplier = randf_range(0.70, 1.50)
     3. affix 개수 롤 (§3.2 확률표)
-    4. affix 종류 롤 (template.affix_pool + affix_weights 기반)  → AffixSystem
+    4. affix 종류 롤 (template.affix_pool에서 균등 확률)  → AffixSystem
     5. max_durability = [3, 3, 5, 5, 7, 7][affix 개수]  (COMMON/RARE/EPIC)
     6. durability = max_durability
     7. 반환
@@ -224,11 +223,11 @@ PartsFactory.generate(template: PartsData) -> PartsData:
 ### 7.3 .tres 파일 역할
 
 `.tres`는 **드롭 템플릿** 역할만 한다.
-- 보유: 파츠 ID, 이름, 스킬 참조, base_weight, drop_weight, affix_pool, affix_weights
+- 보유: 파츠 ID, 이름, 스킬 참조, base_weight, drop_weight, affix_pool
 - 런타임에서 결정: stat_multiplier, rolled_affixes, durability
 
 > [!todo]
-> - [ ] `PartsData.gd` 필드 추가 (drop_weight, affix_pool, affix_weights, stat_multiplier, rolled_affixes, max_durability, durability)
+> - [ ] `PartsData.gd` 필드 추가 (drop_weight, affix_pool, stat_multiplier, rolled_affixes, max_durability, durability)
 > - [ ] `PartsFactory` autoload 설계
 > - [ ] affix 개수 확률표 구현 (방 종류별 가중치 조정 포함)
 > - [ ] affix 종류 롤 — 파츠별 가중치 풀 적용
