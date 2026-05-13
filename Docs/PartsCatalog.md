@@ -14,7 +14,7 @@ updated: 2026-05-12
 > [!note] 작성 기준
 > - **base 수치**: stat_multiplier 적용 전 기준값
 > - **드롭 가중치**: 상대값. 높을수록 자주 등장 (15+ 흔함 / 8~14 보통 / 3~7 드묾 / 1~2 매우 드묾)
-> - **affix 후보**: 이 파츠에 등장 가능한 affix 목록. 가중치 수치는 [[AffixSystem]] 확정 후 이전
+> - **affix 풀**: 이 파츠에 등장 가능한 affix 목록. 풀 내 균등 확률. 상세는 [[AffixSystem]] 참고
 > - 총기류는 좌우 공용 (ARM_L·ARM_R 동일 스킬, 별도 .tres 파일)
 
 ---
@@ -41,14 +41,14 @@ updated: 2026-05-12
 | LG 관통 포격 | 2 | 단일 타겟 공격. 방어력 30% 무시 |
 | ML 유도 공격 | 1 | 적 1~3명에게 피해 분산. 타겟이 1명이면 전체 집중 |
 
-**affix 후보 (안)**
+**affix 풀**
 
-| 파츠 | 후보 affix |
-|------|-----------|
-| M-88 캐논 | 공격력+, 다중타겟, 연계발화, 조건저HP |
-| GR-21 기관포 | 다중타겟, AP환급, 경량화, 연계발화 |
-| LG-40 레일건 | 공격력+, 중장갑화, 조건피해후 |
-| ML-7 미사일 | 다중타겟, 약화부가(공격력↓), 연계발화, 조건저HP |
+| 파츠 | affix 풀 |
+|------|---------|
+| M-88 캐논 | `overload` `serious_punch` `greedy` `kernel_panic` `meticulous` `lifedrain` `backdoor` |
+| GR-21 기관포 | `mindless` `lifedrain` `momentum` `gambler` `productive` `undefined_behavior` |
+| LG-40 레일건 | `overload` `greedy` `meticulous` `serious_punch` `kernel_panic` `backdoor` |
+| ML-7 미사일 | `mindless` `lifedrain` `backdoor` `counter_instinct` `gambler` `momentum` |
 
 ---
 
@@ -70,14 +70,14 @@ updated: 2026-05-12
 | 유압 파쇄 | 2 | 극단발 최고화력. 방어력 20% 무시. 충격 시 섀시 흔들림(선딜 있음) |
 | 회전 굴삭 | 1 | 3연속 관통 공격. 연속 명중 시 손상도 추가 -1 |
 
-**affix 후보 (안)**
+**affix 풀**
 
-| 파츠 | 후보 affix |
-|------|-----------|
-| VHF-9 발열 블레이드 | 약화부가(화상강화), 조건저HP, 공격력+, 연계발화 |
-| EW-4 충격 와이어 | 약화부가(행동력↓), 조건피해후, 연계발화, 경량화 |
-| YB-20 유압 파쇄기 | 공격력+, 중장갑화, 조건저HP, 견고 |
-| RD-9 회전 굴삭기 | AP환급, 연계발화, 공격력+, 중장갑화 |
+| 파츠 | affix 풀 |
+|------|---------|
+| VHF-9 발열 블레이드 | `overload` `backdoor` `kernel_panic` `lifedrain` `greedy` `zombie_process` |
+| EW-4 충격 와이어 | `backdoor` `counter_instinct` `productive` `zombie_process` `meticulous` `momentum` |
+| YB-20 유압 파쇄기 | `overload` `serious_punch` `greedy` `kernel_panic` `meticulous` `gambler` |
+| RD-9 회전 굴삭기 | `mindless` `momentum` `lifedrain` `gambler` `overload` `zombie_process` |
 
 ---
 
@@ -96,7 +96,7 @@ updated: 2026-05-12
 | `arm_r_lg40` | LG-40 레일건 (우) | LG 관통 포격 | 42 | 22 | 8 |
 | `arm_r_ml7` | ML-7 유도 미사일 (우) | ML 유도 공격 | 18×3 | 20 | 10 |
 
-> affix 후보는 ARM_L 총기류와 동일.
+> affix 풀은 ARM_L 총기류와 동일.
 
 ---
 
@@ -122,14 +122,14 @@ updated: 2026-05-12
 > 기계신의 포획·흡수 기관을 역설계해 복제한 파츠. 일반 병기와 다른 원리로 작동.
 > 스캐빈저들 사이에서 "GD형 팔"로 불림.
 
-**affix 후보 (안)**
+**affix 풀**
 
-| 파츠 | 후보 affix |
-|------|-----------|
-| CP-40 복합 방호판 | 중장갑화, 패시브쉴드, 치명내성, 견고 |
-| EMF-3 에너지 배리어 | 패시브쉴드, 코어방어+, 치명내성, 경량화 |
-| 포식 집게팔 | 조건피해후, 코어방어+, 연계발화, 강화부가(방어↑) |
-| 흡취 침지팔 | 패시브재생, 조건저HP, 공격력+, 경량화 |
+| 파츠 | affix 풀 |
+|------|---------|
+| CP-40 복합 방호판 | `meticulous` `greedy` `counter_instinct` `zombie_process` `evolution_lord` `kernel_panic` |
+| EMF-3 전자기 배리어 | `meticulous` `counter_instinct` `productive` `evolution_lord` `zombie_process` `backdoor` |
+| 포식 집게팔 | `counter_instinct` `overload` `backdoor` `kernel_panic` `gambler` `zombie_process` |
+| 흡취 침지팔 | `lifedrain` `overload` `kernel_panic` `greedy` `gambler` `serious_punch` |
 
 ---
 
@@ -167,18 +167,18 @@ updated: 2026-05-12
 >
 > **부스터 점화**: 행동력 0 소모로 사용 가능하지만 손상도는 -1 차감됨.
 
-**affix 후보 (안)**
+**affix 풀**
 
-| 파츠 | 후보 affix |
-|------|-----------|
-| SD-7 방어막 발생기 | 패시브쉴드+, 치명내성, 코어방어+, 중장갑화 |
-| EX-9 강화 외골격 팩 | 패시브재생, 견고, 치명내성, 중장갑화 |
-| TB-3 전술 부스터 팩 | AP환급, 경량화, 연계발화, 코어공격+ |
-| NR-5 나노 수복기 | 패시브재생+, 견고, 조건저HP, 경량화 |
-| PA-6 출력 증폭기 | 코어공격+, 코어방어+, 연계발화, 강화부가 |
-| MD-2 정비 드론 팩 | 견고, 패시브재생, 경량화, 중장갑화 |
-| TR-4 전술 중계기 | 강화부가, 코어방어+, AP환급, 연계발화 |
-| FR-1 현장 수리 키트 | 견고, 패시브재생, 조건저HP, 경량화 |
+| 파츠 | affix 풀 |
+|------|---------|
+| SD-7 방어막 발생기 | — (패시브 스킬 → 기획 수정 예정) |
+| EX-9 강화 외골격 팩 | — (패시브 스킬 → 기획 수정 예정) |
+| TB-3 전술 부스터 팩 | `productive` `momentum` `evolution_lord` `meticulous` `gambler` `undefined_behavior` |
+| NR-5 나노 수복기 | — (패시브 스킬 → 기획 수정 예정) |
+| PA-6 출력 증폭기 | — (패시브 스킬 → 기획 수정 예정) |
+| MD-2 정비 드론 팩 | — (패시브 스킬 → 기획 수정 예정) |
+| TR-4 전술 중계기 | `evolution_lord` `meticulous` `momentum` `greedy` `backdoor` `productive` |
+| FR-1 현장 수리 키트 | `meticulous` `evolution_lord` `zombie_process` `greedy` `productive` `kernel_panic` |
 
 ---
 
@@ -217,15 +217,15 @@ updated: 2026-05-12
 >
 > **HARRIER-7 vs JUKE-3**: 경량 기동(패시브 확률 회피)은 항상 작동하지만 불확실. 반응 회피(액티브 완전 회피)는 확실하지만 행동력 소모. 적 예고 공격을 보고 JUKE-3 사용 여부를 결정.
 
-**affix 후보 (안)**
+**affix 풀**
 
-| 파츠 | 후보 affix |
-|------|-----------|
-| RAMPART-8 | 중장갑화, 치명내성, 견고, 코어방어+ |
-| PORTEUR-4 | 중장갑화, 견고, 패시브쉴드, 코어방어+ |
-| BASTION-1 | 코어공격+, 조건저HP, 연계발화, AP환급 |
-| SPRINGER-6 | 조건피해후, 코어방어+, 연계발화, 강화부가 |
-| SPEARHEAD-2 | 코어공격+, AP환급, 연계발화, 경량화 |
-| DAMPFER-5 | 치명내성, 견고, 중장갑화, 패시브쉴드 |
-| HARRIER-7 | 경량화, AP환급, 조건피해후, 코어공격+ |
-| JUKE-3 | 조건피해후, AP환급, 경량화, 코어방어+ |
+| 파츠 | affix 풀 |
+|------|---------|
+| RAMPART-8 | — (패시브 스킬 → 기획 수정 예정) |
+| PORTEUR-4 | — (패시브 스킬 → 기획 수정 예정) |
+| BASTION-1 | `overload` `greedy` `kernel_panic` `mindless` `gambler` `serious_punch` |
+| SPRINGER-6 | — (패시브 스킬 → 기획 수정 예정) |
+| SPEARHEAD-2 | — (패시브 스킬 → 기획 수정 예정) |
+| DAMPFER-5 | — (패시브 스킬 → 기획 수정 예정) |
+| HARRIER-7 | — (패시브 스킬 → 기획 수정 예정) |
+| JUKE-3 | `counter_instinct` `meticulous` `productive` `backdoor` `momentum` `zombie_process` |
