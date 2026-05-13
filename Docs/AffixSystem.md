@@ -53,60 +53,16 @@ updated: 2026-05-13
 
 ---
 
-## 2. 파츠별 Affix 가중치 테이블
+## 2. Affix 등장 규칙
 
-> 가중치 합계 = 100 기준. 후보에 없는 affix는 해당 파츠에서 등장하지 않는다.
+모든 파츠는 드롭 시 전체 affix 풀에서 균등 랜덤으로 롤한다.
+파츠별 가중치 테이블은 두지 않는다.
 
----
+### 예외 제약
 
-### ARM_L·R 총기류 (좌우 공용)
-
-#### M-88 캐논 — 단발 고화력
-
-| affix | 가중치 |
-|-------|--------|
-| `overload` | 25 |
-| `serious_punch` | 20 |
-| `greedy` | 18 |
-| `kernel_panic` | 17 |
-| `meticulous` | 12 |
-| `lifedrain` | 8 |
-
-#### GR-21 기관포 — 5연발 난사
-
-| affix | 가중치 |
-|-------|--------|
-| `mindless` | 28 |
-| `lifedrain` | 22 |
-| `momentum` | 18 |
-| `gambler` | 15 |
-| `productive` | 10 |
-| `undefined_behavior` | 7 |
-
-#### LG-40 레일건 — 관통 고화력 (AP 2)
-
-| affix | 가중치 |
-|-------|--------|
-| `overload` | 28 |
-| `greedy` | 22 |
-| `meticulous` | 20 |
-| `serious_punch` | 15 |
-| `kernel_panic` | 10 |
-| `backdoor` | 5 |
-
-#### ML-7 유도 미사일 — 광역 분산 공격
-
-| affix | 가중치 |
-|-------|--------|
-| `lifedrain` | 25 |
-| `mindless` | 22 |
-| `backdoor` | 20 |
-| `counter_instinct` | 18 |
-| `gambler` | 15 |
-
----
-
-<!-- TODO: ARM_L 근접 4종 -->
-<!-- TODO: ARM_R 방어·반응 4종 -->
-<!-- TODO: BACK 8종 -->
-<!-- TODO: LEG 8종 -->
+| affix | 제약 |
+|-------|------|
+| `evolution_lord` (진화 군주) | BACK·ARM 슬롯 파츠에만 등장 |
+| `workstation` (워크스테이션) | 패시브형 파츠에만 등장 |
+| `infinite_loop` (무한루프) | 패시브형 파츠에만 등장 |
+| `power_save` (절전 모드) | 패시브형 파츠에만 등장 |
