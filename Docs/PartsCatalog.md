@@ -2,7 +2,7 @@
 tags: [project/project-mecha, document/parts-catalog, status/in-progress]
 status: in-progress
 created: 2026-05-12
-updated: 2026-05-12
+updated: 2026-05-13
 ---
 
 # 파츠 카탈로그 (Parts Catalog)
@@ -135,17 +135,16 @@ updated: 2026-05-12
 
 ## BACK — 등 (8종)
 
-> 백팩 슬롯. 장착하는 것만으로 메카의 생존력·행동력을 끌어올리는 지원형 파츠.  
-> 패시브 6종 (자동 발동) + 액티브 2종 (직접 사용) 구성.
+> 백팩 슬롯. 전원 액티브 스킬. 버프 부여 또는 즉시 회복 효과 위주.
 
 | 파일명 | 이름 | 스킬 | 유형 | base 수치 | base weight | 드롭 가중치 |
 |--------|------|------|------|----------|------------|-----------|
-| `back_sd7` | SD-7 방어막 발생기 | 방어막 전개 | 패시브 | shield 10/턴 | 14 | 13 |
-| `back_ex9` | EX-9 강화 외골격 팩 | 외골격 전개 | 패시브 | max HP +35 | 20 | 12 |
+| `back_sd7` | SD-7 방어막 발생기 | 방어막 전개 | 액티브 | 쉴드 버프 3턴 (+12/턴) | 14 | 13 |
+| `back_ex9` | EX-9 강화 외골격 팩 | 외골격 강화 | 액티브 | max HP +35·즉시 HP +35 | 20 | 12 |
 | `back_tb3` | TB-3 전술 부스터 팩 | 부스터 점화 | 액티브 | AP +1 (1턴) | 12 | 10 |
-| `back_nr5` | NR-5 나노 수복기 | 나노 수복 | 패시브 | heal 6/턴 | 10 | 13 |
-| `back_pa6` | PA-6 출력 증폭기 | 출력 증폭 | 패시브 | 스킬 수치 +12% | 16 | 8 |
-| `back_md2` | MD-2 정비 드론 팩 | 정비 드론 | 패시브 | 손상도 +1/턴 | 11 | 9 |
+| `back_nr5` | NR-5 나노 수복기 | 나노 수복 | 액티브 | HP 회복 버프 3턴 (+10/턴) | 10 | 13 |
+| `back_pa6` | PA-6 출력 증폭기 | 출력 증폭 | 액티브 | 스킬 수치 버프 3턴 (+15%) | 16 | 8 |
+| `back_md2` | MD-2 정비 드론 팩 | 드론 정비 | 액티브 | 전 파츠 손상도 +2 즉시 | 11 | 9 |
 | `back_tr4` | TR-4 전술 중계기 | 중계 강화 | 액티브 | 버프 지속 +2턴 | 13 | 7 |
 | `back_fr1` | FR-1 현장 수리 키트 | 현장 수리 | 액티브 | 손상도 max 복구 | 9 | 8 |
 
@@ -153,17 +152,17 @@ updated: 2026-05-12
 
 | 이름 | 행동력 | 설명 |
 |------|--------|------|
-| 방어막 전개 | — | 패시브. 매 턴 시작 시 쉴드 자동 생성. 쉴드는 피해를 먼저 흡수 |
-| 외골격 전개 | — | 패시브. 장착 시 코어 최대 HP 영구 증가. 런 내내 지속 |
-| 부스터 점화 | 0 | 액티브. 사용 시 이번 턴 행동력 +1. 행동력 소모 없이 사용 가능 |
-| 나노 수복 | — | 패시브. 매 턴 시작 시 코어 HP 소량 자동 회복 |
-| 출력 증폭 | — | 패시브. 장착 중 모든 슬롯의 스킬 수치 상시 증가 |
-| 정비 드론 | — | 패시브. 매 턴 시작 시 손상도가 가장 낮은 파츠의 손상도 +1 자동 복구 |
-| 중계 강화 | 1 | 액티브. 현재 내 메카에 활성화된 버프 전체의 남은 지속 턴 +2 연장 |
-| 현장 수리 | 1 | 액티브. 장착된 파츠 중 하나를 선택해 손상도를 즉시 max로 완전 복구 |
+| 방어막 전개 | 1 | 3턴간 매 턴 시작 시 쉴드 +12 자동 생성 (버프) |
+| 외골격 강화 | 1 | 코어 최대 HP +35 즉시 증가, HP +35 회복 (이번 런 지속) |
+| 부스터 점화 | 0 | 이번 턴 행동력 +1. 행동력 소모 없이 사용 |
+| 나노 수복 | 1 | 3턴간 매 턴 시작 시 코어 HP +10 자동 회복 (버프) |
+| 출력 증폭 | 1 | 3턴간 전 슬롯 스킬 수치 +15% (버프) |
+| 드론 정비 | 1 | 장착된 모든 파츠 손상도 즉시 +2 회복 |
+| 중계 강화 | 1 | 내 메카에 활성화된 버프 전체 남은 지속 턴 +2 연장 |
+| 현장 수리 | 1 | 선택 파츠 손상도 즉시 max 완전 복구 |
 
 > [!note]
-> **MD-2 vs FR-1**: 정비 드론은 매 턴 조금씩 자동 복구 (느리지만 무료), 현장 수리 키트는 즉시 완전 복구 (행동력 소모). 상황에 따라 선택.
+> **MD-2 vs FR-1**: 드론 정비는 전 파츠 +2 분산 복구 (여러 파츠가 조금씩 닳은 경우 유리), 현장 수리는 선택 파츠 완전 복구 (중요 파츠 집중 수리). 상황에 따라 선택.
 >
 > **부스터 점화**: 행동력 0 소모로 사용 가능하지만 손상도는 -1 차감됨.
 
@@ -171,12 +170,12 @@ updated: 2026-05-12
 
 | 파츠 | affix 풀 |
 |------|---------|
-| SD-7 방어막 발생기 | — (패시브 스킬 → 기획 수정 예정) |
-| EX-9 강화 외골격 팩 | — (패시브 스킬 → 기획 수정 예정) |
+| SD-7 방어막 발생기 | `meticulous` `gambler` `greedy` `counter_instinct` `zombie_process` `undefined_behavior` |
+| EX-9 강화 외골격 팩 | `meticulous` `greedy` `serious_punch` `kernel_panic` `lifedrain` `evolution_lord` |
 | TB-3 전술 부스터 팩 | `productive` `momentum` `evolution_lord` `meticulous` `gambler` `undefined_behavior` |
-| NR-5 나노 수복기 | — (패시브 스킬 → 기획 수정 예정) |
-| PA-6 출력 증폭기 | — (패시브 스킬 → 기획 수정 예정) |
-| MD-2 정비 드론 팩 | — (패시브 스킬 → 기획 수정 예정) |
+| NR-5 나노 수복기 | `meticulous` `greedy` `serious_punch` `gambler` `backdoor` `counter_instinct` |
+| PA-6 출력 증폭기 | `greedy` `overload` `backdoor` `evolution_lord` `momentum` `gambler` |
+| MD-2 정비 드론 팩 | `meticulous` `productive` `zombie_process` `greedy` `undefined_behavior` `evolution_lord` |
 | TR-4 전술 중계기 | `evolution_lord` `meticulous` `momentum` `greedy` `backdoor` `productive` |
 | FR-1 현장 수리 키트 | `meticulous` `evolution_lord` `zombie_process` `greedy` `productive` `kernel_panic` |
 
@@ -184,48 +183,51 @@ updated: 2026-05-12
 
 ## LEG — 다리 (8종)
 
-> 다리 슬롯. 방어·하중·기동·전술 반응 위주의 지원형 파츠.  
-> 패시브 5종 + 액티브 3종 구성.
+> 다리 슬롯. 전원 액티브 스킬. 방어·반격·기동 버프 위주.
 
 | 파일명 | 이름 | 스킬 | 유형 | base 수치 | base weight | 드롭 가중치 |
 |--------|------|------|------|----------|------------|-----------|
-| `leg_rampart8` | RAMPART-8 | 중장갑 전개 | 패시브 | defense +20 | 28 | 13 |
-| `leg_porteur4` | PORTEUR-4 | 하중 분산 | 패시브 | 하중 제한 +25 | 18 | 11 |
+| `leg_rampart8` | RAMPART-8 | 중장갑 전개 | 액티브 | 이번 전투 방어력 +20 (지속) | 28 | 13 |
+| `leg_porteur4` | PORTEUR-4 | 중심 잡기 | 액티브 | 2턴간 피해 감소 10%, 하중 패널티 무효 | 18 | 11 |
 | `leg_bastion1` | BASTION-1 | 시즈모드 돌입 | 액티브 | 공격력 +35%, AP -1/턴 | 22 | 7 |
-| `leg_springer6` | SPRINGER-6 | 반동 반격 | 패시브 | 반격 피해 30%, 발동률 40% | 20 | 9 |
-| `leg_spearhead2` | SPEARHEAD-2 | 선제 도약 | 패시브 | 전투 시작 선제 공격 1회 | 16 | 6 |
-| `leg_dampfer5` | DAMPFER-5 | 충격 완충 | 패시브 | 피해 감소 18% | 24 | 12 |
-| `leg_harrier7` | HARRIER-7 | 경량 기동 | 패시브 | 회피율 +15%, 하중 제한 +5 | 14 | 10 |
+| `leg_springer6` | SPRINGER-6 | 반격 준비 | 액티브 | 다음 피격 1회 확정 반격 (방어 수치 40%) | 20 | 9 |
+| `leg_spearhead2` | SPEARHEAD-2 | 선제 도약 | 액티브 | 즉시 무료 스킬 1회 추가 사용 | 16 | 6 |
+| `leg_dampfer5` | DAMPFER-5 | 충격 완충 | 액티브 | 3턴간 받는 피해 20% 감소 (버프) | 24 | 12 |
+| `leg_harrier7` | HARRIER-7 | 고기동 | 액티브 | 3턴간 회피율 +20% (버프) | 14 | 10 |
 | `leg_juke3` | JUKE-3 | 반응 회피 | 액티브 | 다음 적 공격 1회 완전 회피 | 15 | 8 |
 
 **스킬 상세**
 
 | 이름 | 행동력 | 설명 |
 |------|--------|------|
-| 중장갑 전개 | — | 패시브. 장착 시 방어 수치 영구 증가. 런 내내 유지 |
-| 하중 분산 | — | 패시브. 장착 시 코어 하중 제한 영구 증가. 무거운 빌드의 필수 파츠 |
-| 시즈모드 돌입 | 0 | 액티브. 시즈모드 ON/OFF 전환. ON 시 전체 공격력 +35%, 매 턴 행동력 -1 지속. 행동력 소모 없이 사용하지만 손상도 -1 |
-| 반동 반격 | — | 패시브. 피격 시 40% 확률로 즉시 반격. 반격 피해는 방어 수치의 30% |
-| 선제 도약 | — | 패시브. 전투 시작 첫 턴, 행동력과 무관하게 스킬 1회 무료 사용 |
-| 충격 완충 | — | 패시브. 받는 모든 피해 18% 감소. 단순하고 일관된 생존력 |
-| 경량 기동 | — | 패시브. 회피율 +15% (확률 회피). 추가로 하중 제한 소폭 증가 |
-| 반응 회피 | 1 | 액티브. 사용 시 다음으로 받는 적 공격 1회를 완전 회피. 적 행동 예고를 보고 판단 |
+| 중장갑 전개 | 1 | 이번 전투 방어력 +20 영구 증가. 사용 후 재사용 불가 |
+| 중심 잡기 | 1 | 2턴간 받는 피해 -10%, 하중 초과 패널티 무효 |
+| 시즈모드 돌입 | 0 | 시즈모드 ON/OFF 전환. ON 시 공격력 +35%, 매 턴 행동력 -1. 손상도 -1 소모 |
+| 반격 준비 | 0 | 다음 피격 1회에 즉시 확정 반격. 반격 피해 = 방어 수치 × 40% |
+| 선제 도약 | 0 | 즉시 스킬 1회 무료 추가 사용. 지정한 스킬은 행동력·손상도 소모 없이 발동 |
+| 충격 완충 | 1 | 3턴간 받는 피해 20% 감소 (버프) |
+| 고기동 | 1 | 3턴간 회피율 +20% (버프) |
+| 반응 회피 | 1 | 다음으로 받는 적 공격 1회를 완전 회피. 적 예고 행동을 보고 판단 |
 
 > [!note] 시즈모드 전략
-> BASTION-1 시즈모드 ON 상태에서 매 턴 행동력 -1이 누적되므로 장기전보다 단기 화력 집중에 적합.  
+> BASTION-1 시즈모드 ON 상태에서 매 턴 행동력 -1이 누적되므로 장기전보다 단기 화력 집중에 적합.
 > 행동력이 0이 되면 스킬 사용 불가 — 켜는 타이밍과 끄는 타이밍이 핵심 판단.
 >
-> **HARRIER-7 vs JUKE-3**: 경량 기동(패시브 확률 회피)은 항상 작동하지만 불확실. 반응 회피(액티브 완전 회피)는 확실하지만 행동력 소모. 적 예고 공격을 보고 JUKE-3 사용 여부를 결정.
+> **RAMPART-8**: 이번 전투 방어력 +20 영구 적용. 일찍 쓸수록 이득이 크다.
+>
+> **SPRINGER-6 vs JUKE-3**: 반격 준비는 확정 반격, JUKE-3는 완전 회피. 전투 예상 피해에 따라 선택.
+>
+> **HARRIER-7 vs JUKE-3**: 고기동(확률 회피 버프)은 여러 턴에 걸쳐 작동하지만 불확실. 반응 회피(확정 1회 완전 회피)는 확실하지만 행동력 소모.
 
 **affix 풀**
 
 | 파츠 | affix 풀 |
 |------|---------|
-| RAMPART-8 | — (패시브 스킬 → 기획 수정 예정) |
-| PORTEUR-4 | — (패시브 스킬 → 기획 수정 예정) |
+| RAMPART-8 | `meticulous` `greedy` `overload` `serious_punch` `zombie_process` `counter_instinct` |
+| PORTEUR-4 | `meticulous` `productive` `counter_instinct` `gambler` `backdoor` `zombie_process` |
 | BASTION-1 | `overload` `greedy` `kernel_panic` `mindless` `gambler` `serious_punch` |
-| SPRINGER-6 | — (패시브 스킬 → 기획 수정 예정) |
-| SPEARHEAD-2 | — (패시브 스킬 → 기획 수정 예정) |
-| DAMPFER-5 | — (패시브 스킬 → 기획 수정 예정) |
-| HARRIER-7 | — (패시브 스킬 → 기획 수정 예정) |
+| SPRINGER-6 | `counter_instinct` `overload` `gambler` `zombie_process` `backdoor` `kernel_panic` |
+| SPEARHEAD-2 | `serious_punch` `overload` `momentum` `gambler` `kernel_panic` `lifedrain` |
+| DAMPFER-5 | `meticulous` `greedy` `counter_instinct` `zombie_process` `backdoor` `kernel_panic` |
+| HARRIER-7 | `productive` `counter_instinct` `gambler` `zombie_process` `meticulous` `backdoor` |
 | JUKE-3 | `counter_instinct` `meticulous` `productive` `backdoor` `momentum` `zombie_process` |
