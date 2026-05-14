@@ -21,7 +21,7 @@ updated: 2026-05-13
 
 ## ARM_L — 좌팔 (8종)
 
-> 보조 무장 / 방어 슬롯. 총기류 4종(공용) + 근접무기 4종(ARM_L 전용).
+> 보조 무장 / 방어 슬롯. 총기류 4종(공용) + 방어·반응 4종(ARM_L 전용).
 
 ### 총기류 (좌)
 
@@ -52,62 +52,14 @@ updated: 2026-05-13
 
 ---
 
-### 근접무기 (ARM_L 전용)
-
-| 파일명 | 이름 | 스킬 | base damage | base weight | 드롭 가중치 |
-|--------|------|------|------------|------------|-----------|
-| `arm_l_vhf9` | 발열 블레이드 (좌) | 발열 참격 | 30 | 16 | 9 |
-| `arm_l_ew4` | 충격 와이어 (좌) | 전격 포박 | 22 | 12 | 8 |
-| `arm_l_yb20` | 유압 파쇄기 (좌) | 유압 파쇄 | 58 | 30 | 4 |
-| `arm_l_rd9` | 회전 굴삭기 (좌) | 회전 굴삭 | 16×3 | 26 | 6 |
-
-**스킬 상세**
-
-| 이름 | 행동력 | 설명 |
-|------|--------|------|
-| 발열 참격 | 1 | 근접 공격 + 화상(BURN) 1턴 부여. 화상은 적 턴 시작 시 추가 피해 |
-| 전격 포박 | 1 | 전격 공격 + 적 행동력 -1 (다음 턴 스킬 1회 사용 불가) |
-| 유압 파쇄 | 2 | 극단발 최고화력. 방어력 20% 무시. 충격 시 섀시 흔들림(선딜 있음) |
-| 회전 굴삭 | 1 | 3연속 관통 공격. 연속 명중 시 손상도 추가 -1 |
-
-**affix 풀**
-
-| 파츠 | affix 풀 |
-|------|---------|
-| 발열 블레이드 | `overload` `backdoor` `kernel_panic` `lifedrain` `greedy` `zombie_process` |
-| 충격 와이어 | `backdoor` `counter_instinct` `productive` `zombie_process` `meticulous` `momentum` |
-| 유압 파쇄기 | `overload` `serious_punch` `greedy` `kernel_panic` `meticulous` `gambler` |
-| 회전 굴삭기 | `mindless` `momentum` `lifedrain` `gambler` `overload` `zombie_process` |
-
----
-
-## ARM_R — 우팔 (8종)
-
-> 주력 무장 슬롯. 총기류 4종(공용) + 방어·반응 4종(ARM_R 전용).
-
-### 총기류 (우)
-
-총기류 4종은 ARM_L과 스킬·수치 동일. 슬롯만 다름.
-
-| 파일명 | 이름 | 스킬 | base damage | base weight | 드롭 가중치 |
-|--------|------|------|------------|------------|-----------|
-| `arm_r_m88` | 대구경 반자동 캐논 (우) | 대구경 포격 | 38 | 25 | 15 |
-| `arm_r_gr21` | 자동 기관포 (우) | 기관포 연사 | 9×5 | 18 | 14 |
-| `arm_r_lg40` | 레일건 (우) | 관통 포격 | 42 | 22 | 8 |
-| `arm_r_ml7` | 다연장 유도 미사일 시스템 (우) | 유도 미사일 공격 | 18×3 | 20 | 10 |
-
-> affix 풀은 ARM_L 총기류와 동일.
-
----
-
-### 방어·반응 (ARM_R 전용)
+### 방어·반응 (ARM_L 전용)
 
 | 파일명 | 이름 | 스킬 | base 수치 | base weight | 드롭 가중치 |
 |--------|------|------|----------|------------|-----------|
-| `arm_r_cp40` | 복합 방호판 (우) | 중장갑 전개 | defense 42 | 28 | 12 |
-| `arm_r_emf3` | 전자기 배리어 (우) | EMF 배리어 | shield 35 | 16 | 11 |
-| `arm_r_gdclaw` | 포식 집게팔 (우) | 요격 | defense 26, counter | 18 | 6 |
-| `arm_r_gdtendril` | 기계식 나노 재구성 촉수 (우) | 에너지 흡취 | damage 22, heal 40% | 15 | 5 |
+| `arm_l_cp40` | 복합 방호판 (좌) | 중장갑 전개 | defense 42 | 28 | 12 |
+| `arm_l_emf3` | 전자기 배리어 (좌) | EMF 배리어 | shield 35 | 16 | 11 |
+| `arm_l_gdclaw` | 포식 집게팔 (좌) | 요격 | defense 26, counter | 18 | 6 |
+| `arm_l_gdtendril` | 기계식 나노 재구성 촉수 (좌) | 에너지 흡취 | damage 22, heal 40% | 15 | 5 |
 
 **스킬 상세**
 
@@ -130,6 +82,54 @@ updated: 2026-05-13
 | 전자기 배리어 | `meticulous` `counter_instinct` `productive` `evolution_lord` `zombie_process` `backdoor` |
 | 포식 집게팔 | `counter_instinct` `overload` `backdoor` `kernel_panic` `gambler` `zombie_process` |
 | 기계식 나노 재구성 촉수 | `lifedrain` `overload` `kernel_panic` `greedy` `gambler` `serious_punch` |
+
+---
+
+## ARM_R — 우팔 (8종)
+
+> 주력 무장 슬롯. 총기류 4종(공용) + 근접무기 4종(ARM_R 전용).
+
+### 총기류 (우)
+
+총기류 4종은 ARM_L과 스킬·수치 동일. 슬롯만 다름.
+
+| 파일명 | 이름 | 스킬 | base damage | base weight | 드롭 가중치 |
+|--------|------|------|------------|------------|-----------|
+| `arm_r_m88` | 대구경 반자동 캐논 (우) | 대구경 포격 | 38 | 25 | 15 |
+| `arm_r_gr21` | 자동 기관포 (우) | 기관포 연사 | 9×5 | 18 | 14 |
+| `arm_r_lg40` | 레일건 (우) | 관통 포격 | 42 | 22 | 8 |
+| `arm_r_ml7` | 다연장 유도 미사일 시스템 (우) | 유도 미사일 공격 | 18×3 | 20 | 10 |
+
+> affix 풀은 ARM_L 총기류와 동일.
+
+---
+
+### 근접무기 (ARM_R 전용)
+
+| 파일명 | 이름 | 스킬 | base damage | base weight | 드롭 가중치 |
+|--------|------|------|------------|------------|-----------|
+| `arm_r_vhf9` | 발열 블레이드 (우) | 발열 참격 | 30 | 16 | 9 |
+| `arm_r_ew4` | 충격 와이어 (우) | 전격 포박 | 22 | 12 | 8 |
+| `arm_r_yb20` | 유압 파쇄기 (우) | 유압 파쇄 | 58 | 30 | 4 |
+| `arm_r_rd9` | 회전 굴삭기 (우) | 회전 굴삭 | 16×3 | 26 | 6 |
+
+**스킬 상세**
+
+| 이름 | 행동력 | 설명 |
+|------|--------|------|
+| 발열 참격 | 1 | 근접 공격 + 화상(BURN) 1턴 부여. 화상은 적 턴 시작 시 추가 피해 |
+| 전격 포박 | 1 | 전격 공격 + 적 행동력 -1 (다음 턴 스킬 1회 사용 불가) |
+| 유압 파쇄 | 2 | 극단발 최고화력. 방어력 20% 무시. 충격 시 섀시 흔들림(선딜 있음) |
+| 회전 굴삭 | 1 | 3연속 관통 공격. 연속 명중 시 손상도 추가 -1 |
+
+**affix 풀**
+
+| 파츠 | affix 풀 |
+|------|---------|
+| 발열 블레이드 | `overload` `backdoor` `kernel_panic` `lifedrain` `greedy` `zombie_process` |
+| 충격 와이어 | `backdoor` `counter_instinct` `productive` `zombie_process` `meticulous` `momentum` |
+| 유압 파쇄기 | `overload` `serious_punch` `greedy` `kernel_panic` `meticulous` `gambler` |
+| 회전 굴삭기 | `mindless` `momentum` `lifedrain` `gambler` `overload` `zombie_process` |
 
 ---
 
