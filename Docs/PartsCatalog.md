@@ -191,7 +191,7 @@ updated: 2026-05-13
 | `leg_porteur4` | 중형 4각 | 중심 잡기 | 액티브 | 2턴간 피해 감소 10%, 하중 패널티 무효 | 18 | +20 | 11 |
 | `leg_bastion1` | 포대형 무한궤도 | 시즈모드 돌입 | 액티브 | 공격력 +35%, AP -1/턴 | 22 | +25 | 7 |
 | `leg_springer6` | 반동 역관절 2각 | 반격 준비 | 액티브 | 다음 피격 1회 확정 반격 (방어 수치 40%) | 20 | +12 | 9 |
-| `leg_spearhead2` | 강습 역관절 2각 | 선제 도약 | 액티브 | 즉시 무료 스킬 1회 추가 사용 | 16 | +10 | 6 |
+| `leg_spearhead2` | 강습 2각 | 선제 도약 | 액티브 | 즉시 무료 스킬 1회 추가 사용 | 16 | +10 | 6 |
 | `leg_dampfer5` | 완충 4각 | 충격 완충 | 액티브 | 3턴간 받는 피해 20% 감소 (버프) | 24 | +16 | 12 |
 | `leg_harrier7` | 경량 역관절 2각 | 고기동 | 액티브 | 3턴간 회피율 +20% (버프) | 14 | +6 | 10 |
 | `leg_juke3` | 고속 역관절 2각 | 반응 회피 | 액티브 | 다음 적 공격 1회 완전 회피 | 15 | +5 | 8 |
@@ -223,7 +223,7 @@ updated: 2026-05-13
 >
 > **경량 역관절 2각 vs 고속 역관절 2각**: 고기동(확률 회피 버프)은 여러 턴에 걸쳐 작동하지만 불확실. 반응 회피(확정 1회 완전 회피)는 확실하지만 행동력 소모.
 >
-> **표준 2각 vs 중형 2각**: 안정 자세는 순수 방어 수치 증가. 중심 고정은 디버프·상태이상을 자주 거는 적 상대로 추가 가치를 발휘.
+> **표준 2각 vs 중형 2각 vs 강습 2각**: 안정 자세는 꾸준한 방어 증가. 중심 고정은 디버프 빈도 높은 적 상대 유리. 강습 2각(선제 도약)은 선제 행동이 필요한 상황에 특화 — 행동력 소모 없이 즉시 스킬 1회 추가.
 
 **affix 풀**
 
@@ -233,7 +233,7 @@ updated: 2026-05-13
 | 중형 4각 | `meticulous` `productive` `counter_instinct` `gambler` `backdoor` `zombie_process` |
 | 포대형 무한궤도 | `overload` `greedy` `kernel_panic` `mindless` `gambler` `serious_punch` |
 | 반동 역관절 2각 | `counter_instinct` `overload` `gambler` `zombie_process` `backdoor` `kernel_panic` |
-| 강습 역관절 2각 | `serious_punch` `overload` `momentum` `gambler` `kernel_panic` `lifedrain` |
+| 강습 2각 | `serious_punch` `overload` `momentum` `gambler` `kernel_panic` `lifedrain` |
 | 완충 4각 | `meticulous` `greedy` `counter_instinct` `zombie_process` `backdoor` `kernel_panic` |
 | 경량 역관절 2각 | `productive` `counter_instinct` `gambler` `zombie_process` `meticulous` `backdoor` |
 | 고속 역관절 2각 | `counter_instinct` `meticulous` `productive` `backdoor` `momentum` `zombie_process` |
