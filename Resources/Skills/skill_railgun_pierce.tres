@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s203"]
+
+[resource]
+script = ExtResource("1_s203")
+skill_id = 203
+skill_name = "관통 포격"
+skill_type = 0
+skill_description = "단일 타겟 공격. 방어력 30% 무시."
+skill_damage = 42.0
+skill_action_cost = 2
+skill_target = 1
+armor_penetration = 0.3
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

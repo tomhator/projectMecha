@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s221"]
+
+[resource]
+script = ExtResource("1_s221")
+skill_id = 221
+skill_name = "발열 참격"
+skill_type = 0
+skill_description = "근접 공격 + 화상(BURN) 1턴 부여. 화상은 적 턴 시작 시 추가 피해."
+skill_damage = 30.0
+skill_action_cost = 1
+skill_target = 1
+has_debuff = true
+debuff_type = 4
+buff_turns = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

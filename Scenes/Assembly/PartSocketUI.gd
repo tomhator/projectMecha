@@ -15,6 +15,7 @@ var equipped_part: PartsData = null
 var _slot_name_label: Label
 var _part_name_label: Label
 var _skill_label: Label
+var _durability_label: Label
 
 # ── 스타일 상수 ──────────────────────────
 const COLOR_EMPTY: Color             = Color(0.25, 0.25, 0.30, 1.0)
@@ -34,6 +35,7 @@ var _style_reject: StyleBoxFlat
 
 # ── 초기화 ──────────────────────────────
 func _ready() -> void:
+	add_to_group("part_socket_drag_highlight")
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	# 부모가 레이아웃 전달하기 전까지 최소 터치 영역
 	custom_minimum_size = Vector2(72, 72)
@@ -43,6 +45,21 @@ func _ready() -> void:
 	_apply_style(_style_empty)
 
 	gui_input.connect(_on_gui_input)
+
+
+func on_drag_inventory_part(part: PartsData) -> void:
+	if part == null:
+		end_drag_inventory_highlight()
+		return
+	if _part_type_matches(part.parts_type):
+		_apply_style(_style_hover)
+	else:
+		_refresh_display()
+
+
+func end_drag_inventory_highlight() -> void:
+	_refresh_display()
+
 
 # 부모(AssemblyScene)가 ChassisPanel 너비에 맞춰 호출
 func set_layout_size(s: Vector2) -> void:
@@ -79,6 +96,11 @@ func _build_ui() -> void:
 	_skill_label.custom_minimum_size = Vector2(1, 0)
 	vbox.add_child(_skill_label)
 
+	_durability_label = Label.new()
+	_durability_label.add_theme_font_size_override("font_size", 10)
+	_durability_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	vbox.add_child(_durability_label)
+
 # ── 퍼블릭 ───────────────────────────────
 func set_equipped(part: PartsData) -> void:
 	equipped_part = part
@@ -112,10 +134,14 @@ func _on_gui_input(event: InputEvent) -> void:
 			if equipped_part != null:
 				part_unequipped.emit(slot_type)
 
-# ── 드래그 이탈 / 종료 시 스타일 복원 ──────
+# ── 드래그 이탈 시: 인벤 드래그 중이면 전역 하이라이트 규칙으로 복귀 (AssemblyScene이 DRAG_END에서 정리)
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_DRAG_END or what == NOTIFICATION_MOUSE_EXIT:
-		_refresh_display()
+	if what == NOTIFICATION_MOUSE_EXIT:
+		if EventBus.assembly_drag_inventory_part != null:
+			on_drag_inventory_part(EventBus.assembly_drag_inventory_part)
+		else:
+			_refresh_display()
+
 
 # ── 헬퍼 ─────────────────────────────────
 func _part_type_matches(parts_type: PartsData.PartsType) -> bool:
@@ -139,15 +165,25 @@ func _refresh_display() -> void:
 		_part_name_label.text = "빈 슬롯"
 		_part_name_label.remove_theme_color_override("font_color")
 		_skill_label.text = ""
+		_durability_label.text = ""
 		_apply_style(_style_empty)
 	else:
-		var damage_tag: String = " ⚠" if equipped_part.is_damaged else ""
-		_part_name_label.text = equipped_part.parts_name + damage_tag
-		if equipped_part.is_damaged:
-			_part_name_label.add_theme_color_override("font_color", Color(1.0, 0.7, 0.3))
+		_part_name_label.text = equipped_part.parts_name
+		if equipped_part.is_broken():
+			_part_name_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+		elif equipped_part.is_worn():
+			_part_name_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.28))
 		else:
 			_part_name_label.remove_theme_color_override("font_color")
 		_skill_label.text = equipped_part.parts_description
+		var dur_str: String = "■".repeat(equipped_part.durability) + "□".repeat(equipped_part.max_durability - equipped_part.durability)
+		_durability_label.text = dur_str
+		if equipped_part.is_broken():
+			_durability_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+		elif equipped_part.is_worn():
+			_durability_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.28))
+		else:
+			_durability_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.55))
 		_apply_style(_style_filled)
 
 func _build_styles() -> void:

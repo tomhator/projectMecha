@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s248"]
+
+[resource]
+script = ExtResource("1_s248")
+skill_id = 248
+skill_name = "반응 회피"
+skill_type = 1
+skill_description = "다음으로 받는 적 공격 1회를 완전 회피."
+skill_action_cost = 1
+skill_target = 0
+invincible_hit_count = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

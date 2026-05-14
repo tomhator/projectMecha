@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s237"]
+
+[resource]
+script = ExtResource("1_s237")
+skill_id = 237
+skill_name = "중계 강화"
+skill_type = 3
+skill_description = "내 메카에 활성화된 버프 전체 남은 지속 턴 +2 연장."
+skill_action_cost = 1
+skill_target = 0
+buff_turns = 2
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

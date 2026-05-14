@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s224"]
+
+[resource]
+script = ExtResource("1_s224")
+skill_id = 224
+skill_name = "회전 굴삭"
+skill_type = 0
+skill_description = "3연속 관통 공격. 연속 명중 시 손상도 추가 -1."
+skill_damage = 16.0
+skill_action_cost = 1
+skill_target = 1
+hit_count = 3
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

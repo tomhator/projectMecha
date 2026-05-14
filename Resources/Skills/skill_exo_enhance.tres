@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s232"]
+
+[resource]
+script = ExtResource("1_s232")
+skill_id = 232
+skill_name = "외골격 강화"
+skill_type = 2
+skill_description = "코어 최대 HP +35 즉시 증가, HP +35 회복 (이번 런 지속)."
+skill_action_cost = 1
+skill_target = 0
+skill_heal = 35.0
+permanent_max_hp = 35.0
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

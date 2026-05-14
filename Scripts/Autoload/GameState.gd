@@ -69,16 +69,41 @@ func equip_part(part: PartsData, slot: CoreData.CoreSlot) -> void:
 		current_payload -= prev.parts_weight
 	equipped_parts[slot] = part
 	current_payload += part.parts_weight
+	current_action_count = get_max_action_count()
 	EventBus.parts_equipped.emit(part, slot)
 	EventBus.payload_changed.emit(self, current_payload, current_core.core_max_payload)
+	EventBus.action_count_changed.emit(self, current_action_count)
 
 func unequip_part(slot: CoreData.CoreSlot) -> void:
 	var prev: PartsData = equipped_parts[slot]
 	if prev != null:
 		current_payload -= prev.parts_weight
 	equipped_parts[slot] = null
+	current_action_count = get_max_action_count()
 	EventBus.parts_unequipped.emit(prev, slot)
 	EventBus.payload_changed.emit(self, current_payload, current_core.core_max_payload)
+	EventBus.action_count_changed.emit(self, current_action_count)
+
+func get_max_action_count() -> int:
+	if current_core == null:
+		return 0
+	var total: int = current_core.core_action_count
+	for slot: CoreData.CoreSlot in [CoreData.CoreSlot.ARM_L, CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.BACK]:
+		var p: PartsData = equipped_parts.get(slot)
+		if p != null:
+			total += p.ap_contribution
+	return total
+
+func is_overloaded() -> bool:
+	var leg: PartsData = equipped_parts.get(CoreData.CoreSlot.LEG)
+	if leg == null:
+		return false
+	var arm_back_weight: float = 0.0
+	for slot: CoreData.CoreSlot in [CoreData.CoreSlot.ARM_L, CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.BACK]:
+		var p: PartsData = equipped_parts.get(slot)
+		if p != null:
+			arm_back_weight += p.parts_weight
+	return arm_back_weight > leg.max_load_bonus
 
 # 재화 추가/차감
 func add_credits(amount: int) -> void:

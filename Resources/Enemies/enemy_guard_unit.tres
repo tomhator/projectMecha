@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
 [ext_resource type="Script" path="res://Resources/EnemyData.gd" id="2_enemy"]
 [ext_resource type="Resource" path="res://Resources/Skills/skill_heavy_punch.tres" id="3_punch"]
-[ext_resource type="Resource" path="res://Resources/Skills/skill_iron_shield.tres" id="4_shield"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_iron_shield_guard.tres" id="4_shield"]
 
 [resource]
 script = ExtResource("2_enemy")

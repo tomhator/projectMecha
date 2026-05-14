@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_is001"]
+
+[resource]
+script = ExtResource("1_is001")
+skill_id = 2011
+skill_name = "철갑 방어"
+skill_type = 1
+skill_description = "두꺼운 철갑을 전개해 쉴드를 충전한다. (경장갑 유닛용)"
+skill_defense = 5.0
+skill_action_cost = 2
+skill_target = 0
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

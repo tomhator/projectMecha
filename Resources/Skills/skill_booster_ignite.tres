@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s233"]
+
+[resource]
+script = ExtResource("1_s233")
+skill_id = 233
+skill_name = "부스터 점화"
+skill_type = 3
+skill_description = "이번 턴 행동력 +1. 행동력 소모 없이 사용."
+skill_action_cost = 0
+skill_target = 0
+is_free_action = true
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

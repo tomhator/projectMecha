@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s214"]
+
+[resource]
+script = ExtResource("1_s214")
+skill_id = 214
+skill_name = "에너지 흡취"
+skill_type = 0
+skill_description = "피해를 주고 피해량의 40%를 코어 HP로 회복."
+skill_damage = 22.0
+skill_action_cost = 1
+skill_target = 1
+skill_heal = 0.4
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

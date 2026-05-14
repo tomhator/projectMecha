@@ -50,7 +50,7 @@ theme_override_constants/separation = 20
 clip_contents = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 6.0
+size_flags_stretch_ratio = 4.0
 alignment = 1
 theme_override_constants/separation = 8
 
@@ -69,7 +69,7 @@ theme_override_constants/separation = 8
 [node name="RightColumn" type="VBoxContainer" parent="MainContainer" unique_id=3000000001]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_stretch_ratio = 4.0
+size_flags_stretch_ratio = 6.0
 theme_override_constants/separation = 8
 
 [node name="InventoryTitle" type="Label" parent="MainContainer/RightColumn" unique_id=3000000002]
@@ -88,6 +88,20 @@ size_flags_horizontal = 3
 theme_override_constants/h_separation = 6
 theme_override_constants/v_separation = 6
 columns = 5
+
+[node name="APOrbsRow" type="HBoxContainer" parent="." unique_id=6000000001]
+layout_mode = 1
+anchors_preset = 0
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -104.0
+offset_right = 280.0
+offset_bottom = -82.0
+grow_vertical = 0
+theme_override_constants/separation = 4
 
 [node name="PayloadBar" type="ProgressBar" parent="." unique_id=4000000001]
 layout_mode = 1

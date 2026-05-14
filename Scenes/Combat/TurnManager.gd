@@ -12,10 +12,12 @@ var current_phase: TurnPhase = TurnPhase.PLAYER_TURN
 var player_mecha: MechaEntity = null
 var enemies: Array[EnemyEntity] = []
 var actions_left: int = 0
+var current_turn: int = 0
 
 func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:
 	player_mecha = mecha
 	enemies = enemy_list
+	current_turn = 0
 	player_mecha.setup()
 	for enemy: EnemyEntity in enemies:
 		enemy.setup()
@@ -26,9 +28,12 @@ func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:
 func start_player_turn() -> void:
 	current_phase = TurnPhase.PLAYER_TURN
 	actions_left = GameState.current_action_count
+	current_turn += 1
+	EventBus.combat_turn_changed.emit(current_turn)
 	phase_changed.emit(current_phase)
 	var usable: Array[SkillData] = _get_usable_skills()
-	print("--- [플레이어 턴] HP: %.0f | 쉴드: %.0f | 행동력: %d | 사용 가능 스킬: %s ---" % [
+	print("--- [턴 %d · 플레이어] HP: %.0f | 쉴드: %.0f | 행동력: %d | 사용 가능 스킬: %s ---" % [
+		current_turn,
 		GameState.current_hp,
 		GameState.current_shield,
 		actions_left,

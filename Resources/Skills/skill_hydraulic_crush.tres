@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s223"]
+
+[resource]
+script = ExtResource("1_s223")
+skill_id = 223
+skill_name = "유압 파쇄"
+skill_type = 0
+skill_description = "극단발 최고화력. 방어력 20% 무시."
+skill_damage = 58.0
+skill_action_cost = 2
+skill_target = 1
+armor_penetration = 0.2
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

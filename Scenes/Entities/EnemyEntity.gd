@@ -28,17 +28,38 @@ func setup_from_data(data: EnemyData) -> void:
 	skills = data.skills
 
 func take_damage(damage: float) -> void:
+	damage = maxf(damage, 0.0)
+	# 쉴드·HP가 이전 프레임/버그로 범위를 벗어나면 흡수 계산이 깨질 수 있음 → 먼저 클램프
+	current_shield = clampf(current_shield, 0.0, enemy_max_shield)
+	current_hp = clampf(current_hp, 0.0, enemy_max_hp)
 	var absorbed: float = minf(current_shield, damage)
 	current_shield -= absorbed
 	current_hp -= (damage - absorbed)
-	current_hp = maxf(current_hp, 0.0)
-	print("  > [%s] 피격: %.0f 데미지 (HP: %.0f | 쉴드: %.0f)" % [
-		enemy_name, damage, current_hp, current_shield
+	current_hp = clampf(current_hp, 0.0, enemy_max_hp)
+	current_shield = clampf(current_shield, 0.0, enemy_max_shield)
+	var to_hp: float = damage - absorbed
+	var absorb_note: String = ""
+	if absorbed > 0.0:
+		absorb_note = " — 쉴드 %.0f 흡수, HP에 %.0f" % [absorbed, to_hp]
+	elif damage > 0.0:
+		absorb_note = " — 쉴드 없음, HP에 전부"
+	print("  > [%s] 피격: %.0f 데미지%s → HP: %.0f | 쉴드: %.0f" % [
+		enemy_name, damage, absorb_note, current_hp, current_shield
 	])
 	EventBus.hp_changed.emit(self, current_hp, enemy_max_hp)
 	EventBus.shield_changed.emit(self, current_shield, enemy_max_shield)
 	if is_defeated():
 		print("  > [%s] 격파!" % enemy_name)
+
+
+## `take_damage`와 동일한 흡수 규칙으로, 들어오는 피해가 쉴드·HP에 어떻게 나뉘는지 미리 계산 (UI 프리뷰용).
+func preview_incoming_damage_split(damage: float) -> Vector2:
+	damage = maxf(damage, 0.0)
+	var sh: float = clampf(current_shield, 0.0, enemy_max_shield)
+	var absorbed: float = minf(sh, damage)
+	var to_hp: float = damage - absorbed
+	return Vector2(absorbed, to_hp)
+
 
 func is_defeated() -> bool:
 	return current_hp <= 0.0
@@ -50,7 +71,6 @@ func execute_actions(target: Node) -> void:
 			target.take_damage(action.skill_damage * attack_multiplier)
 		if action.skill_defense > 0.0:
 			_heal_shield(action.skill_defense)
-			print("  > [%s] 쉴드 +%.0f" % [enemy_name, action.skill_defense])
 		if action.skill_heal > 0.0:
 			_heal_hp(action.skill_heal)
 			print("  > [%s] HP +%.0f" % [enemy_name, action.skill_heal])
@@ -82,5 +102,18 @@ func _heal_hp(amount: float) -> void:
 	EventBus.hp_changed.emit(self, current_hp, enemy_max_hp)
 
 func _heal_shield(amount: float) -> void:
-	current_shield = minf(current_shield + amount, enemy_max_shield)
+	var before: float = clampf(current_shield, 0.0, enemy_max_shield)
+	current_shield = before
+	var add: float = maxf(amount, 0.0)
+	var after: float = minf(current_shield + add, enemy_max_shield)
+	var gained: float = after - before
+	current_shield = after
 	EventBus.shield_changed.emit(self, current_shield, enemy_max_shield)
+	if add > 0.0:
+		if gained < add - 0.001:
+			print(
+				"  > [%s] 쉴드 회복 시도 +%.0f → 실제 +%.0f (최대 %.0f / 현재 %.0f)"
+				% [enemy_name, add, gained, enemy_max_shield, current_shield]
+			)
+		else:
+			print("  > [%s] 쉴드 +%.0f (%.0f / %.0f)" % [enemy_name, gained, current_shield, enemy_max_shield])

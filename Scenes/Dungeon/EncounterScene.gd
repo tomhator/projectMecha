@@ -80,7 +80,8 @@ func _apply_result(result: String) -> void:
 			result_label.text = "부품 [%s]을 획득했지만, 코어가 손상됐다. (HP -10%%)" % part.parts_name
 		"B":
 			var part2: PartsData = RewardManager.generate_choices(PartsData.PartsGrade.COMMON)[0]
-			part2.is_damaged = true
+			part2.durability = maxi(part2.durability - 1, 0)
+			part2._normalize_durability()
 			GameState.add_to_inventory(part2)
 			result_label.text = "손상된 부품 [%s]을 회수했다. 스킬 위력 -30%%" % part2.parts_name
 		"C":

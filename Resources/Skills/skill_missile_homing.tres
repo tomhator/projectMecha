@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s204"]
+
+[resource]
+script = ExtResource("1_s204")
+skill_id = 204
+skill_name = "유도 미사일 공격"
+skill_type = 0
+skill_description = "적 1~3명에게 피해 분산. 타겟이 1명이면 전체 집중."
+skill_damage = 18.0
+skill_action_cost = 1
+skill_target = 1
+hit_count = 3
+multi_target = true
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

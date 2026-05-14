@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="PartsData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" uid="uid://c2b3j3p3cjckn" path="res://Resources/PartsData.gd" id="2_parts"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_siege_mode.tres" id="3_skill"]
+
+[resource]
+script = ExtResource("2_parts")
+parts_id = 1303
+parts_name = "포대형 무한궤도"
+parts_type = 3
+parts_description = "시즈모드 ON/OFF 전환. ON 시 공격력 +35%, 매 턴 행동력·손상도 -1."
+parts_weight = 22.0
+ap_contribution = 0
+max_load_bonus = 25
+drop_weight = 7.0
+affix_pool = Array[String](["overload", "greedy", "kernel_panic", "mindless", "gambler", "serious_punch"])
+parts_skills = Array[ExtResource("1_skill_type")]([ExtResource("3_skill")])
+metadata/_custom_type_script = "uid://c2b3j3p3cjckn"

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s236"]
+
+[resource]
+script = ExtResource("1_s236")
+skill_id = 236
+skill_name = "드론 정비"
+skill_type = 2
+skill_description = "장착된 모든 파츠 손상도 즉시 +2 회복."
+skill_action_cost = 1
+skill_target = 0
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

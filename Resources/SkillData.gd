@@ -5,8 +5,8 @@ class_name SkillData
 enum SkillType { ATTACK, DEFENSE, HEAL, PASSIVE }
 enum SkillTarget { SELF, ENEMY }
 
-enum SkillBuff { ATTACK_UP, DEFENSE_UP, HEAL_UP, SPEED_UP }
-enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN }
+enum SkillBuff { ATTACK_UP, DEFENSE_UP, HEAL_UP, SPEED_UP, SHIELD_REGEN, DAMAGE_BOOST, DAMAGE_REDUCTION, EVASION_UP }
+enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DOWN }
 
 # 스킬 기본 정보
 @export var skill_id: int = 0
@@ -30,3 +30,21 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN }
 
 # 스킬 타겟 정보
 @export var skill_target: SkillTarget = SkillTarget.SELF
+
+# 타격 관련
+@export var hit_count: int = 1
+@export var armor_penetration: float = 0.0
+@export var multi_target: bool = false
+
+# 방어/보호
+@export var shield_amount: float = 0.0
+@export var invincible_hit_count: int = 0
+@export var has_counter_attack: bool = false
+
+# 버프/디버프 지속
+@export var buff_turns: int = 0
+
+# 특수 동작
+@export var is_toggle: bool = false
+@export var is_free_action: bool = false
+@export var permanent_max_hp: float = 0.0

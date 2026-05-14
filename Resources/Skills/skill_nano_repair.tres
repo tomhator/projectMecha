@@ -1,14 +1,17 @@
 [gd_resource type="Resource" script_class="SkillData" format=3]
 
-[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_nr001"]
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s234"]
 
 [resource]
-script = ExtResource("1_nr001")
-skill_id = 402
+script = ExtResource("1_s234")
+skill_id = 234
 skill_name = "나노 수복"
 skill_type = 2
-skill_description = "나노 봇을 방출해 코어 구조를 재구성한다."
-skill_heal = 30.0
-skill_action_cost = 4
+skill_description = "3턴간 매 턴 시작 시 코어 HP +10 자동 회복 (버프)."
+skill_action_cost = 1
 skill_target = 0
+has_buff = true
+buff_type = 2
+buff_turns = 3
+skill_heal = 10.0
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s211"]
+
+[resource]
+script = ExtResource("1_s211")
+skill_id = 211
+skill_name = "중장갑 전개"
+skill_type = 1
+skill_description = "1턴 간 피해 감소 + 방어 수치 부여. 가장 단순하고 가장 두꺼운 방어."
+skill_defense = 42.0
+skill_action_cost = 1
+skill_target = 0
+has_buff = true
+buff_type = 1
+buff_turns = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

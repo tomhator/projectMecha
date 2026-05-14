@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s242"]
+
+[resource]
+script = ExtResource("1_s242")
+skill_id = 242
+skill_name = "중심 잡기"
+skill_type = 1
+skill_description = "2턴간 받는 피해 -10%, 하중 초과 패널티 무효."
+skill_action_cost = 1
+skill_target = 0
+has_buff = true
+buff_type = 6
+buff_turns = 2
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

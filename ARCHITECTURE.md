@@ -46,7 +46,7 @@
         - `RunStatusStrip.tscn` / `RunStatusStrip.gd`: 런 상단 HUD(층·HP/쉴드 바+현재값·크레딧·설정 스텁). 주요 런 씬에 인스턴스.
         - `CombatUi.tscn` / `CombatUI.gd`: 전투 UI(좌 플레이어/우 적·행동력·스킬·다중 적 타겟팅).
 - `Scripts/`: 전역 유틸리티 및 싱글톤(AutoLoad).
-    - `Autoload/`: `EventBus`, `GameState` 등 전역 시스템.
+    - `Autoload/`: `EventBus`, `GameState`, `DungeonManager`, `PartsFactory`, `RewardManager` 등 전역 시스템.
 
 ---
 
@@ -66,11 +66,12 @@
 ### 3.3 전역 시스템 (Global Systems)
 - **EventBus:** 게임 내 전역 이벤트를 중개합니다 (전투 시작/종료, 부품 장착, 스탯 변경 등).
 - **GameState:** 현재 런의 상태(층수, 크레딧, 메카의 현재 HP 및 장착 부품)를 유지하고 관리합니다.
+- **PartsFactory:** `PartsData` 템플릿을 복제해 `stat_multiplier`·affix 개수(드롭 등급별)·`affix_pool` 롤 및 `durability` 초기화를 수행합니다.
 
 ### 3.4 데이터 모델 (Data Models)
 현재 프로젝트에서 사용 중인 핵심 데이터 구조는 다음과 같습니다:
 - **CoreData:** 메카의 기본 HP, 하중 제한, 행동 횟수 등을 정의.
-- **PartsData:** 부품의 종류(팔/등/다리), 등급, 스탯 보정치 및 할당된 스킬을 정의.
+- **PartsData:** 슬롯 타입·템플릿 등급·`drop_weight`/`affix_pool`·롤 결과(`stat_multiplier`, `rolled_affixes`)·`max_durability`/`durability`·`is_worn()`/`is_broken()`/`grade()` 및 스킬 참조.
 - **SkillData:** 피해량, 쿨다운, 대상 지정(자기/적), 부가 효과(버프/디버프)를 정의.
 - **EnemyData:** 적의 HP, 쉴드, 공격 배율, 티어, 스킬 목록을 정의.
 

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s245"]
+
+[resource]
+script = ExtResource("1_s245")
+skill_id = 245
+skill_name = "선제 도약"
+skill_type = 3
+skill_description = "즉시 스킬 1회 무료 추가 사용. 지정한 스킬은 행동력·손상도 소모 없이 발동."
+skill_action_cost = 0
+skill_target = 0
+is_free_action = true
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

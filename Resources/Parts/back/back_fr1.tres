@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="PartsData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" uid="uid://c2b3j3p3cjckn" path="res://Resources/PartsData.gd" id="2_parts"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_field_repair.tres" id="3_skill"]
+
+[resource]
+script = ExtResource("2_parts")
+parts_id = 1208
+parts_name = "현장 수리 키트"
+parts_type = 2
+parts_description = "선택 파츠 손상도 즉시 max 완전 복구."
+parts_weight = 9.0
+drop_weight = 8.0
+affix_pool = Array[String](["meticulous", "evolution_lord", "zombie_process", "greedy", "productive", "kernel_panic"])
+parts_skills = Array[ExtResource("1_skill_type")]([ExtResource("3_skill")])
+metadata/_custom_type_script = "uid://c2b3j3p3cjckn"

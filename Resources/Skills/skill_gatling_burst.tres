@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s202"]
+
+[resource]
+script = ExtResource("1_s202")
+skill_id = 202
+skill_name = "기관포 연사"
+skill_type = 0
+skill_description = "단일 타겟 5연발. 1발 수치 낮음, 총합 높음."
+skill_damage = 9.0
+skill_action_cost = 1
+skill_target = 1
+hit_count = 5
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

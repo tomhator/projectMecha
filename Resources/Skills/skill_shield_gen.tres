@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s231"]
+
+[resource]
+script = ExtResource("1_s231")
+skill_id = 231
+skill_name = "방어막 전개"
+skill_type = 1
+skill_description = "3턴간 매 턴 시작 시 쉴드 +12 자동 생성 (버프)."
+skill_action_cost = 1
+skill_target = 0
+has_buff = true
+buff_type = 4
+buff_turns = 3
+shield_amount = 12.0
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

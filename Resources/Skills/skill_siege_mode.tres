@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s241"]
+
+[resource]
+script = ExtResource("1_s241")
+skill_id = 241
+skill_name = "시즈모드 돌입"
+skill_type = 3
+skill_description = "시즈모드 ON/OFF 전환. ON 시 공격력 +35%, 매 턴 행동력 -1, 매 턴 손상도 추가 -1."
+skill_action_cost = 0
+skill_target = 0
+is_toggle = true
+is_free_action = true
+has_buff = true
+buff_type = 5
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_s243"]
+
+[resource]
+script = ExtResource("1_s243")
+skill_id = 243
+skill_name = "중장갑 전개"
+skill_type = 1
+skill_description = "이번 전투 방어력 +20 영구 증가. 사용 후 재사용 불가."
+skill_defense = 20.0
+skill_action_cost = 1
+skill_target = 0
+has_buff = true
+buff_type = 1
+buff_turns = 99
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

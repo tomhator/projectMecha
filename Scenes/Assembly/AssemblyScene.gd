@@ -9,6 +9,7 @@ const DUNGEON_MAP_SCENE: String = "res://Scenes/Dungeon/DungeonMapScene.tscn"
 @onready var payload_bar: ProgressBar       = $PayloadBar
 @onready var close_button: Button           = $CloseButton
 @onready var hint_label: Label              = $HintLabel
+@onready var _ap_orbs_row: HBoxContainer    = $APOrbsRow
 
 # ── 소켓 맵 ─────────────────────────────
 var _sockets: Dictionary = {}  # CoreData.CoreSlot → PartSocketUI
@@ -21,6 +22,8 @@ const CELL_MAX: int = 220
 const INVENTORY_COLS: int = 5
 const INVENTORY_ROWS: int = 6
 const INVENTORY_SLOTS: int = INVENTORY_COLS * INVENTORY_ROWS
+## 인벤토리 슬롯·카드는 정사각형 (픽셀 한 변 길이)
+const INVENTORY_CELL_PX: int = 96
 
 var _chassis_spacers: Array[Control] = []
 var _core_placeholder_panel: Panel = null
@@ -34,6 +37,19 @@ func _ready() -> void:
 	_rebuild_inventory()
 	_update_payload()
 	call_deferred("_refresh_chassis_layout")
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_DRAG_END:
+		call_deferred("_clear_assembly_inventory_drag")
+
+
+func _clear_assembly_inventory_drag() -> void:
+	if EventBus.assembly_drag_inventory_part == null:
+		return
+	EventBus.assembly_drag_inventory_part = null
+	get_tree().call_group("part_socket_drag_highlight", "end_drag_inventory_highlight")
+
 
 # ── 소켓 구성 (십자 배치) ─────────────────
 func _build_sockets() -> void:
@@ -163,17 +179,30 @@ func _rebuild_inventory() -> void:
 		if idx < parts.size():
 			var part: PartsData = parts[idx]
 			var card := _make_card(part)
-			card.custom_minimum_size = Vector2(104.0, 76.0)
-			inventory_grid.add_child(card)
+			card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			card.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			inventory_grid.add_child(_wrap_inventory_square(card))
 			card.setup(part)
 		else:
-			inventory_grid.add_child(_make_empty_inventory_cell())
+			var empty_p := _make_empty_inventory_cell()
+			empty_p.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			empty_p.size_flags_vertical = Control.SIZE_EXPAND_FILL
+			inventory_grid.add_child(_wrap_inventory_square(empty_p))
 		idx += 1
+
+
+func _wrap_inventory_square(inner: Control) -> AspectRatioContainer:
+	var ar := AspectRatioContainer.new()
+	ar.ratio = 1.0
+	ar.custom_minimum_size = Vector2(float(INVENTORY_CELL_PX), float(INVENTORY_CELL_PX))
+	ar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ar.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	ar.add_child(inner)
+	return ar
 
 
 func _make_empty_inventory_cell() -> Panel:
 	var p := Panel.new()
-	p.custom_minimum_size = Vector2(104.0, 76.0)
 	var st := StyleBoxFlat.new()
 	st.bg_color = Color(0.12, 0.14, 0.18, 0.85)
 	st.set_border_width_all(1)
@@ -247,3 +276,26 @@ func _update_payload() -> void:
 		payload_label.remove_theme_color_override("font_color")
 		hint_label.text = "파츠를 소켓으로 끌어다 놓아 장착하세요. 소켓 클릭으로 해제."
 		hint_label.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+
+	_update_ap_orbs()
+
+
+func _update_ap_orbs() -> void:
+	if _ap_orbs_row == null:
+		return
+	for child: Node in _ap_orbs_row.get_children():
+		child.queue_free()
+
+	var tag := Label.new()
+	tag.text = "행동력"
+	tag.add_theme_font_size_override("font_size", 11)
+	tag.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_ap_orbs_row.add_child(tag)
+
+	var ap: int = GameState.get_max_action_count()
+	for _i: int in ap:
+		var orb := ColorRect.new()
+		orb.custom_minimum_size = Vector2(18.0, 18.0)
+		orb.color = Color(0.35, 0.85, 0.45, 1.0)
+		_ap_orbs_row.add_child(orb)
