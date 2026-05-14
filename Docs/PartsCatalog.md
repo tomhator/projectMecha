@@ -1,8 +1,9 @@
 ---
 tags: [project/project-mecha, document/parts-catalog, status/in-progress]
 status: in-progress
+version: 0.2
 created: 2026-05-12
-updated: 2026-05-13
+updated: 2026-05-14
 ---
 
 # 파츠 카탈로그 (Parts Catalog)

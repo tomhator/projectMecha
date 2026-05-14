@@ -1,9 +1,9 @@
 ---
 tags: [project/project-mecha, document/parts-system, status/in-progress]
 status: in-progress
-version: 0.4
+version: 0.5
 created: 2026-05-11
-updated: 2026-05-12
+updated: 2026-05-14
 ---
 
 # 파츠 시스템 명세 (Parts System Specification)
