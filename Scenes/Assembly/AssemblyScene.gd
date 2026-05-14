@@ -52,15 +52,16 @@ func _build_sockets() -> void:
 	row1.add_child(_make_socket_spacer())
 	chassis_panel.add_child(row1)
 
-	# Row 2: [ARM_L] [코어 플레이스홀더] [ARM_R]
+	# Row 2: [ARM_R] [코어 플레이스홀더] [ARM_L]
+	# 코어가 카메라를 바라보므로 메크 기준 오른팔이 화면 왼쪽에 위치
 	var row2 := _make_chassis_row()
-	var arml_socket := _make_socket(CoreData.CoreSlot.ARM_L)
-	_sockets[CoreData.CoreSlot.ARM_L] = arml_socket
-	row2.add_child(arml_socket)
-	row2.add_child(_make_core_placeholder())
 	var armr_socket := _make_socket(CoreData.CoreSlot.ARM_R)
 	_sockets[CoreData.CoreSlot.ARM_R] = armr_socket
 	row2.add_child(armr_socket)
+	row2.add_child(_make_core_placeholder())
+	var arml_socket := _make_socket(CoreData.CoreSlot.ARM_L)
+	_sockets[CoreData.CoreSlot.ARM_L] = arml_socket
+	row2.add_child(arml_socket)
 	chassis_panel.add_child(row2)
 
 	# Row 3: [빈칸] [LEG] [빈칸]
