@@ -1,8 +1,9 @@
 ---
 tags: [project/project-mecha, document/parts-catalog, status/in-progress]
 status: in-progress
+version: 0.2
 created: 2026-05-12
-updated: 2026-05-13
+updated: 2026-05-14
 ---
 
 # 파츠 카탈로그 (Parts Catalog)
@@ -21,7 +22,7 @@ updated: 2026-05-13
 
 ## ARM_L — 좌팔 (8종)
 
-> 주력 공격 슬롯. 총기류 4종(공용) + 근접무기 4종(ARM_L 전용).
+> 보조 무장 / 방어 슬롯. 총기류 4종(공용) + 방어·반응 4종(ARM_L 전용).
 
 ### 총기류 (좌)
 
@@ -52,62 +53,14 @@ updated: 2026-05-13
 
 ---
 
-### 근접무기 (ARM_L 전용)
-
-| 파일명 | 이름 | 스킬 | base damage | base weight | 드롭 가중치 |
-|--------|------|------|------------|------------|-----------|
-| `arm_l_vhf9` | 발열 블레이드 (좌) | 발열 참격 | 30 | 16 | 9 |
-| `arm_l_ew4` | 충격 와이어 (좌) | 전격 포박 | 22 | 12 | 8 |
-| `arm_l_yb20` | 유압 파쇄기 (좌) | 유압 파쇄 | 58 | 30 | 4 |
-| `arm_l_rd9` | 회전 굴삭기 (좌) | 회전 굴삭 | 16×3 | 26 | 6 |
-
-**스킬 상세**
-
-| 이름 | 행동력 | 설명 |
-|------|--------|------|
-| 발열 참격 | 1 | 근접 공격 + 화상(BURN) 1턴 부여. 화상은 적 턴 시작 시 추가 피해 |
-| 전격 포박 | 1 | 전격 공격 + 적 행동력 -1 (다음 턴 스킬 1회 사용 불가) |
-| 유압 파쇄 | 2 | 극단발 최고화력. 방어력 20% 무시. 충격 시 섀시 흔들림(선딜 있음) |
-| 회전 굴삭 | 1 | 3연속 관통 공격. 연속 명중 시 손상도 추가 -1 |
-
-**affix 풀**
-
-| 파츠 | affix 풀 |
-|------|---------|
-| 발열 블레이드 | `overload` `backdoor` `kernel_panic` `lifedrain` `greedy` `zombie_process` |
-| 충격 와이어 | `backdoor` `counter_instinct` `productive` `zombie_process` `meticulous` `momentum` |
-| 유압 파쇄기 | `overload` `serious_punch` `greedy` `kernel_panic` `meticulous` `gambler` |
-| 회전 굴삭기 | `mindless` `momentum` `lifedrain` `gambler` `overload` `zombie_process` |
-
----
-
-## ARM_R — 우팔 (8종)
-
-> 보조 무장 / 방어 슬롯. 총기류 4종(공용) + 방어·반응 4종(ARM_R 전용).
-
-### 총기류 (우)
-
-총기류 4종은 ARM_L과 스킬·수치 동일. 슬롯만 다름.
-
-| 파일명 | 이름 | 스킬 | base damage | base weight | 드롭 가중치 |
-|--------|------|------|------------|------------|-----------|
-| `arm_r_m88` | 대구경 반자동 캐논 (우) | 대구경 포격 | 38 | 25 | 15 |
-| `arm_r_gr21` | 자동 기관포 (우) | 기관포 연사 | 9×5 | 18 | 14 |
-| `arm_r_lg40` | 레일건 (우) | 관통 포격 | 42 | 22 | 8 |
-| `arm_r_ml7` | 다연장 유도 미사일 시스템 (우) | 유도 미사일 공격 | 18×3 | 20 | 10 |
-
-> affix 풀은 ARM_L 총기류와 동일.
-
----
-
-### 방어·반응 (ARM_R 전용)
+### 방어·반응 (ARM_L 전용)
 
 | 파일명 | 이름 | 스킬 | base 수치 | base weight | 드롭 가중치 |
 |--------|------|------|----------|------------|-----------|
-| `arm_r_cp40` | 복합 방호판 (우) | 중장갑 전개 | defense 42 | 28 | 12 |
-| `arm_r_emf3` | 전자기 배리어 (우) | EMF 배리어 | shield 35 | 16 | 11 |
-| `arm_r_gdclaw` | 포식 집게팔 (우) | 요격 | defense 26, counter | 18 | 6 |
-| `arm_r_gdtendril` | 기계식 나노 재구성 촉수 (우) | 에너지 흡취 | damage 22, heal 40% | 15 | 5 |
+| `arm_l_cp40` | 복합 방호판 (좌) | 중장갑 전개 | defense 42 | 28 | 12 |
+| `arm_l_emf3` | 전자기 배리어 (좌) | EMF 배리어 | shield 35 | 16 | 11 |
+| `arm_l_gdclaw` | 포식 집게팔 (좌) | 요격 | defense 26, counter | 18 | 6 |
+| `arm_l_gdtendril` | 기계식 나노 재구성 촉수 (좌) | 에너지 흡취 | damage 22, heal 40% | 15 | 5 |
 
 **스킬 상세**
 
@@ -130,6 +83,54 @@ updated: 2026-05-13
 | 전자기 배리어 | `meticulous` `counter_instinct` `productive` `evolution_lord` `zombie_process` `backdoor` |
 | 포식 집게팔 | `counter_instinct` `overload` `backdoor` `kernel_panic` `gambler` `zombie_process` |
 | 기계식 나노 재구성 촉수 | `lifedrain` `overload` `kernel_panic` `greedy` `gambler` `serious_punch` |
+
+---
+
+## ARM_R — 우팔 (8종)
+
+> 주력 무장 슬롯. 총기류 4종(공용) + 근접무기 4종(ARM_R 전용).
+
+### 총기류 (우)
+
+총기류 4종은 ARM_L과 스킬·수치 동일. 슬롯만 다름.
+
+| 파일명 | 이름 | 스킬 | base damage | base weight | 드롭 가중치 |
+|--------|------|------|------------|------------|-----------|
+| `arm_r_m88` | 대구경 반자동 캐논 (우) | 대구경 포격 | 38 | 25 | 15 |
+| `arm_r_gr21` | 자동 기관포 (우) | 기관포 연사 | 9×5 | 18 | 14 |
+| `arm_r_lg40` | 레일건 (우) | 관통 포격 | 42 | 22 | 8 |
+| `arm_r_ml7` | 다연장 유도 미사일 시스템 (우) | 유도 미사일 공격 | 18×3 | 20 | 10 |
+
+> affix 풀은 ARM_L 총기류와 동일.
+
+---
+
+### 근접무기 (ARM_R 전용)
+
+| 파일명 | 이름 | 스킬 | base damage | base weight | 드롭 가중치 |
+|--------|------|------|------------|------------|-----------|
+| `arm_r_vhf9` | 발열 블레이드 (우) | 발열 참격 | 30 | 16 | 9 |
+| `arm_r_ew4` | 충격 와이어 (우) | 전격 포박 | 22 | 12 | 8 |
+| `arm_r_yb20` | 유압 파쇄기 (우) | 유압 파쇄 | 58 | 30 | 4 |
+| `arm_r_rd9` | 회전 굴삭기 (우) | 회전 굴삭 | 16×3 | 26 | 6 |
+
+**스킬 상세**
+
+| 이름 | 행동력 | 설명 |
+|------|--------|------|
+| 발열 참격 | 1 | 근접 공격 + 화상(BURN) 1턴 부여. 화상은 적 턴 시작 시 추가 피해 |
+| 전격 포박 | 1 | 전격 공격 + 적 행동력 -1 (다음 턴 스킬 1회 사용 불가) |
+| 유압 파쇄 | 2 | 극단발 최고화력. 방어력 20% 무시. 충격 시 섀시 흔들림(선딜 있음) |
+| 회전 굴삭 | 1 | 3연속 관통 공격. 연속 명중 시 손상도 추가 -1 |
+
+**affix 풀**
+
+| 파츠 | affix 풀 |
+|------|---------|
+| 발열 블레이드 | `overload` `backdoor` `kernel_panic` `lifedrain` `greedy` `zombie_process` |
+| 충격 와이어 | `backdoor` `counter_instinct` `productive` `zombie_process` `meticulous` `momentum` |
+| 유압 파쇄기 | `overload` `serious_punch` `greedy` `kernel_panic` `meticulous` `gambler` |
+| 회전 굴삭기 | `mindless` `momentum` `lifedrain` `gambler` `overload` `zombie_process` |
 
 ---
 
@@ -185,16 +186,18 @@ updated: 2026-05-13
 
 > 다리 슬롯. 전원 액티브 스킬. 방어·반격·기동 버프 위주.
 
-| 파일명 | 이름 | 스킬 | 유형 | base 수치 | base weight | 드롭 가중치 |
-|--------|------|------|------|----------|------------|-----------|
-| `leg_rampart8` | 중장 무한궤도 | 중장갑 전개 | 액티브 | 이번 전투 방어력 +20 (지속) | 28 | 13 |
-| `leg_porteur4` | 중형 4각 | 중심 잡기 | 액티브 | 2턴간 피해 감소 10%, 하중 패널티 무효 | 18 | 11 |
-| `leg_bastion1` | 포대형 무한궤도 | 시즈모드 돌입 | 액티브 | 공격력 +35%, AP -1/턴 | 22 | 7 |
-| `leg_springer6` | 반동 역관절 2각 | 반격 준비 | 액티브 | 다음 피격 1회 확정 반격 (방어 수치 40%) | 20 | 9 |
-| `leg_spearhead2` | 강습 역관절 2각 | 선제 도약 | 액티브 | 즉시 무료 스킬 1회 추가 사용 | 16 | 6 |
-| `leg_dampfer5` | 완충 4각 | 충격 완충 | 액티브 | 3턴간 받는 피해 20% 감소 (버프) | 24 | 12 |
-| `leg_harrier7` | 경량 역관절 2각 | 고기동 | 액티브 | 3턴간 회피율 +20% (버프) | 14 | 10 |
-| `leg_juke3` | 고속 역관절 2각 | 반응 회피 | 액티브 | 다음 적 공격 1회 완전 회피 | 15 | 8 |
+| 파일명 | 이름 | 스킬 | 유형 | base 수치 | base weight | 최대 하중 증가 | 드롭 가중치 |
+|--------|------|------|------|----------|------------|-------------|-----------|
+| `leg_rampart8` | 중장 무한궤도 | 중장갑 전개 | 액티브 | 이번 전투 방어력 +20 (지속) | 28 | +30 | 13 |
+| `leg_porteur4` | 중형 4각 | 중심 잡기 | 액티브 | 2턴간 피해 감소 10%, 하중 패널티 무효 | 18 | +20 | 11 |
+| `leg_bastion1` | 포대형 무한궤도 | 시즈모드 돌입 | 액티브 | 공격력 +35%, AP -1/턴 | 22 | +25 | 7 |
+| `leg_springer6` | 반동 역관절 2각 | 반격 준비 | 액티브 | 다음 피격 1회 확정 반격 (방어 수치 40%) | 20 | +12 | 9 |
+| `leg_spearhead2` | 강습 2각 | 선제 도약 | 액티브 | 즉시 무료 스킬 1회 추가 사용 | 16 | +10 | 6 |
+| `leg_dampfer5` | 완충 4각 | 충격 완충 | 액티브 | 3턴간 받는 피해 20% 감소 (버프) | 24 | +16 | 12 |
+| `leg_harrier7` | 경량 역관절 2각 | 고기동 | 액티브 | 3턴간 회피율 +20% (버프) | 14 | +6 | 10 |
+| `leg_juke3` | 고속 역관절 2각 | 반응 회피 | 액티브 | 다음 적 공격 1회 완전 회피 | 15 | +5 | 8 |
+| `leg_strider1` | 표준 2각 | 안정 자세 | 액티브 | 3턴간 방어력 +12 (버프) | 16 | +10 | 13 |
+| `leg_bulwark2` | 중형 2각 | 중심 고정 | 액티브 | 3턴간 방어력 +10, 디버프 지속 -1턴 (버프) | 21 | +14 | 9 |
 
 **스킬 상세**
 
@@ -208,6 +211,8 @@ updated: 2026-05-13
 | 충격 완충 | 1 | 3턴간 받는 피해 20% 감소 (버프) |
 | 고기동 | 1 | 3턴간 회피율 +20% (버프) |
 | 반응 회피 | 1 | 다음으로 받는 적 공격 1회를 완전 회피. 적 예고 행동을 보고 판단 |
+| 안정 자세 | 1 | 3턴간 방어력 +12 (버프). 단순하고 꾸준한 방어 증가 |
+| 중심 고정 | 1 | 3턴간 방어력 +10 + 적 디버프·상태이상 지속 1턴 단축 (버프) |
 
 > [!note] 시즈모드 전략
 > 포대형 무한궤도 시즈모드 ON 상태에서 매 턴 행동력 -1이 누적되므로 장기전보다 단기 화력 집중에 적합.
@@ -218,6 +223,8 @@ updated: 2026-05-13
 > **반동 역관절 2각 vs 고속 역관절 2각**: 반격 준비는 확정 반격, 반응 회피는 완전 회피. 전투 예상 피해에 따라 선택.
 >
 > **경량 역관절 2각 vs 고속 역관절 2각**: 고기동(확률 회피 버프)은 여러 턴에 걸쳐 작동하지만 불확실. 반응 회피(확정 1회 완전 회피)는 확실하지만 행동력 소모.
+>
+> **표준 2각 vs 중형 2각 vs 강습 2각**: 안정 자세는 꾸준한 방어 증가. 중심 고정은 디버프 빈도 높은 적 상대 유리. 강습 2각(선제 도약)은 선제 행동이 필요한 상황에 특화 — 행동력 소모 없이 즉시 스킬 1회 추가.
 
 **affix 풀**
 
@@ -227,7 +234,9 @@ updated: 2026-05-13
 | 중형 4각 | `meticulous` `productive` `counter_instinct` `gambler` `backdoor` `zombie_process` |
 | 포대형 무한궤도 | `overload` `greedy` `kernel_panic` `mindless` `gambler` `serious_punch` |
 | 반동 역관절 2각 | `counter_instinct` `overload` `gambler` `zombie_process` `backdoor` `kernel_panic` |
-| 강습 역관절 2각 | `serious_punch` `overload` `momentum` `gambler` `kernel_panic` `lifedrain` |
+| 강습 2각 | `serious_punch` `overload` `momentum` `gambler` `kernel_panic` `lifedrain` |
 | 완충 4각 | `meticulous` `greedy` `counter_instinct` `zombie_process` `backdoor` `kernel_panic` |
 | 경량 역관절 2각 | `productive` `counter_instinct` `gambler` `zombie_process` `meticulous` `backdoor` |
 | 고속 역관절 2각 | `counter_instinct` `meticulous` `productive` `backdoor` `momentum` `zombie_process` |
+| 표준 2각 | `meticulous` `counter_instinct` `greedy` `gambler` `backdoor` `productive` |
+| 중형 2각 | `meticulous` `greedy` `zombie_process` `counter_instinct` `kernel_panic` `overload` |
