@@ -19,8 +19,8 @@ const CHASSIS_COL_SEP: int = 8
 const CELL_MIN: int = 72
 const CELL_MAX: int = 220
 
-const INVENTORY_COLS: int = 5
-const INVENTORY_ROWS: int = 6
+const INVENTORY_COLS: int = 4
+const INVENTORY_ROWS: int = 4
 const INVENTORY_SLOTS: int = INVENTORY_COLS * INVENTORY_ROWS
 ## 인벤토리 슬롯·카드는 정사각형 (픽셀 한 변 길이)
 const INVENTORY_CELL_PX: int = 96

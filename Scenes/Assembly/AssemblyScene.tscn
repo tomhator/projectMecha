@@ -87,7 +87,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/h_separation = 6
 theme_override_constants/v_separation = 6
-columns = 5
+columns = 4
 
 [node name="APOrbsRow" type="HBoxContainer" parent="." unique_id=6000000001]
 layout_mode = 1
