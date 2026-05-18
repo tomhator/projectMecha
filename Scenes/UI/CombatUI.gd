@@ -15,7 +15,7 @@ const ENEMY_COL_MAX_W: float = 500.0
 @onready var enemy_container: HBoxContainer = %EnemyContainer
 @onready var action_orbs_row: HBoxContainer = %ActionOrbsRow
 @onready var core_name_label: Label = %CoreNameLabel
-@onready var parts_labels: VBoxContainer = %PartsLabels
+@onready var _mech_illustration: Control = %MechIllustration
 @onready var selection_status: Label = %SelectionStatus
 @onready var turn_label: Label = %TurnLabel
 
@@ -35,6 +35,8 @@ var _hover_damage_preview_enemy: EnemyEntity = null
 var _hover_self_for_preview: bool = false
 var _player_preview_label: Label = null
 var _player_target_catcher: Button = null
+var _mech_layers: Dictionary = {}   # CoreData.CoreSlot → ColorRect (slot layers)
+var _hud_icons: Dictionary = {}     # CoreData.CoreSlot → Panel (status HUD)
 
 
 func _ready() -> void:
@@ -44,6 +46,8 @@ func _ready() -> void:
 	EventBus.combat_turn_changed.connect(_on_combat_turn_changed)
 	EventBus.part_durability_changed.connect(_on_part_durability_changed)
 	battle_hbox.resized.connect(_apply_battle_column_split)
+	_build_mech_layers()
+	_build_parts_hud()
 	_refresh_player_strip_from_state()
 	_ensure_player_target_strip()
 	_apply_battle_column_split.call_deferred()
@@ -54,8 +58,11 @@ func _on_combat_turn_changed(turn: int) -> void:
 		turn_label.text = "턴 %d" % turn
 
 
-func _on_part_durability_changed(_part: PartsData) -> void:
-	_update_parts_display()
+func _on_part_durability_changed(part: PartsData) -> void:
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		if GameState.equipped_parts[slot] == part:
+			_refresh_hud_icon(slot)
+			break
 
 
 func _apply_battle_column_split() -> void:
@@ -74,38 +81,168 @@ func _apply_battle_column_split() -> void:
 func _refresh_player_strip_from_state() -> void:
 	if GameState.current_core != null:
 		core_name_label.text = GameState.current_core.core_name
-	_update_parts_display()
+	_refresh_all_mech_layers()
+	_refresh_all_hud_icons()
 
 
-func _update_parts_display() -> void:
-	for child: Node in parts_labels.get_children():
-		child.queue_free()
-	if GameState.current_core == null:
+# ── 메카 일러스트 ─────────────────────────────────────────────────────────────
+
+func _build_mech_layers() -> void:
+	# [slot_or_null, color, position, size, z_index]
+	# null = 코어 몸통 (항상 표시, CoreData.CoreSlot 아님)
+	var specs: Array = [
+		[CoreData.CoreSlot.BACK,  Color(0.40, 0.40, 0.50), Vector2(5,   5),   Vector2(28, 50), 0],
+		[CoreData.CoreSlot.LEG,   Color(0.35, 0.35, 0.40), Vector2(32, 107),  Vector2(60, 55), 1],
+		[null,                    Color(0.65, 0.65, 0.70), Vector2(30,  20),  Vector2(75, 90), 2],
+		[CoreData.CoreSlot.ARM_R, Color(0.30, 0.45, 0.70), Vector2(98,  40),  Vector2(40, 72), 3],
+		[CoreData.CoreSlot.ARM_L, Color(0.30, 0.65, 0.65), Vector2(5,   52),  Vector2(30, 58), 4],
+	]
+	for spec in specs:
+		var slot = spec[0]
+		var rect := ColorRect.new()
+		rect.color = spec[1]
+		rect.position = spec[2]
+		rect.size = spec[3]
+		rect.z_index = spec[4]
+		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_mech_illustration.add_child(rect)
+		if slot != null:
+			_mech_layers[slot] = rect
+
+
+func _refresh_all_mech_layers() -> void:
+	for slot: CoreData.CoreSlot in [
+		CoreData.CoreSlot.BACK, CoreData.CoreSlot.LEG,
+		CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.ARM_L
+	]:
+		_refresh_mech_layer(slot)
+
+
+func _refresh_mech_layer(slot: CoreData.CoreSlot) -> void:
+	if slot not in _mech_layers:
 		return
-	for slot: CoreData.CoreSlot in GameState.equipped_parts:
-		var part: PartsData = GameState.equipped_parts[slot]
-		var line := Label.new()
-		line.add_theme_font_size_override("font_size", 11)
-		if part != null:
-			var dur_str: String = "■".repeat(part.durability) + "□".repeat(part.max_durability - part.durability)
-			line.text = "%s: %s  %s" % [_slot_korean(slot), part.parts_name, dur_str]
-			if part.is_broken():
-				line.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-			elif part.is_worn():
-				line.add_theme_color_override("font_color", Color(1.0, 0.72, 0.28))
+	var rect: ColorRect = _mech_layers[slot]
+	rect.visible = GameState.equipped_parts.get(slot) != null
+
+
+# ── 파츠 상태 HUD (좌하단 십자형) ────────────────────────────────────────────
+
+func _build_parts_hud() -> void:
+	var container := Control.new()
+	container.custom_minimum_size = Vector2(96, 96)
+
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 0)
+	grid.add_theme_constant_override("v_separation", 0)
+	grid.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	container.add_child(grid)
+
+	# 십자형 배치 (row by row): null = 빈 칸
+	var cross: Array = [
+		null,                    CoreData.CoreSlot.BACK,  null,
+		CoreData.CoreSlot.ARM_R, "core",                  CoreData.CoreSlot.ARM_L,
+		null,                    CoreData.CoreSlot.LEG,   null,
+	]
+	for key in cross:
+		if key == null:
+			var spacer := Control.new()
+			spacer.custom_minimum_size = Vector2(32, 32)
+			spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			grid.add_child(spacer)
 		else:
-			line.text = "%s: (빈 슬롯)" % _slot_korean(slot)
-			line.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
-		parts_labels.add_child(line)
+			var panel := Panel.new()
+			panel.custom_minimum_size = Vector2(32, 32)
+			panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			var lbl := Label.new()
+			lbl.text = "코" if key == "core" else _slot_short(key as CoreData.CoreSlot)
+			lbl.add_theme_font_size_override("font_size", 9)
+			lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			panel.add_child(lbl)
+			if key != "core":
+				_hud_icons[key as CoreData.CoreSlot] = panel
+			grid.add_child(panel)
+
+	var bottom_hbox: HBoxContainer = $BottomBar/BottomHBox
+	bottom_hbox.add_child(container)
+	bottom_hbox.move_child(container, 0)
+	_refresh_all_hud_icons()
 
 
-func _slot_korean(slot: CoreData.CoreSlot) -> String:
+func _refresh_all_hud_icons() -> void:
+	for slot: CoreData.CoreSlot in [
+		CoreData.CoreSlot.BACK, CoreData.CoreSlot.LEG,
+		CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.ARM_L
+	]:
+		_refresh_hud_icon(slot)
+
+
+func _refresh_hud_icon(slot: CoreData.CoreSlot) -> void:
+	if slot not in _hud_icons:
+		return
+	var panel: Panel = _hud_icons[slot]
+	var part: PartsData = GameState.equipped_parts.get(slot)
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(2)
+
+	if part == null:
+		style.bg_color = Color(0.12, 0.12, 0.12, 0.7)
+		style.set_border_width_all(1)
+		style.border_color = Color(0.35, 0.35, 0.35)
+		panel.modulate = Color(1, 1, 1, 1)
+		_clear_hud_broken_overlay(panel)
+	elif part.is_broken():
+		style.bg_color = Color(0.20, 0.05, 0.05, 0.9)
+		style.set_border_width_all(2)
+		style.border_color = Color(0.9, 0.2, 0.2)
+		panel.modulate = Color(0.45, 0.45, 0.45, 1)
+		_ensure_hud_broken_overlay(panel)
+	elif part.is_worn():
+		style.bg_color = Color(0.18, 0.15, 0.08, 0.9)
+		style.set_border_width_all(2)
+		style.border_color = Color(1.0, 0.7, 0.2)
+		panel.modulate = Color(1, 1, 1, 0.55)
+		_clear_hud_broken_overlay(panel)
+	else:
+		style.bg_color = Color(0.10, 0.18, 0.10, 0.9)
+		style.set_border_width_all(1)
+		style.border_color = Color(0.3, 0.75, 0.3)
+		panel.modulate = Color(1, 1, 1, 1)
+		_clear_hud_broken_overlay(panel)
+	panel.add_theme_stylebox_override("panel", style)
+
+
+func _ensure_hud_broken_overlay(panel: Panel) -> void:
+	if panel.has_meta("x_lbl"):
+		(panel.get_meta("x_lbl") as Label).visible = true
+		return
+	var lbl := Label.new()
+	lbl.text = "✕"
+	lbl.add_theme_font_size_override("font_size", 14)
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+	lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_child(lbl)
+	panel.set_meta("x_lbl", lbl)
+
+
+func _clear_hud_broken_overlay(panel: Panel) -> void:
+	if panel.has_meta("x_lbl"):
+		(panel.get_meta("x_lbl") as Label).visible = false
+
+
+func _slot_short(slot: CoreData.CoreSlot) -> String:
 	match slot:
-		CoreData.CoreSlot.ARM_L: return "왼팔"
-		CoreData.CoreSlot.ARM_R: return "오른팔"
+		CoreData.CoreSlot.ARM_L: return "왼"
+		CoreData.CoreSlot.ARM_R: return "오"
 		CoreData.CoreSlot.BACK:  return "등"
-		CoreData.CoreSlot.LEG:   return "다리"
-	return "슬롯"
+		CoreData.CoreSlot.LEG:   return "다"
+	return "?"
 
 
 func on_player_action_required(
@@ -387,7 +524,7 @@ func _ensure_player_target_strip() -> void:
 	_player_preview_label.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
 	_player_preview_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_player_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	parts_labels.add_sibling(_player_preview_label)
+	_mech_illustration.add_sibling(_player_preview_label)
 
 	_player_target_catcher = Button.new()
 	_player_target_catcher.flat = true
