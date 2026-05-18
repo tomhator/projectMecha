@@ -37,6 +37,7 @@ var _player_preview_label: Label = null
 var _player_target_catcher: Button = null
 var _mech_layers: Dictionary = {}   # CoreData.CoreSlot → ColorRect (slot layers)
 var _hud_icons: Dictionary = {}     # CoreData.CoreSlot → Panel (status HUD)
+var _broken_skills: Dictionary = {}  # SkillData → true (파괴된 파츠 소속 스킬)
 
 
 func _ready() -> void:
@@ -282,6 +283,13 @@ func _rebuild_action_orbs() -> void:
 
 
 func _rebuild_skill_buttons(available_skills: Array[SkillData]) -> void:
+	_broken_skills.clear()
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		var part: PartsData = GameState.equipped_parts[slot] as PartsData
+		if part != null and part.is_broken():
+			for s: SkillData in part.parts_skills:
+				_broken_skills[s] = true
+
 	for child: Node in skill_container.get_children():
 		child.queue_free()
 	_skill_buttons.clear()
@@ -289,7 +297,11 @@ func _rebuild_skill_buttons(available_skills: Array[SkillData]) -> void:
 		var btn: Button = Button.new()
 		btn.text = "%s [%d]" % [skill.skill_name, skill.skill_action_cost]
 		btn.focus_mode = Control.FOCUS_NONE
-		btn.pressed.connect(_on_skill_button_pressed.bind(skill))
+		if _broken_skills.has(skill):
+			btn.disabled = true
+			btn.tooltip_text = "파츠 파괴됨"
+		else:
+			btn.pressed.connect(_on_skill_button_pressed.bind(skill))
 		skill_container.add_child(btn)
 		_skill_buttons[skill] = btn
 
@@ -373,6 +385,8 @@ func _set_enemy_targeting_enabled(on: bool) -> void:
 ## 더 이상 실제로 버튼을 비활성화하지 않는다. (다른 스킬로 자유롭게 교체 가능)
 func _set_skill_buttons_disabled(disabled: bool, except_skill: SkillData = null) -> void:
 	for s: SkillData in _skill_buttons.keys():
+		if _broken_skills.has(s):
+			continue
 		var b: Button = _skill_buttons[s] as Button
 		b.disabled = false
 		if disabled and except_skill != null and s == except_skill:
