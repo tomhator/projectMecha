@@ -118,7 +118,7 @@
 ### 2.4 최소 크기 및 그리드 영향
 
 - 카드 `custom_minimum_size`: `Vector2(220, 110)`
-- 조립 씬 인벤 그리드(5열 × 6행): 카드 높이 증가에 따라 `GridContainer` 세로 여백 재확인 필요
+- 조립 씬 인벤 그리드(4열 × 4행): 카드 높이 증가에 따라 `GridContainer` 세로 여백 재확인 필요
 - affix 없는 COMMON 카드는 줄 5가 숨김 → 실제 높이 약 90px로 수축 가능 (ShrinkCenter)
 
 ---
@@ -126,7 +126,7 @@
 ## 3. 메카 조립 (AssemblyScene)
 
 - 본문 `HBox`: 좌 **6** : 우 **4** (`size_flags_stretch_ratio`).
-- 인벤: `GridContainer` **5열 × 6행**(30칸), 빈 칸은 빈 슬롯 스타일.
+- 인벤: `GridContainer` **4열 × 4행**(16칸), 빈 칸은 빈 슬롯 스타일. 코어 업그레이드 시 24→28칸으로 확장.
 - 상단 Run HUD + 본문 상단 여백(스트립 높이 + 16px 권장).
 
 ---
