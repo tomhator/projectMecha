@@ -17,9 +17,10 @@
 │ │                  │                                   │   │
 │ │ [내 메카]        │ [예고 라벨]                       │   │
 │ │ 코어 이름        │ 적 이름                            │   │
-│ │ 파츠 목록(VBox)  │ HP 바 + 숫자 오버레이             │   │
-│ │ ── 예상 회복 ──  │ 쉴드 바 + 숫자 오버레이           │   │
-│ │ [클릭 캐처 영역] │ (적 N개 가로 나열)                │   │
+│ │ [메카 슬롯 패널] │ HP 바 + 숫자 오버레이             │   │
+│ │  (십자형 블록)   │ 쉴드 바 + 숫자 오버레이           │   │
+│ │ ── 예상 회복 ──  │ (적 N개 가로 나열)                │   │
+│ │ [클릭 캐처 영역] │                                   │   │
 │ └──────────────────┴───────────────────────────────────┘   │
 ├────────────────────────────────────────────────────────────┤
 │ 행동력 오브  │  스킬 버튼들  │  SelectionStatus 텍스트     │
@@ -38,9 +39,95 @@
 |------|------|
 | `PlayerTitle` | "내 메카" 헤더 |
 | `CoreNameLabel` | 현재 코어 이름 |
-| `PartsLabels` | 슬롯별 장착 파츠 라벨 (VBox) |
+| **`MechStatusPanel`** | 슬롯 블록형 메카 상태 표시 (§2.3 참조) |
 | **`_player_preview_label`** (런타임 생성, 주황) | 자기 대상 스킬을 고른 뒤 클릭 캐처에 호버할 때 예상 회복량 표시 |
 | **`_player_target_catcher`** (런타임 생성, 투명 Button) | 자기 대상 스킬 발동용 클릭 영역. 평소엔 `MOUSE_FILTER_IGNORE`. |
+
+---
+
+## 2.3 MechStatusPanel — 메카 슬롯 상태 표시
+
+### 2.3.1 표시 방식: 블록형 십자 레이아웃
+
+조립 씬과 동일한 십자형 배치를 전투 화면용 소형으로 재현한다.  
+`PlayerColumn` 내 `CoreNameLabel` 바로 아래, `_player_preview_label` 위에 배치.
+
+```
+           ┌─────────┐
+           │  BACK   │
+           │   등    │
+           └─────────┘
+┌─────────┐┌─────────┐┌─────────┐
+│  ARM_R  ││  CORE   ││  ARM_L  │
+│ 오른팔  ││ 코어명  ││  왼팔   │
+└─────────┘└─────────┘└─────────┘
+           ┌─────────┐
+           │   LEG   │
+           │  다리   │
+           └─────────┘
+```
+
+- **화면 방향**: ARM_R(메크 오른팔)이 화면 **왼쪽**, ARM_L(메크 왼팔)이 화면 **오른쪽**.  
+  (코어가 카메라를 바라보기 때문 — 조립 씬과 동일한 규칙.)
+- **각 슬롯 블록 크기**: 최소 52×44px. `PlayerColumn` 폭에 따라 비례 축소 가능.
+- **코어 블록**: 공격 대상이 아니므로 이름만 표시. HP/쉴드는 RunStatusStrip 참조.
+- **파츠 슬롯 블록 내부**:
+  - 줄 1: 슬롯 한국어명 (`오른팔` / `왼팔` / `등` / `다리`, font 10, 회색)
+  - 줄 2: 파츠명 (최대 6자 truncate + `…`, font 11, 상태 색)
+  - 줄 3: 손상도 블록 `■■□□□` (font 9)
+- 기존 `PartsLabels` (텍스트 VBox) 제거 후 `MechStatusPanel`로 단일화.
+
+### 2.3.2 슬롯 상태 색상 코딩
+
+| 상태 | 조건 | 테두리 색 | 파츠명 색 | 배경 추가 처리 |
+|------|------|----------|----------|--------------|
+| 정상 | `durability == max_durability` | `Color(0.3, 0.8, 0.3)` 초록 | 흰색 | 없음 |
+| 손상 | `is_worn()` (0 < dur < max) | `Color(1.0, 0.7, 0.2)` 주황 | 주황 | 없음 |
+| 파괴 | `is_broken()` (dur == 0) | `Color(0.9, 0.2, 0.2)` 빨강 | 빨강 | `modulate Color(0.5, 0.5, 0.5)` + "✕" 오버레이 |
+| 빈 슬롯 | `part == null` | `Color(0.4, 0.4, 0.4)` 회색 | 회색 | "(없음)" 텍스트 |
+
+> **파괴 슬롯 ✕ 오버레이**: `Control` 레이어를 블록 위에 `PRESET_FULL_RECT`로 덮어씌워  
+> 반투명 빨간 배경 `Color(0.8, 0.1, 0.1, 0.35)` + 중앙 "✕" 라벨(font 14, 흰색) 표시.
+
+### 2.3.3 파츠 저격 예고 하이라이트
+
+적이 파츠 저격 계열 스킬(파츠 저격 · 과부하 공격 · EMP 충격)의 예고 액션으로  
+특정 슬롯을 타겟할 때, `MechStatusPanel`이 즉각 시각 피드백을 제공한다.
+
+#### 예고 상태 시각 규칙
+
+| 슬롯 | 테두리 | modulate | 추가 표시 |
+|------|-------|----------|---------|
+| **타겟 슬롯** | `Color(1.0, 0.9, 0.1)` 노란 테두리 | 1.0 (정상) | Tween 깜빡임 (0.6s 주기, 0.8↔1.0 alpha) |
+| **비타겟 슬롯** | 기존 상태 색 유지 | `Color(0.6, 0.6, 0.6)` 어둡게 | 없음 |
+
+- `MechStatusPanel._set_snipe_preview(target_slot: CoreData.CoreSlot)` 호출로 하이라이트 적용.
+- `MechStatusPanel._clear_snipe_preview()` 호출로 초기화.
+- 예고 해제 조건: 해당 적 격파, 적 턴 종료, 전투 종료.
+
+#### 저격 타겟 정보 전달 설계 (미구현)
+
+현재 `SkillData`에는 슬롯 타겟 필드가 없다. 파츠 저격 예고 UI 구현을 위해 추후 필요한 변경:
+
+```gdscript
+# SkillData.gd 에 추가 예정
+@export var target_slot: CoreData.CoreSlot = CoreData.CoreSlot.NONE  # 0이면 비저격 스킬
+```
+
+`EnemyEntity.decide_next_actions()`에서 `target_slot != NONE`인 스킬을 선택하면  
+`EventBus.enemy_snipe_preview_changed(enemy, slot)` 시그널로 UI에 알린다.
+
+### 2.3.4 갱신 타이밍
+
+`MechStatusPanel`은 아래 이벤트에서 `_refresh_all()` 호출:
+
+| 이벤트 | 갱신 범위 |
+|--------|---------|
+| `EventBus.part_durability_changed(part)` | 해당 파츠 슬롯 블록만 갱신 |
+| `on_player_action_required` 진입 | 전체 갱신 |
+| `EventBus.enemy_snipe_preview_changed` (미구현) | 저격 하이라이트 갱신 |
+
+---
 
 ### 2.1 자기 대상 스킬(타겟 = SELF) 발동 흐름
 
@@ -175,14 +262,20 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 ## 7. 향후 작업
 
-- [ ] 자기 대상 클릭 영역에 호버 시 테두리/배경 강조 (현재는 modulate만 가능).
+- [ ] **`MechStatusPanel` 구현** — 블록형 십자 레이아웃 + 상태 색상 코딩 + 파츠명 truncate.
+  - `PartSocketUI`와 별개의 씬으로 분리하거나 `CombatUI.gd` 내 런타임 생성.
+  - 기존 `PartsLabels` 텍스트 VBox 제거.
+- [ ] **파츠 저격 예고 하이라이트** — `SkillData.target_slot` 필드 추가 및 `EventBus.enemy_snipe_preview_changed` 시그널 구현 후 `MechStatusPanel._set_snipe_preview()` 연결.
+- [ ] **파괴 슬롯 ✕ 오버레이** — `is_broken()` 시 반투명 레이어 + "✕" 라벨 표시.
 - [ ] 적 카드 폭이 좁을 때 예상 피해 라벨의 줄바꿈(`autowrap_mode`) 적용 검토.
 - [ ] 예고 / 예상 피해 라벨을 두 줄(VBox)로 분리해 동시에 보여줄지 검토.
 - [ ] AP 부족·손상 등으로 비활성된 스킬 버튼에 사유 툴팁 표시.
 - [ ] `Affix`(반격 본능 등) 적용 시 예상 수치 보정.
+- [ ] 자기 대상 클릭 영역에 `PlayerColumn` 전체 테두리 강조 검토 (현재는 캐처 박스만).
 
 ---
 
 ## 8. 변경 이력
 
+- 2026-05-18 — §2.3 MechStatusPanel 추가 (메카 슬롯 블록형 표시, 손상도 색상, 저격 예고 하이라이트 설계).
 - 2026-05-14 — 최초 작성. 적 HP/쉴드 오버레이, 예상 피해/회복, 자기 대상 2단계 클릭 발동.
