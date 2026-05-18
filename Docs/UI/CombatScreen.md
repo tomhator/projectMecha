@@ -9,9 +9,11 @@
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│ RunStatusStrip  (층 / HP / 쉴드 / 크레딧 / 설정)            │ ← HUD.md §1
+│ RunStatusStrip  (층 / HP / 쉴드 / 크레딧 / 설정)            │ ← 0~56px (HUD.md §1)
 ├────────────────────────────────────────────────────────────┤
-│ BattleMargin (좌우 16, 상단 64, 하단 104)                  │
+│ TurnLabel  (가로 전폭, 중앙 정렬, font 18, 노란빛)          │ ← 60~92px
+├────────────────────────────────────────────────────────────┤
+│ BattleMargin (좌우 16, 상단 96, 하단 104)                   │
 │ ┌──────────────────┬───────────────────────────────────┐   │
 │ │ PlayerColumn ≈40%│ EnemyColumn ≈60% (200~500 클램프) │   │
 │ │                  │                                   │   │
@@ -228,17 +230,64 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 ---
 
-## 4. 하단 — 행동력 / 스킬 / 상태
+## 4. 상단 중앙 — TurnLabel
+
+| 속성 | 값 |
+|------|----|
+| 위치 | `RunStatusStrip` 아래 (y: 60~92px), 가로 전폭 |
+| 텍스트 | `"턴 N"` (`N` = 현재 플레이어 턴 번호, 1부터 시작) |
+| 폰트 크기 | 18 |
+| 정렬 | 중앙 (`horizontal_alignment = CENTER`) |
+| 색상 | 옅은 노란빛 (`Color(1.0, 0.96, 0.75)` 권장) |
+| 노드 위치 | `CombatUI` 루트 직계 자식 — 전투 전용 위젯이므로 RunStatusStrip과 별도 계층 |
+
+- `TurnManager.start_player_turn()`이 `current_turn += 1` 후 `EventBus.combat_turn_changed.emit(current_turn)` 발행.
+- `CombatUI._on_combat_turn_changed(turn)` 핸들러가 `TurnLabel.text = "턴 %d" % turn` 갱신.
+- 전투 시작 시 `current_turn = 0`으로 초기화 (첫 플레이어 턴에 1이 됨).
+
+---
+
+## 5. 하단 — 행동력 / 스킬 / 상태
 
 | 요소 | 노드 | 비고 |
 |------|------|-----|
 | 행동력 오브 | `ActionOrbsRow` (HBox of `ColorRect`) | 남은 액션만큼 초록, 나머지는 회색. 최대치는 `core_action_count`. |
-| 스킬 버튼 | `SkillContainer` (HBox of `Button`) | 텍스트: `"스킬명 [AP비용]"`. 대기 중인 스킬은 disabled + 녹색 강조 스타일(`_style_skill_button_pending`). |
+| 스킬 버튼 | `SkillContainer` (HBox of `Button`) | 텍스트: `"스킬명 [AP비용]"`. 대기 중인 스킬은 **시각 강조만** (`_style_skill_button_pending`, normal/hover/pressed 스타일박스에 적용). |
 | 상태 메시지 | `SelectionStatus` | `"스킬을 선택하세요."` / `"「X」 — 대상 적을 클릭하세요"` / `"「X」 — 내 메카(왼쪽 패널)을 클릭하세요"` / `"「X」 → 타겟이름"`. |
+
+### 5.1 펜딩 스킬 흐름 및 자유 교체
+
+모든 스킬 발동은 **「스킬 선택 → 대상 클릭」 2단계**로 통일된다.
+
+```
+[1단계] 스킬 버튼 클릭  →  _pending_skill 저장 + 시각 강조
+[2단계] 대상 클릭       →  skill_selected.emit  →  캐처/타겟 비활성
+```
+
+**자유 교체 규칙**: 2단계 대상 클릭 전까지 모든 스킬 버튼이 항상 활성 상태를 유지한다.  
+다른 스킬 버튼을 클릭하면 `_pending_skill`이 교체되며 이전 강조가 제거된다.
+
+| 비활성 사유 | `disabled` 적용 여부 |
+|------------|---------------------|
+| 타겟 미확정 (펜딩 중) | ❌ 비활성 안 함 (교체 가능) |
+| AP 부족 | ✅ `disabled = true` |
+| 파츠 파괴 (`is_broken()`) | ✅ `disabled = true` |
+
+### 5.2 자기 대상 클릭 영역 (`_player_target_catcher`)
+
+자기 대상 스킬(SELF 타겟) 선택 시 `PlayerColumn` 하단에 시각화된 클릭 영역이 나타난다.
+
+| 상태 | `flat` | 텍스트 | 스타일 |
+|------|-------|-------|-------|
+| 비활성 (평소) | `true` | 없음 | 없음, `mouse_filter = IGNORE` |
+| **활성** (SELF 스킬 선택 시) | `false` | **"내 메카 클릭"** | 녹색 점선 박스 (`_style_player_target_catcher_active`) |
+
+- 활성 상태: `_set_player_self_target_pending(true)` → `mouse_filter = STOP` + 녹색 점선 스타일 적용.
+- 비활성 상태: `_clear_player_target_catcher_style()` → `flat = true`, `mouse_filter = IGNORE`.
 
 ---
 
-## 5. 신호·이벤트 연동
+## 6. 신호·이벤트 연동
 
 | 발신 | 수신 | 목적 |
 |------|------|-----|
@@ -250,17 +299,19 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 ---
 
-## 6. 디자인 결정 요약
+## 7. 디자인 결정 요약
 
 - **모든 스킬이 명시적 타겟팅**: 즉시 발동은 폐기 (광역/패시브가 생기면 별도 분기).
+- **스킬 버튼은 타겟 확정 전까지 항상 활성**: 대기 스킬 강조는 시각만, `disabled`는 AP부족·파괴 시만.
 - **숫자는 바 위 오버레이**: 행 높이를 절약하면서 가독성은 outline으로 확보.
 - **예상 수치는 단일 라벨**: 적 카드 상단의 "예고" 라벨을 호버 시 일시적으로 점령. 둘이 충돌하지 않도록 `_pending_skill` 유무로 분기.
 - **회복량은 실제 적용량**: 표시 = 코어 최대치로 클램프 후 값 (사용자가 "오버힐"을 미리 인지).
 - **공격 손상 보정**: 손상 파츠 스킬은 표시도 ×0.7 반영해서 실제와 동일.
+- **자기 대상 클릭 영역**: 별도 캐처 박스(녹색 점선)로 시각화. 캐릭터 일러스트 추가 시 `PlayerColumn` 전체 테두리 방식으로 재검토.
 
 ---
 
-## 7. 향후 작업
+## 8. 향후 작업
 
 - [ ] **`MechStatusPanel` 구현** — 블록형 십자 레이아웃 + 상태 색상 코딩 + 파츠명 truncate.
   - `PartSocketUI`와 별개의 씬으로 분리하거나 `CombatUI.gd` 내 런타임 생성.
@@ -275,7 +326,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 ---
 
-## 8. 변경 이력
+## 9. 변경 이력
 
-- 2026-05-18 — §2.3 MechStatusPanel 추가 (메카 슬롯 블록형 표시, 손상도 색상, 저격 예고 하이라이트 설계).
+- 2026-05-18 — §4 TurnLabel·펜딩 스킬 흐름·자기 대상 캐처 명세 추가. §2.3 MechStatusPanel 추가. 섹션 번호 재정렬.
 - 2026-05-14 — 최초 작성. 적 HP/쉴드 오버레이, 예상 피해/회복, 자기 대상 2단계 클릭 발동.
