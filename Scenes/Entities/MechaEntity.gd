@@ -4,6 +4,7 @@ class_name MechaEntity
 
 var available_skills: Array[SkillData] = []
 var _skill_to_part: Dictionary = {}  # SkillData → PartsData (코어 스킬은 null)
+var _serious_punch_pending: bool = false
 
 func setup() -> void:
 	available_skills.clear()
@@ -23,28 +24,30 @@ func get_available_skills() -> Array[SkillData]:
 
 
 ## `use_skill`의 공격 피해량과 동일한 계수 (UI 예상 피해용).
-func get_preview_outgoing_damage(skill: SkillData) -> float:
+func get_preview_outgoing_damage(skill: SkillData, target: Node = null) -> float:
 	if skill.skill_damage <= 0.0:
 		return 0.0
-	return skill.skill_damage * GameState.attack_multiplier * _output_mult(skill)
+	return skill.skill_damage * GameState.attack_multiplier * _output_mult(skill, target, false)
 
 
 ## `use_skill`의 HP 회복과 동일한 상한(코어 최대 HP) 적용 후 실제로 오를 양
 func get_preview_effective_hp_heal(skill: SkillData) -> float:
 	if skill.skill_heal <= 0.0 or GameState.current_core == null:
 		return 0.0
-	return minf(skill.skill_heal, maxf(GameState.current_core.core_hp - GameState.current_hp, 0.0))
+	var predicted: float = skill.skill_heal * _output_mult(skill, null, false)
+	return minf(predicted, maxf(GameState.current_core.core_hp - GameState.current_hp, 0.0))
 
 
 ## `use_skill`의 쉴드 회복과 동일한 상한(코어 최대 쉴드) 적용 후 실제로 오를 양
 func get_preview_effective_shield_heal(skill: SkillData) -> float:
 	if skill.skill_defense <= 0.0 or GameState.current_core == null:
 		return 0.0
-	return minf(skill.skill_defense, maxf(GameState.current_core.core_shield - GameState.current_shield, 0.0))
+	var predicted: float = skill.skill_defense * _output_mult(skill, null, false)
+	return minf(predicted, maxf(GameState.current_core.core_shield - GameState.current_shield, 0.0))
 
 
 func use_skill(skill: SkillData, target: Node) -> void:
-	var mult: float = _output_mult(skill)
+	var mult: float = _output_mult(skill, target, true)
 
 	if skill.skill_damage > 0.0:
 		if target != null and target.has_method("take_damage"):
@@ -63,6 +66,7 @@ func use_skill(skill: SkillData, target: Node) -> void:
 		print("  > 회복: %s (HP +%.0f%s)" % [skill.skill_name, actual_heal, _mult_note(mult)])
 
 	EventBus.skill_used.emit(self, skill)
+	_arm_serious_punch_if_needed(skill)
 
 	var part: PartsData = _skill_to_part.get(skill)
 	if part != null and part.durability > 0:
@@ -72,16 +76,78 @@ func use_skill(skill: SkillData, target: Node) -> void:
 			print("  > [파츠 파괴] %s" % part.parts_name)
 
 
-func _output_mult(skill: SkillData) -> float:
-	var part: PartsData = _skill_to_part.get(skill)
+func _output_mult(skill: SkillData, target: Node = null, consume_temp: bool = false) -> float:
+	var part: PartsData = _get_skill_part(skill)
 	if part == null:
 		return 1.0
 	var mult: float = 1.0
+	var bonus_sum: float = _affix_bonus_sum(part, target, consume_temp)
+	mult *= maxf(1.0 + bonus_sum, 0.1)
 	if part.is_worn():
 		mult *= 0.7
 	if part.parts_type == PartsData.PartsType.LEG and GameState.is_overloaded():
 		mult *= 0.8
 	return mult
+
+
+func _get_skill_part(skill: SkillData) -> PartsData:
+	return _skill_to_part.get(skill)
+
+
+func _has_affix(part: PartsData, affix_id: String) -> bool:
+	return part != null and part.rolled_affixes.has(affix_id)
+
+
+func _is_low_hp_state() -> bool:
+	if GameState.current_core == null or GameState.current_core.core_hp <= 0.0:
+		return false
+	return (GameState.current_hp / GameState.current_core.core_hp) <= 0.3
+
+
+func _affix_bonus_sum(part: PartsData, target: Node, consume_temp: bool) -> float:
+	var sum: float = 0.0
+	if _has_affix(part, "mindless"):
+		sum -= 0.10
+	if _has_affix(part, "greedy"):
+		sum += 0.10
+	if _has_affix(part, "overload"):
+		sum += 0.25
+	if _has_affix(part, "kernel_panic") and _is_low_hp_state():
+		sum += 0.30
+	if _has_affix(part, "backdoor") and target != null and target.has_method("has_any_debuff") and target.has_any_debuff():
+		sum += 0.25
+
+	if part.has_meta("undefined_behavior_modifier"):
+		var turn_mod: Variant = part.get_meta("undefined_behavior_modifier")
+		if typeof(turn_mod) in [TYPE_FLOAT, TYPE_INT]:
+			sum += float(turn_mod)
+
+	if _has_affix(part, "counter_instinct"):
+		var active: bool = bool(part.get_meta("counter_instinct_active", false))
+		if active:
+			sum += 0.20
+			if consume_temp:
+				part.set_meta("counter_instinct_active", false)
+
+	if _serious_punch_pending:
+		sum += 1.0
+		if consume_temp:
+			_serious_punch_pending = false
+
+	return sum
+
+
+func _arm_serious_punch_if_needed(skill: SkillData) -> void:
+	var part: PartsData = _get_skill_part(skill)
+	if _has_affix(part, "serious_punch"):
+		_serious_punch_pending = true
+
+
+func _activate_counter_instinct_on_hit() -> void:
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		var part: PartsData = GameState.equipped_parts[slot]
+		if _has_affix(part, "counter_instinct"):
+			part.set_meta("counter_instinct_active", true)
 
 
 func _mult_note(mult: float) -> String:
@@ -101,3 +167,4 @@ func take_damage(amount: float) -> void:
 		maxf(GameState.current_hp - amount, 0.0)
 	])
 	GameState.take_damage(amount)
+	_activate_counter_instinct_on_hit()

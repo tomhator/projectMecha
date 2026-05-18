@@ -3,7 +3,9 @@
     "allow": [
       "Bash(~/.claude/skills/gstack/bin/gstack-config set *)",
       "Bash(touch ~/.claude/skills/gstack/.feature-prompted-continuous-checkpoint)",
-      "Bash(touch ~/.claude/skills/gstack/.feature-prompted-model-overlay)"
+      "Bash(touch ~/.claude/skills/gstack/.feature-prompted-model-overlay)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

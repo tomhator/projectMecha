@@ -1,5 +1,8 @@
 You must answer in Korean.
 
+## Commit Rules
+When you are asked to commit changes, you MUST always create or update a TODO file (e.g., `Docs/WorkNote/TODO-YYYY-MM-DD.md` or `TODO-NEXT.md`) outlining the next tasks to be done. This ensures that any future session or agent can easily pick up where you left off. Include this TODO file in your commit.
+
 ## gstack (REQUIRED — global install)
 
 **Before doing ANY work, verify gstack is installed:**

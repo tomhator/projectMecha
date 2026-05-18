@@ -56,6 +56,15 @@ func on_skill_selected(skill: SkillData, target: Node) -> void:
 	else:
 		player_action_required.emit(usable, enemies, actions_left)
 
+
+func on_end_turn_requested() -> void:
+	if current_phase != TurnPhase.PLAYER_TURN:
+		return
+	if actions_left <= 0:
+		return
+	print("[플레이어] 턴 종료 버튼 선택")
+	start_enemy_turn()
+
 func start_enemy_turn() -> void:
 	current_phase = TurnPhase.ENEMY_TURN
 	phase_changed.emit(current_phase)

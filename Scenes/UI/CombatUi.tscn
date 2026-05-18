@@ -73,7 +73,7 @@ text = "코어"
 
 [node name="MechIllustration" type="Control" parent="BattleMargin/BattleHBox/PlayerColumn"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(140, 170)
+custom_minimum_size = Vector2(160, 190)
 layout_mode = 2
 clip_contents = true
 theme_override_constants/separation = 4
@@ -157,3 +157,17 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
+
+[node name="EndTurnBlock" type="VBoxContainer" parent="BottomBar/BottomHBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="EndTurnSpacer" type="Control" parent="BottomBar/BottomHBox/EndTurnBlock"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EndTurnButton" type="Button" parent="BottomBar/BottomHBox/EndTurnBlock"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 34)
+layout_mode = 2
+text = "턴 종료"

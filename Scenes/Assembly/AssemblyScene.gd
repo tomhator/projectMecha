@@ -232,6 +232,9 @@ func _on_socket_drop(part: PartsData, slot: CoreData.CoreSlot) -> void:
 	# 기존 슬롯 파츠 → 인벤토리 반환
 	var existing: PartsData = GameState.equipped_parts[slot]
 	if existing != null:
+		if existing.durability > 0:
+			existing.durability = 0
+			EventBus.part_durability_changed.emit(existing)
 		GameState.inventory.append(existing)
 
 	GameState.inventory.erase(part)
@@ -248,6 +251,9 @@ func _on_socket_unequip(slot: CoreData.CoreSlot) -> void:
 	if part == null:
 		return
 	GameState.unequip_part(slot)
+	if part.durability > 0:
+		part.durability = 0
+		EventBus.part_durability_changed.emit(part)
 	GameState.inventory.append(part)
 	EventBus.inventory_changed.emit(GameState.inventory)
 

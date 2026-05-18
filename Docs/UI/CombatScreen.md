@@ -18,15 +18,15 @@
 │ │ PlayerColumn ≈40%│ EnemyColumn ≈60% (200~500 클램프) │   │
 │ │                  │                                   │   │
 │ │ [내 메카]        │ [예고 라벨]                       │   │
-│ │ 코어 이름        │ 적 이름                            │   │
+│ │ 코어 이름        │ [호버 예상 라벨]                  │   │
 │ │ [메카 일러스트]  │ HP 바 + 숫자 오버레이             │   │
 │ │  (파츠 레이어)   │ 쉴드 바 + 숫자 오버레이           │   │
 │ │ ── 예상 회복 ──  │ (적 N개 가로 나열)                │   │
 │ │ [클릭 캐처 영역] │                                   │   │
 │ └──────────────────┴───────────────────────────────────┘   │
 ├────────────────────────────────────────────────────────────┤
-│ [파츠 상태 HUD]  │  행동력 오브  │  스킬 버튼들  │  Status  │
-│  (십자형, 좌하단) │               │               │          │
+│ [파츠 상태 HUD]  │  행동력 오브  │  스킬 버튼들  │ Status │ 턴 종료 │
+│  (십자형, 좌하단) │               │               │        │  버튼   │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -88,7 +88,7 @@
 | 이벤트 | 처리 |
 |--------|------|
 | 전투 진입 (`on_player_action_required` 최초) | 파츠 레이어 전체 재구성 |
-| `EventBus.enemy_snipe_preview_changed` (미구현) | 저격 하이라이트 갱신 |
+| `EventBus.enemy_snipe_preview_changed` | 저격 하이라이트 갱신 |
 
 > 내구도 변화(`part_durability_changed`)는 메카 일러스트에 영향 없음 — §4 HUD만 갱신.
 
@@ -134,7 +134,7 @@
 |--------|------|
 | `EventBus.part_durability_changed(part)` | 해당 슬롯 아이콘만 갱신 |
 | `on_player_action_required` 진입 | 전체 갱신 |
-| `EventBus.enemy_snipe_preview_changed` (미구현) | 저격 하이라이트 갱신 |
+| `EventBus.enemy_snipe_preview_changed` | 저격 하이라이트 갱신 |
 
 ---
 
@@ -170,7 +170,8 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 ```
 ┌─────────────────────────┐
-│ [예고 / 예상 피해 라벨] │  ← _enemy_preview_labels[id]  (font 11, 주황)
+│ [예고 라벨]            │  ← _enemy_forecast_labels[id] (font 11, 주황)
+│ [호버 예상 라벨]       │  ← _enemy_hover_preview_labels[id] (font 11, 청록)
 │ 적 이름                 │  ← font 13
 │ ┌─────────────────────┐ │
 │ │ ████░░░░ 42 / 100   │ │  ← HP 바 + 숫자 오버레이 (높이 16)
@@ -197,15 +198,16 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 1. 스킬 버튼 클릭 → `_pending_skill` 저장.
 2. 살아있는 적들의 카드 `Button`이 `disabled = false` + 푸른 테두리 스타일.
-3. 적 카드 호버 시 카드 modulate 1.12~1.25 + **예고 라벨이 예상 피해로 전환**.
+3. 적 카드 호버 시 카드 modulate 1.12~1.25 + **호버 예상 라벨에 예상 피해 표시**.
 4. 적 카드 클릭 → `skill_selected.emit(skill, enemy)`.
 
 ### 3.3 적 호버 시 예상 수치 (`_damage_preview_text_for_hover`)
 
 들어가는 정보:
 
-- **공격 피해**: `MechaEntity.get_preview_outgoing_damage(skill)`  
-  `= skill.skill_damage × GameState.attack_multiplier × (손상 파츠 0.7, 정상 1.0)`
+- **공격 피해**: `MechaEntity.get_preview_outgoing_damage(skill, enemy)`  
+  `= skill.skill_damage × GameState.attack_multiplier × output_mult`
+  - `output_mult`는 손상/과부하 패널티 + affix 보정(예: `counter_instinct`, `serious_punch`)을 반영
 - **쉴드 / HP 분배**: `EnemyEntity.preview_incoming_damage_split(damage) -> Vector2`  
   - `take_damage`와 동일한 클램프·흡수 규칙
   - `x = 쉴드에 깎일 양`, `y = HP에 깎일 양`
@@ -226,14 +228,14 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 | `skill_defense > 0` | `· 나 쉴드 +y` 추가 |
 | 모두 0 | `예상 수치 없음` |
 
-### 3.4 예고 라벨 우선순위
+### 3.4 예고/호버 라벨 우선순위
 
 `_update_enemy_preview()`에서:
 
-1. `enemy.is_defeated()` → 빈 텍스트.
-2. `_pending_skill != null && 호버 중인 적` → §3.3 예상 피해 텍스트.
-3. `next_actions`가 있으면 → `예고: 스킬1 → 스킬2`.
-4. 그 외 → 빈 텍스트.
+1. `enemy.is_defeated()` → 예고/호버 라벨 모두 빈 텍스트.
+2. `next_actions`가 있으면 예고 라벨에 `예고: 스킬1 → 스킬2`.
+3. `_pending_skill != null && 호버 중인 적`이면 호버 라벨에 §3.3 예상 피해 텍스트.
+4. 호버가 아니면 호버 라벨은 빈 텍스트.
 
 ---
 
@@ -261,6 +263,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 | 행동력 오브 | `ActionOrbsRow` (HBox of `ColorRect`) | 남은 액션만큼 초록, 나머지는 회색. 최대치는 `core_action_count`. |
 | 스킬 버튼 | `SkillContainer` (HBox of `Button`) | 텍스트: `"스킬명 [AP비용]"`. 대기 중인 스킬은 **시각 강조만** (`_style_skill_button_pending`, normal/hover/pressed 스타일박스에 적용). |
 | 상태 메시지 | `SelectionStatus` | `"스킬을 선택하세요."` / `"「X」 — 대상 적을 클릭하세요"` / `"「X」 — 내 메카(왼쪽 패널)을 클릭하세요"` / `"「X」 → 타겟이름"`. |
+| 턴 종료 버튼 | `EndTurnButton` | 우측 하단 고정. 플레이어 턴 + 행동력>0일 때 활성. 클릭 시 즉시 적 턴으로 진행. |
 
 ### 5.1 펜딩 스킬 흐름 및 자유 교체
 
@@ -277,8 +280,8 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 | 비활성 사유 | `disabled` 적용 여부 |
 |------------|---------------------|
 | 타겟 미확정 (펜딩 중) | ❌ 비활성 안 함 (교체 가능) |
-| AP 부족 | ✅ `disabled = true` |
-| 파츠 파괴 (`is_broken()`) | ✅ `disabled = true` |
+| AP 부족 | ✅ `disabled = true`, 툴팁 `AP 부족 (필요/보유)` |
+| 파츠 파괴 (`is_broken()`) | ✅ `disabled = true`, 툴팁 `파츠 파괴됨` |
 
 ### 5.2 자기 대상 클릭 영역 (`_player_target_catcher`)
 
@@ -291,6 +294,19 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 - 활성 상태: `_set_player_self_target_pending(true)` → `mouse_filter = STOP` + 녹색 점선 스타일 적용.
 - 비활성 상태: `_clear_player_target_catcher_style()` → `flat = true`, `mouse_filter = IGNORE`.
+- SELF 타겟팅 중 `PlayerColumn.modulate = Color(0.9, 1.0, 0.92, 1.0)`로 좌측 컬럼 전체를 추가 강조한다.
+
+### 5.3 턴 종료 버튼 (`EndTurnButton`)
+
+`EndTurnButton`은 하단 우측에 고정 배치된다.
+
+| 상태 | 조건 | 동작 |
+|------|------|------|
+| 활성 | 플레이어 턴이고 `actions_remaining > 0` | 클릭 시 `_pending_skill`/타겟팅 상태를 정리한 뒤 `end_turn_requested` 신호 발행 |
+| 비활성 | 적 턴/전투 종료/행동력 0 | 클릭 불가 |
+
+- 용도: 파츠 파손/쿨타임/타겟 부재 등으로 의미 있는 선택지가 없을 때 수동으로 턴을 넘긴다.
+- 자동 종료(행동력 0 또는 사용 가능 스킬 없음) 규칙은 기존대로 유지된다.
 
 ---
 
@@ -299,6 +315,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 | 발신 | 수신 | 목적 |
 |------|------|-----|
 | `CombatUI.skill_selected(skill, target)` | `TurnManager.on_skill_selected` | 스킬 실제 사용 |
+| `CombatUI.end_turn_requested()` | `TurnManager.on_end_turn_requested` | 플레이어 턴 수동 종료 |
 | `TurnManager.player_action_required(skills, enemies, ap)` | `CombatUI.on_player_action_required` | UI 재구성 |
 | `EventBus.hp_changed(entity, new, max)` | `CombatUI._on_hp_changed` | 적 = 카드 갱신, `GameState` = 자기 프리뷰 갱신 |
 | `EventBus.shield_changed(...)` | `CombatUI._on_shield_changed` | 동일 |
@@ -312,25 +329,27 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 - **파츠 상태 HUD는 십자형**: 조립씬 배치감과 동일하게 등/오른팔·코어·왼팔/다리 십자 구성.
 - **모든 스킬이 명시적 타겟팅**: 즉시 발동은 폐기 (광역/패시브가 생기면 별도 분기).
 - **스킬 버튼은 타겟 확정 전까지 항상 활성**: 대기 스킬 강조는 시각만, `disabled`는 AP부족·파괴 시만.
-- **예상 수치는 단일 라벨**: 적 카드 상단의 "예고" 라벨을 호버 시 일시적으로 점령.
+- **턴 종료 버튼 제공**: 선택지가 없거나 불리한 교환을 피하고 싶을 때 플레이어가 수동으로 적 턴으로 넘길 수 있다.
+- **예고/예상 수치 라벨 분리**: 예고는 상시 유지, 호버 예상은 별도 2번째 라벨에 표시.
 - **회복량은 실제 적용량**: 코어 최대치로 클램프 후 값.
 
 ---
 
 ## 8. 향후 작업
 
-- [ ] **`MechIllustration` 구현** — `Control` 컨테이너 + 5개 `ColorRect` 레이어 플레이스홀더. 기존 `PartsLabels` VBox 제거.
-- [ ] **파츠 상태 HUD 구현** — 십자형 32×32px 아이콘 5개. `part_durability_changed` 연동.
-- [ ] **파츠 저격 예고 연동** — `SkillData.target_slot` 필드 + `EventBus.enemy_snipe_preview_changed` 시그널 추가 후 일러스트·HUD 양쪽 하이라이트 연결.
-- [ ] 적 카드 폭이 좁을 때 예상 피해 라벨의 줄바꿈(`autowrap_mode`) 적용 검토.
-- [ ] 예고 / 예상 피해 라벨을 두 줄(VBox)로 분리해 동시에 보여줄지 검토.
-- [ ] AP 부족·손상 등으로 비활성된 스킬 버튼에 사유 툴팁 표시.
-- [ ] `Affix`(반격 본능 등) 적용 시 예상 수치 보정.
-- [ ] 자기 대상 클릭 영역에 `PlayerColumn` 전체 테두리 강조 검토 (현재는 캐처 박스만).
+- [x] **`MechIllustration` 구현** — `Control` 컨테이너 + 5개 레이어 플레이스홀더/텍스처 기반 구성.
+- [x] **파츠 상태 HUD 구현** — 십자형 32×32px 아이콘 5개. `part_durability_changed` 연동.
+- [x] **파츠 저격 예고 연동** — `SkillData.target_slot` + `EventBus.enemy_snipe_preview_changed`로 일러스트·HUD 동시 하이라이트.
+- [x] 적 카드 폭이 좁을 때 예고/예상 라벨 줄바꿈(`autowrap_mode`) 적용.
+- [x] 예고 / 예상 피해 라벨을 두 줄(VBox)로 분리해 동시에 표시.
+- [x] AP 부족·파츠 파괴 비활성 스킬 버튼에 사유 툴팁 표시.
+- [x] `Affix`(반격 본능·진심펀치 등) 예상 수치 보정과 실제 적용식 동기화.
+- [x] 자기 대상 클릭 시 `PlayerColumn` 전체 하이라이트 적용.
 
 ---
 
 ## 9. 변경 이력
 
+- 2026-05-18 — 예고/호버 라벨 2줄 분리, 줄바꿈 적용, 비활성 스킬 툴팁 사유화, SELF 타겟팅 시 PlayerColumn 하이라이트, affix(반격 본능·진심펀치) 예상 수치 반영.
 - 2026-05-18 — §2.3 MechIllustration(파츠 레이어 합성)·§4 파츠 상태 HUD(십자형 아이콘) 재설계. §5 TurnLabel·§6 펜딩 스킬 흐름 추가. 섹션 번호 재정렬.
 - 2026-05-14 — 최초 작성. 적 HP/쉴드 오버레이, 예상 피해/회복, 자기 대상 2단계 클릭 발동.

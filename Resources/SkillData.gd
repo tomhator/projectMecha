@@ -4,6 +4,7 @@ class_name SkillData
 
 enum SkillType { ATTACK, DEFENSE, HEAL, PASSIVE }
 enum SkillTarget { SELF, ENEMY }
+enum TargetSlot { NONE = -1, ARM_L = 0, ARM_R = 1, BACK = 2, LEG = 3 }
 
 enum SkillBuff { ATTACK_UP, DEFENSE_UP, HEAL_UP, SPEED_UP, SHIELD_REGEN, DAMAGE_BOOST, DAMAGE_REDUCTION, EVASION_UP }
 enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DOWN }
@@ -30,6 +31,8 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DO
 
 # 스킬 타겟 정보
 @export var skill_target: SkillTarget = SkillTarget.SELF
+# 특정 파츠 저격 스킬인 경우 대상 슬롯 (NONE이면 코어/일반 타겟으로 처리)
+@export var target_slot: TargetSlot = TargetSlot.NONE
 
 # 타격 관련
 @export var hit_count: int = 1

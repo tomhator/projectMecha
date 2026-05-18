@@ -2,11 +2,14 @@ extends Control
 class_name CombatUI
 
 signal skill_selected(skill: SkillData, target: Node)
+signal end_turn_requested
 
 const BATTLE_H_SEP: float = 24.0
 const ENEMY_COL_WIDTH_FRAC: float = 0.6
 const ENEMY_COL_MIN_W: float = 200.0
 const ENEMY_COL_MAX_W: float = 500.0
+const HUD_CORE_CELL: int = -1
+const SNIPE_SLOT_NONE: int = -1
 
 @onready var battle_hbox: HBoxContainer = %BattleHBox
 @onready var player_column: VBoxContainer = %PlayerColumn
@@ -18,6 +21,7 @@ const ENEMY_COL_MAX_W: float = 500.0
 @onready var _mech_illustration: Control = %MechIllustration
 @onready var selection_status: Label = %SelectionStatus
 @onready var turn_label: Label = %TurnLabel
+@onready var end_turn_button: Button = %EndTurnButton
 
 var _current_enemies: Array[EnemyEntity] = []
 ## EnemyEntity 인스턴스 ID → UI 위젯 (노드 참조 키 불일치 방지)
@@ -25,9 +29,11 @@ var _enemy_hp_bars: Dictionary = {}  # int → ProgressBar
 var _enemy_shield_bars: Dictionary = {}  # int → ProgressBar
 var _enemy_hp_value_labels: Dictionary = {}  # int → Label
 var _enemy_shield_value_labels: Dictionary = {}  # int → Label
-var _enemy_preview_labels: Dictionary = {}  # int → Label
+var _enemy_forecast_labels: Dictionary = {}  # int → Label (적 행동 예고)
+var _enemy_hover_preview_labels: Dictionary = {}  # int → Label (호버 예상값)
 var _enemy_target_buttons: Dictionary = {}  # int → Button
 var _skill_buttons: Dictionary = {}  # SkillData -> Button
+var _skill_disable_reasons: Dictionary = {}  # SkillData -> String
 
 var _pending_skill: SkillData = null
 var _actions_remaining: int = 0
@@ -35,9 +41,20 @@ var _hover_damage_preview_enemy: EnemyEntity = null
 var _hover_self_for_preview: bool = false
 var _player_preview_label: Label = null
 var _player_target_catcher: Button = null
-var _mech_layers: Dictionary = {}   # CoreData.CoreSlot → ColorRect (slot layers)
+const MECH_TEXTURE_PATHS: Dictionary = {
+	"core": "res://Asset/UI/Mecha/core.png",
+	"arm_l": "res://Asset/UI/Mecha/arm_l.png",
+	"arm_r": "res://Asset/UI/Mecha/arm_r.png",
+	"back": "res://Asset/UI/Mecha/back.png",
+	"leg": "res://Asset/UI/Mecha/leg.png",
+}
+
+var _mech_layers: Dictionary = {}   # CoreData.CoreSlot → TextureRect (slot layers)
 var _hud_icons: Dictionary = {}     # CoreData.CoreSlot → Panel (status HUD)
 var _broken_skills: Dictionary = {}  # SkillData → true (파괴된 파츠 소속 스킬)
+var _enemy_snipe_slots: Dictionary = {}  # enemy_instance_id -> int(slot)
+var _active_snipe_slot: int = SNIPE_SLOT_NONE
+var _snipe_pulse_tween: Tween = null
 
 
 func _ready() -> void:
@@ -46,11 +63,15 @@ func _ready() -> void:
 	EventBus.skill_used.connect(_on_skill_used_global)
 	EventBus.combat_turn_changed.connect(_on_combat_turn_changed)
 	EventBus.part_durability_changed.connect(_on_part_durability_changed)
+	EventBus.enemy_snipe_preview_changed.connect(_on_enemy_snipe_preview_changed)
 	battle_hbox.resized.connect(_apply_battle_column_split)
 	_build_mech_layers()
 	_build_parts_hud()
 	_refresh_player_strip_from_state()
 	_ensure_player_target_strip()
+	if end_turn_button != null and not end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
+		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
+	_set_end_turn_button_enabled(false)
 	_apply_battle_column_split.call_deferred()
 
 
@@ -84,31 +105,56 @@ func _refresh_player_strip_from_state() -> void:
 		core_name_label.text = GameState.current_core.core_name
 	_refresh_all_mech_layers()
 	_refresh_all_hud_icons()
+	_apply_snipe_highlight()
 
 
 # ── 메카 일러스트 ─────────────────────────────────────────────────────────────
 
 func _build_mech_layers() -> void:
-	# [slot_or_null, color, position, size, z_index]
+	# [slot_or_null, texture_key, fallback_color, position, size, z_index]
 	# null = 코어 몸통 (항상 표시, CoreData.CoreSlot 아님)
 	var specs: Array = [
-		[CoreData.CoreSlot.BACK,  Color(0.40, 0.40, 0.50), Vector2(5,   5),   Vector2(28, 50), 0],
-		[CoreData.CoreSlot.LEG,   Color(0.35, 0.35, 0.40), Vector2(32, 107),  Vector2(60, 55), 1],
-		[null,                    Color(0.65, 0.65, 0.70), Vector2(30,  20),  Vector2(75, 90), 2],
-		[CoreData.CoreSlot.ARM_R, Color(0.30, 0.45, 0.70), Vector2(98,  40),  Vector2(40, 72), 3],
-		[CoreData.CoreSlot.ARM_L, Color(0.30, 0.65, 0.65), Vector2(5,   52),  Vector2(30, 58), 4],
+		[CoreData.CoreSlot.BACK,  "back",  Color(0.40, 0.40, 0.50), Vector2(5,   5),   Vector2(28, 50), 0],
+		[CoreData.CoreSlot.LEG,   "leg",   Color(0.35, 0.35, 0.40), Vector2(32, 107),  Vector2(60, 55), 1],
+		[null,                    "core",  Color(0.65, 0.65, 0.70), Vector2(30,  20),  Vector2(75, 90), 2],
+		[CoreData.CoreSlot.ARM_R, "arm_r", Color(0.30, 0.45, 0.70), Vector2(98,  40),  Vector2(40, 72), 3],
+		[CoreData.CoreSlot.ARM_L, "arm_l", Color(0.30, 0.65, 0.65), Vector2(5,   52),  Vector2(30, 58), 4],
 	]
 	for spec in specs:
 		var slot = spec[0]
-		var rect := ColorRect.new()
-		rect.color = spec[1]
-		rect.position = spec[2]
-		rect.size = spec[3]
-		rect.z_index = spec[4]
+		var tex_key: String = spec[1]
+		var fallback: Color = spec[2]
+		var pos: Vector2 = spec[3]
+		var layer_size: Vector2 = spec[4]
+		var layer_z: int = spec[5]
+		var rect := TextureRect.new()
+		rect.texture = _load_mech_texture(tex_key, fallback, layer_size)
+		rect.position = pos
+		rect.size = layer_size
+		rect.z_index = layer_z
+		rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_mech_illustration.add_child(rect)
 		if slot != null:
 			_mech_layers[slot] = rect
+
+
+func _load_mech_texture(texture_key: String, fallback_color: Color, layer_size: Vector2) -> Texture2D:
+	var path: String = MECH_TEXTURE_PATHS.get(texture_key, "")
+	if not path.is_empty() and ResourceLoader.exists(path):
+		var loaded: Resource = load(path)
+		if loaded is Texture2D:
+			return loaded as Texture2D
+	return _make_fallback_texture(fallback_color, layer_size)
+
+
+func _make_fallback_texture(color: Color, layer_size: Vector2) -> Texture2D:
+	var w: int = maxi(int(layer_size.x), 1)
+	var h: int = maxi(int(layer_size.y), 1)
+	var image := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	image.fill(color)
+	return ImageTexture.create_from_image(image)
 
 
 func _refresh_all_mech_layers() -> void:
@@ -122,8 +168,9 @@ func _refresh_all_mech_layers() -> void:
 func _refresh_mech_layer(slot: CoreData.CoreSlot) -> void:
 	if slot not in _mech_layers:
 		return
-	var rect: ColorRect = _mech_layers[slot]
+	var rect: TextureRect = _mech_layers[slot]
 	rect.visible = GameState.equipped_parts.get(slot) != null
+	_apply_snipe_highlight()
 
 
 # ── 파츠 상태 HUD (좌하단 십자형) ────────────────────────────────────────────
@@ -142,7 +189,7 @@ func _build_parts_hud() -> void:
 	# 십자형 배치 (row by row): null = 빈 칸
 	var cross: Array = [
 		null,                    CoreData.CoreSlot.BACK,  null,
-		CoreData.CoreSlot.ARM_R, "core",                  CoreData.CoreSlot.ARM_L,
+		CoreData.CoreSlot.ARM_R, HUD_CORE_CELL,           CoreData.CoreSlot.ARM_L,
 		null,                    CoreData.CoreSlot.LEG,   null,
 	]
 	for key in cross:
@@ -152,18 +199,19 @@ func _build_parts_hud() -> void:
 			spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			grid.add_child(spacer)
 		else:
+			var is_core: bool = (typeof(key) == TYPE_INT and int(key) == HUD_CORE_CELL)
 			var panel := Panel.new()
 			panel.custom_minimum_size = Vector2(32, 32)
 			panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			var lbl := Label.new()
-			lbl.text = "코" if key == "core" else _slot_short(key as CoreData.CoreSlot)
+			lbl.text = "코" if is_core else _slot_short(key as CoreData.CoreSlot)
 			lbl.add_theme_font_size_override("font_size", 9)
 			lbl.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 			lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			panel.add_child(lbl)
-			if key != "core":
+			if not is_core:
 				_hud_icons[key as CoreData.CoreSlot] = panel
 			grid.add_child(panel)
 
@@ -214,6 +262,9 @@ func _refresh_hud_icon(slot: CoreData.CoreSlot) -> void:
 		panel.modulate = Color(1, 1, 1, 1)
 		_clear_hud_broken_overlay(panel)
 	panel.add_theme_stylebox_override("panel", style)
+	panel.set_meta("base_modulate", panel.modulate)
+	panel.set_meta("base_style", style.duplicate())
+	_apply_snipe_highlight()
 
 
 func _ensure_hud_broken_overlay(panel: Panel) -> void:
@@ -259,13 +310,38 @@ func on_player_action_required(
 	_apply_enemy_targeting_border(false)
 	_current_enemies = enemies
 	_actions_remaining = actions_remaining
+	_prune_stale_snipe_sources()
 	_rebuild_action_orbs()
 	_rebuild_skill_buttons(available_skills)
 	_rebuild_enemy_bars(enemies)
 	_update_enemy_preview()
 	_refresh_player_preview_label()
 	_set_selection_status("스킬을 선택하세요.")
+	_set_end_turn_button_enabled(actions_remaining > 0)
+	_recompute_snipe_highlight()
 	_apply_battle_column_split.call_deferred()
+
+
+func _set_end_turn_button_enabled(enabled: bool) -> void:
+	if end_turn_button == null:
+		return
+	end_turn_button.disabled = not enabled
+	end_turn_button.tooltip_text = "" if enabled else "행동력이 없으면 턴이 자동 종료됩니다."
+
+
+func _on_end_turn_button_pressed() -> void:
+	if _actions_remaining <= 0:
+		return
+	_pending_skill = null
+	_hover_damage_preview_enemy = null
+	_hover_self_for_preview = false
+	_set_player_self_target_pending(false)
+	_set_enemy_targeting_enabled(false)
+	_apply_enemy_targeting_border(false)
+	_set_skill_buttons_disabled(false)
+	_set_selection_status("턴을 종료합니다.")
+	_set_end_turn_button_enabled(false)
+	end_turn_requested.emit()
 
 
 func _rebuild_action_orbs() -> void:
@@ -284,6 +360,7 @@ func _rebuild_action_orbs() -> void:
 
 func _rebuild_skill_buttons(available_skills: Array[SkillData]) -> void:
 	_broken_skills.clear()
+	_skill_disable_reasons.clear()
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
 		var part: PartsData = GameState.equipped_parts[slot] as PartsData
 		if part != null and part.is_broken():
@@ -297,13 +374,23 @@ func _rebuild_skill_buttons(available_skills: Array[SkillData]) -> void:
 		var btn: Button = Button.new()
 		btn.text = "%s [%d]" % [skill.skill_name, skill.skill_action_cost]
 		btn.focus_mode = Control.FOCUS_NONE
-		if _broken_skills.has(skill):
+		var disable_reason: String = _skill_disable_reason(skill)
+		if not disable_reason.is_empty():
 			btn.disabled = true
-			btn.tooltip_text = "파츠 파괴됨"
+			btn.tooltip_text = disable_reason
+			_skill_disable_reasons[skill] = disable_reason
 		else:
 			btn.pressed.connect(_on_skill_button_pressed.bind(skill))
 		skill_container.add_child(btn)
 		_skill_buttons[skill] = btn
+
+
+func _skill_disable_reason(skill: SkillData) -> String:
+	if _broken_skills.has(skill):
+		return "파츠 파괴됨"
+	if skill.skill_action_cost > _actions_remaining:
+		return "AP 부족 (%d 필요 / %d 보유)" % [skill.skill_action_cost, _actions_remaining]
+	return ""
 
 
 func _on_skill_button_pressed(skill: SkillData) -> void:
@@ -385,10 +472,14 @@ func _set_enemy_targeting_enabled(on: bool) -> void:
 ## 더 이상 실제로 버튼을 비활성화하지 않는다. (다른 스킬로 자유롭게 교체 가능)
 func _set_skill_buttons_disabled(disabled: bool, except_skill: SkillData = null) -> void:
 	for s: SkillData in _skill_buttons.keys():
-		if _broken_skills.has(s):
-			continue
 		var b: Button = _skill_buttons[s] as Button
-		b.disabled = false
+		var fixed_disabled: bool = _skill_disable_reasons.has(s)
+		b.disabled = fixed_disabled
+		if fixed_disabled:
+			b.tooltip_text = _skill_disable_reasons[s]
+			_clear_skill_button_decoration(b)
+			continue
+		b.tooltip_text = ""
 		if disabled and except_skill != null and s == except_skill:
 			_style_skill_button_pending(b)
 		else:
@@ -490,20 +581,32 @@ func _pick_default_target(skill: SkillData) -> Node:
 func _update_enemy_preview() -> void:
 	for enemy: EnemyEntity in _current_enemies:
 		var id: int = enemy.get_instance_id()
-		if not _enemy_preview_labels.has(id):
+		if not _enemy_forecast_labels.has(id) or not _enemy_hover_preview_labels.has(id):
 			continue
-		var lbl: Label = _enemy_preview_labels[id] as Label
-		if lbl == null:
+		var forecast_lbl: Label = _enemy_forecast_labels[id] as Label
+		var hover_lbl: Label = _enemy_hover_preview_labels[id] as Label
+		if forecast_lbl == null or hover_lbl == null:
 			continue
 		if enemy.is_defeated():
-			lbl.text = ""
-		elif _pending_skill != null and _hover_damage_preview_enemy == enemy:
-			lbl.text = _damage_preview_text_for_hover(enemy)
-		elif not enemy.next_actions.is_empty():
+			_set_enemy_label_text(forecast_lbl, "")
+			_set_enemy_label_text(hover_lbl, "")
+			continue
+
+		if not enemy.next_actions.is_empty():
 			var names: Array = enemy.next_actions.map(func(s: SkillData) -> String: return s.skill_name)
-			lbl.text = "예고: %s" % " → ".join(names)
+			_set_enemy_label_text(forecast_lbl, "예고: %s" % " → ".join(names))
 		else:
-			lbl.text = ""
+			_set_enemy_label_text(forecast_lbl, "")
+
+		if _pending_skill != null and _hover_damage_preview_enemy == enemy:
+			_set_enemy_label_text(hover_lbl, _damage_preview_text_for_hover(enemy))
+		else:
+			_set_enemy_label_text(hover_lbl, "")
+
+
+func _set_enemy_label_text(lbl: Label, text: String) -> void:
+	lbl.text = text
+	lbl.visible = not text.is_empty()
 
 
 func _damage_preview_text_for_hover(enemy: EnemyEntity) -> String:
@@ -511,7 +614,7 @@ func _damage_preview_text_for_hover(enemy: EnemyEntity) -> String:
 	if mecha == null or not (mecha is MechaEntity):
 		return ""
 	var m: MechaEntity = mecha as MechaEntity
-	var dmg: float = m.get_preview_outgoing_damage(_pending_skill)
+	var dmg: float = m.get_preview_outgoing_damage(_pending_skill, enemy)
 	var hp_gain: float = m.get_preview_effective_hp_heal(_pending_skill)
 	var sh_gain: float = m.get_preview_effective_shield_heal(_pending_skill)
 	var parts: PackedStringArray = []
@@ -558,15 +661,26 @@ func _set_player_self_target_pending(on: bool) -> void:
 	if _player_target_catcher == null:
 		return
 	if on:
+		_set_player_column_highlight(true)
 		_player_target_catcher.mouse_filter = Control.MOUSE_FILTER_STOP
 		_player_target_catcher.flat = false
 		_player_target_catcher.text = "내 메카 클릭"
 		_style_player_target_catcher_active()
 	else:
+		_set_player_column_highlight(false)
 		_player_target_catcher.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_player_target_catcher.flat = true
 		_player_target_catcher.text = ""
 		_clear_player_target_catcher_style()
+
+
+func _set_player_column_highlight(on: bool) -> void:
+	if player_column == null:
+		return
+	if on:
+		player_column.modulate = Color(0.9, 1.0, 0.92, 1.0)
+	else:
+		player_column.modulate = Color.WHITE
 
 
 func _style_player_target_catcher_active() -> void:
@@ -655,7 +769,8 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 	_enemy_shield_bars.clear()
 	_enemy_hp_value_labels.clear()
 	_enemy_shield_value_labels.clear()
-	_enemy_preview_labels.clear()
+	_enemy_forecast_labels.clear()
+	_enemy_hover_preview_labels.clear()
 	_enemy_target_buttons.clear()
 
 	for enemy: EnemyEntity in enemies:
@@ -682,11 +797,25 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 		vbox.offset_top = 4.0
 		vbox.offset_bottom = -4.0
 
+		var forecast := Label.new()
+		forecast.add_theme_font_size_override("font_size", 11)
+		forecast.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
+		forecast.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		forecast.clip_text = true
+		forecast.visible = false
+		forecast.custom_minimum_size = Vector2(0.0, 14.0)
+		vbox.add_child(forecast)
+		_enemy_forecast_labels[eid] = forecast
+
 		var preview := Label.new()
 		preview.add_theme_font_size_override("font_size", 11)
-		preview.add_theme_color_override("font_color", Color(1.0, 0.82, 0.35))
+		preview.add_theme_color_override("font_color", Color(0.70, 0.92, 1.0, 1.0))
+		preview.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		preview.clip_text = true
+		preview.visible = false
+		preview.custom_minimum_size = Vector2(0.0, 14.0)
 		vbox.add_child(preview)
-		_enemy_preview_labels[eid] = preview
+		_enemy_hover_preview_labels[eid] = preview
 
 		var name_label := Label.new()
 		name_label.text = enemy.enemy_name
@@ -755,6 +884,7 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 		enemy_container.add_child(btn)
 
 	_update_enemy_preview()
+	_recompute_snipe_highlight()
 
 
 func _set_enemy_hp_number_text(id: int, cur: float, maxv: float) -> void:
@@ -773,9 +903,108 @@ func _set_enemy_shield_number_text(id: int, cur: float, maxv: float) -> void:
 		lab.text = "%.0f / %.0f" % [cur, maxv]
 
 
+func _on_enemy_snipe_preview_changed(enemy: EnemyEntity, target_slot: int, active: bool) -> void:
+	if enemy == null:
+		return
+	var enemy_id: int = enemy.get_instance_id()
+	if not active or enemy.is_defeated() or target_slot == SNIPE_SLOT_NONE:
+		_enemy_snipe_slots.erase(enemy_id)
+	else:
+		_enemy_snipe_slots[enemy_id] = target_slot
+	_recompute_snipe_highlight()
+
+
+func _prune_stale_snipe_sources() -> void:
+	var alive_ids: Dictionary = {}
+	for enemy: EnemyEntity in _current_enemies:
+		if enemy == null or enemy.is_defeated():
+			continue
+		alive_ids[enemy.get_instance_id()] = true
+	for enemy_id in _enemy_snipe_slots.keys().duplicate():
+		if not alive_ids.has(enemy_id):
+			_enemy_snipe_slots.erase(enemy_id)
+
+
+func _recompute_snipe_highlight() -> void:
+	_prune_stale_snipe_sources()
+	var picked: int = SNIPE_SLOT_NONE
+	for enemy: EnemyEntity in _current_enemies:
+		if enemy == null or enemy.is_defeated():
+			continue
+		var enemy_id: int = enemy.get_instance_id()
+		if _enemy_snipe_slots.has(enemy_id):
+			picked = int(_enemy_snipe_slots[enemy_id])
+			break
+	_active_snipe_slot = picked
+	_apply_snipe_highlight()
+
+
+func _apply_snipe_highlight() -> void:
+	var has_target: bool = _active_snipe_slot != SNIPE_SLOT_NONE
+	for key in _mech_layers.keys():
+		var slot: CoreData.CoreSlot = key as CoreData.CoreSlot
+		var layer: TextureRect = _mech_layers[slot] as TextureRect
+		if layer == null:
+			continue
+		layer.remove_theme_stylebox_override("normal")
+		layer.modulate = Color.WHITE
+		if has_target:
+			if int(slot) == _active_snipe_slot:
+				var sb := StyleBoxFlat.new()
+				sb.bg_color = Color(0.0, 0.0, 0.0, 0.0)
+				sb.set_border_width_all(2)
+				sb.border_color = Color(1.0, 0.86, 0.2, 1.0)
+				sb.set_corner_radius_all(4)
+				layer.add_theme_stylebox_override("normal", sb)
+			else:
+				layer.modulate = Color(0.5, 0.5, 0.5, 1.0)
+
+	for key in _hud_icons.keys():
+		var slot: CoreData.CoreSlot = key as CoreData.CoreSlot
+		var panel: Panel = _hud_icons[slot] as Panel
+		if panel == null:
+			continue
+		var base_modulate: Color = Color.WHITE
+		if panel.has_meta("base_modulate"):
+			var maybe_color: Variant = panel.get_meta("base_modulate")
+			if typeof(maybe_color) == TYPE_COLOR:
+				base_modulate = maybe_color
+		if panel.has_meta("base_style"):
+			var base_style: StyleBoxFlat = panel.get_meta("base_style") as StyleBoxFlat
+			if base_style != null:
+				panel.add_theme_stylebox_override("panel", base_style.duplicate())
+		panel.modulate = base_modulate
+		if not has_target:
+			continue
+		if int(slot) == _active_snipe_slot:
+			var style: StyleBoxFlat = panel.get_theme_stylebox("panel").duplicate() as StyleBoxFlat
+			if style != null:
+				style.set_border_width_all(maxi(style.border_width_left, 2))
+				style.border_color = Color(1.0, 0.86, 0.2, 1.0)
+				panel.add_theme_stylebox_override("panel", style)
+		else:
+			panel.modulate = Color(base_modulate.r * 0.6, base_modulate.g * 0.6, base_modulate.b * 0.6, base_modulate.a)
+
+	if _snipe_pulse_tween != null:
+		_snipe_pulse_tween.kill()
+		_snipe_pulse_tween = null
+	if has_target:
+		var target_layer: TextureRect = null
+		for key in _mech_layers.keys():
+			var slot: CoreData.CoreSlot = key as CoreData.CoreSlot
+			if int(slot) == _active_snipe_slot:
+				target_layer = _mech_layers[slot] as TextureRect
+				break
+		if target_layer != null:
+			_snipe_pulse_tween = create_tween().set_loops()
+			_snipe_pulse_tween.tween_property(target_layer, "modulate:a", 0.72, 0.3)
+			_snipe_pulse_tween.tween_property(target_layer, "modulate:a", 1.0, 0.3)
+
+
 func _on_skill_used_global(entity: Node, _skill: SkillData) -> void:
 	if entity is EnemyEntity:
 		_update_enemy_preview()
+		_recompute_snipe_highlight()
 
 
 func _on_hp_changed(entity: Node, new_hp: float, max_hp: float) -> void:
@@ -788,6 +1017,7 @@ func _on_hp_changed(entity: Node, new_hp: float, max_hp: float) -> void:
 			hb.value = new_hp
 		_set_enemy_hp_number_text(id, new_hp, max_hp)
 		_update_enemy_preview()
+		_recompute_snipe_highlight()
 		return
 	if entity == GameState:
 		_refresh_player_preview_label()

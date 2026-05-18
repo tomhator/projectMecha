@@ -11,4 +11,5 @@ skill_description = "대구경 포탄을 발사한다."
 skill_damage = 16.0
 skill_action_cost = 2
 skill_target = 1
+target_slot = 2
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

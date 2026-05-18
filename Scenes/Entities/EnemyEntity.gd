@@ -8,10 +8,12 @@ class_name EnemyEntity
 @export var attack_multiplier: float = 1.0
 @export var enemy_action_count: int = 2
 @export var skills: Array[SkillData] = []
+const SNIPE_SLOT_NONE: int = -1
 
 var current_hp: float = 0.0
 var current_shield: float = 0.0
 var next_actions: Array[SkillData] = []
+var _preview_target_slot: int = SNIPE_SLOT_NONE
 
 func setup() -> void:
 	current_hp = enemy_max_hp
@@ -50,6 +52,8 @@ func take_damage(damage: float) -> void:
 	EventBus.shield_changed.emit(self, current_shield, enemy_max_shield)
 	if is_defeated():
 		print("  > [%s] 격파!" % enemy_name)
+		_preview_target_slot = SNIPE_SLOT_NONE
+		EventBus.enemy_snipe_preview_changed.emit(self, _preview_target_slot, false)
 
 
 ## `take_damage`와 동일한 흡수 규칙으로, 들어오는 피해가 쉴드·HP에 어떻게 나뉘는지 미리 계산 (UI 프리뷰용).
@@ -80,6 +84,7 @@ func execute_actions(target: Node) -> void:
 func decide_next_actions() -> void:
 	next_actions.clear()
 	if skills.is_empty():
+		_publish_snipe_preview()
 		return
 	var ap_remaining: int = enemy_action_count
 	var candidates: Array[SkillData] = skills.filter(
@@ -96,6 +101,25 @@ func decide_next_actions() -> void:
 		enemy_name,
 		" → ".join(next_actions.map(func(s: SkillData) -> String: return s.skill_name))
 	])
+	_publish_snipe_preview()
+
+
+func _publish_snipe_preview() -> void:
+	_preview_target_slot = _resolve_snipe_preview_slot()
+	var active: bool = _preview_target_slot != SNIPE_SLOT_NONE and not is_defeated()
+	EventBus.enemy_snipe_preview_changed.emit(self, _preview_target_slot, active)
+
+
+func _resolve_snipe_preview_slot() -> int:
+	for action: SkillData in next_actions:
+		if action == null:
+			continue
+		if action.skill_target != SkillData.SkillTarget.ENEMY:
+			continue
+		if action.target_slot == SNIPE_SLOT_NONE:
+			continue
+		return action.target_slot
+	return SNIPE_SLOT_NONE
 
 func _heal_hp(amount: float) -> void:
 	current_hp = minf(current_hp + amount, enemy_max_hp)

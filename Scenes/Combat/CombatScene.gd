@@ -16,6 +16,7 @@ func _ready() -> void:
 		enemies.append(entity)
 
 	combat_ui.skill_selected.connect(turn_manager.on_skill_selected)
+	combat_ui.end_turn_requested.connect(turn_manager.on_end_turn_requested)
 	turn_manager.player_action_required.connect(combat_ui.on_player_action_required)
 	turn_manager.combat_ended.connect(_on_combat_ended)
 

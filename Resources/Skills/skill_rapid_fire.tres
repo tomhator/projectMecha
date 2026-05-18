@@ -11,4 +11,5 @@ skill_description = "빠르게 탄환을 퍼붓는다. 위력은 낮지만 행�
 skill_damage = 10.0
 skill_action_cost = 1
 skill_target = 1
+target_slot = 1
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

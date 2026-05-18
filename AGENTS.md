@@ -27,7 +27,7 @@
 3. **Scenes 폴더 구조 확인** — 기존 파일과 충돌하지 않도록 파악한다.
 4. **AGENTS.md 확인** — 해당 폴더의 규칙을 숙지한다.
 5. **구현** — 기획 문서 기반으로 코드 작성.
-6. **커밋 시 WorkNote 작성** — `Docs/WorkNote/YYYY-MM-DD.md`에 작업 일지 기록.
+6. **커밋 시 WorkNote 및 TODO 작성** — `Docs/WorkNote/YYYY-MM-DD.md`에 작업 일지 기록 및 다음 작업을 위한 `TODO-YYYY-MM-DD.md` 작성.
 
 ---
 
@@ -68,6 +68,7 @@ chore   - 기타 잡무
 예시: `feat: 부품 장착 드래그앤드롭 구현`
 
 커밋 시 반드시 `Docs/WorkNote/YYYY-MM-DD.md` 작성 또는 업데이트.
+또한, 다음 작업을 명확히 하기 위해 반드시 `Docs/WorkNote/TODO-YYYY-MM-DD.md` (또는 `TODO-NEXT.md`) 파일을 생성하거나 업데이트하여 다음 할 일을 기록해야 합니다.
 
 ---
 
