@@ -71,10 +71,11 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "코어"
 
-[node name="PartsLabels" type="VBoxContainer" parent="BattleMargin/BattleHBox/PlayerColumn"]
+[node name="MechIllustration" type="Control" parent="BattleMargin/BattleHBox/PlayerColumn"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 170)
 layout_mode = 2
-size_flags_vertical = 3
+clip_contents = true
 theme_override_constants/separation = 4
 
 [node name="EnemyColumn" type="VBoxContainer" parent="BattleMargin/BattleHBox"]
