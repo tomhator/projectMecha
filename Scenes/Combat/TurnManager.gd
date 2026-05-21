@@ -15,6 +15,19 @@ var actions_left: int = 0
 var current_turn: int = 0
 var _counted_defeated_enemies: Array[EnemyEntity] = []
 
+func start_combat_untyped(mecha: Node, enemy_list: Array) -> void:
+	if not (mecha is MechaEntity):
+		push_error("TurnManager.start_combat_untyped: mecha must be MechaEntity")
+		return
+	var typed_enemies: Array[EnemyEntity] = []
+	for enemy in enemy_list:
+		if enemy is EnemyEntity:
+			typed_enemies.append(enemy)
+		else:
+			push_error("TurnManager.start_combat_untyped: enemy must be EnemyEntity")
+	start_combat(mecha as MechaEntity, typed_enemies)
+
+
 func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:
 	player_mecha = mecha
 	enemies = enemy_list
@@ -33,6 +46,7 @@ func start_player_turn() -> void:
 	for enemy: EnemyEntity in enemies:
 		if not enemy.is_defeated():
 			enemy.tick_debuffs()
+	_prune_defeated_boss_arms()
 	_count_new_defeats()
 	if _check_combat_end():
 		return
@@ -49,15 +63,24 @@ func start_player_turn() -> void:
 		actions_left,
 		usable.map(func(s: SkillData) -> String: return s.skill_name)
 	])
-	player_action_required.emit(usable, enemies, actions_left)
+	if usable.is_empty():
+		print("[TurnManager] 사용 가능한 스킬 없음 — 자동 턴 종료")
+		start_enemy_turn()
+		return
+	player_action_required.emit(_get_display_skills(), enemies, actions_left)
 
 func on_skill_selected(skill: SkillData, target: Node) -> void:
 	if current_phase != TurnPhase.PLAYER_TURN:
+		return
+	if skill == null or not player_mecha.can_use_skill(skill) or skill.skill_action_cost > actions_left:
+		print("[TurnManager] 사용 불가 스킬 무시: %s" % ("null" if skill == null else skill.skill_name))
+		player_action_required.emit(_get_display_skills(), enemies, actions_left)
 		return
 	var target_name: String = "없음" if target == null else str(target.name)
 	print("[플레이어] '%s' 사용 → 타겟: %s" % [skill.skill_name, target_name])
 	player_mecha.use_skill(skill, target)
 	actions_left -= skill.skill_action_cost
+	_prune_defeated_boss_arms()
 	_count_new_defeats()
 	if _check_combat_end():
 		return
@@ -65,7 +88,7 @@ func on_skill_selected(skill: SkillData, target: Node) -> void:
 	if actions_left <= 0 or usable.is_empty():
 		start_enemy_turn()
 	else:
-		player_action_required.emit(usable, enemies, actions_left)
+		player_action_required.emit(_get_display_skills(), enemies, actions_left)
 
 
 func on_end_turn_requested() -> void:
@@ -83,6 +106,7 @@ func start_enemy_turn() -> void:
 	for enemy: EnemyEntity in enemies:
 		if not enemy.is_defeated():
 			enemy.execute_actions(player_mecha)
+			_prune_defeated_boss_arms()
 			_count_new_defeats()
 			if _check_combat_end():
 				return
@@ -92,6 +116,9 @@ func _get_usable_skills() -> Array[SkillData]:
 	return player_mecha.get_available_skills().filter(
 		func(s: SkillData) -> bool: return s.skill_action_cost <= actions_left
 	)
+
+func _get_display_skills() -> Array[SkillData]:
+	return player_mecha.get_display_skills()
 
 func add_enemy(enemy: EnemyEntity) -> void:
 	if enemy in enemies:
@@ -106,8 +133,31 @@ func get_defeated_enemy_count() -> int:
 
 func _count_new_defeats() -> void:
 	for enemy: EnemyEntity in enemies:
+		if enemy is CollectorArmEntity:
+			continue
 		if enemy.is_defeated() and not _counted_defeated_enemies.has(enemy):
 			_counted_defeated_enemies.append(enemy)
+
+
+func _prune_defeated_boss_arms() -> void:
+	var removed: bool = false
+	var removed_nodes: Array[EnemyEntity] = []
+	for i: int in range(enemies.size() - 1, -1, -1):
+		var enemy: EnemyEntity = enemies[i]
+		if enemy is CollectorArmEntity and enemy.is_defeated():
+			enemies.remove_at(i)
+			removed = true
+			removed_nodes.append(enemy)
+			print("[TurnManager] 파괴된 수집가 팔 제거: %s (현재 적 수: %d)" % [enemy.enemy_name, enemies.size()])
+	if removed:
+		for enemy: EnemyEntity in enemies:
+			if enemy is BossCollectorEntity:
+				(enemy as BossCollectorEntity).prune_defeated_arms()
+		for removed_node: EnemyEntity in removed_nodes:
+			if removed_node.is_inside_tree():
+				removed_node.queue_free()
+			else:
+				removed_node.free()
 
 
 func _check_combat_end() -> bool:

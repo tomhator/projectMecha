@@ -147,6 +147,7 @@ run_check "GDScript parser" run_gdparse
 run_check "Godot headless project load" run_godot_headless
 run_check "Resource integrity" run_godot_script res://Scripts/Validation/check_resource_integrity.gd
 run_check "Scene smoke" run_godot_script res://Scripts/Validation/check_scene_smoke.gd
+run_check "P0 combat flows" run_godot_script res://Scripts/Validation/check_p0_combat_flows.gd
 
 if [ "$failed" -eq 0 ]; then
   echo "Validation complete: PASS"

@@ -29,6 +29,25 @@ func get_available_skills() -> Array[SkillData]:
 	)
 
 
+func get_display_skills() -> Array[SkillData]:
+	return available_skills.filter(func(s: SkillData) -> bool:
+		return s.skill_type != SkillData.SkillType.PASSIVE
+	)
+
+
+func can_use_skill(skill: SkillData) -> bool:
+	if skill == null:
+		return false
+	if not available_skills.has(skill):
+		return false
+	if skill.skill_type == SkillData.SkillType.PASSIVE:
+		return false
+	var part: PartsData = _skill_to_part.get(skill)
+	if part != null and part.is_broken():
+		return false
+	return true
+
+
 func get_part_at_slot(slot_index: int) -> PartsData:
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
 		if int(slot) == slot_index:

@@ -56,6 +56,10 @@ func apply_core_shield_heal(amount: float) -> void:
 	_heal_shield(amount)
 
 
+func prune_defeated_arms() -> void:
+	_prune_defeated_arms()
+
+
 func _decide_with_theft_option(include_theft: bool) -> void:
 	next_actions.clear()
 	if skills.is_empty() and not include_theft:
