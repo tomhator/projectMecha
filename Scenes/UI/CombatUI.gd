@@ -1121,7 +1121,7 @@ func _spawn_floating_label(text: String, global_pos: Vector2, color: Color) -> v
 	lbl.modulate = color
 	lbl.z_index = 100
 	lbl.add_theme_font_size_override("font_size", 16)
-	lbl.position = to_local(global_pos) + Vector2(randf_range(-10.0, 10.0), -20.0)
+	lbl.position = global_pos - global_position + Vector2(randf_range(-10.0, 10.0), -20.0)
 	add_child(lbl)
 	var start_y: float = lbl.position.y
 	var t := lbl.create_tween()
