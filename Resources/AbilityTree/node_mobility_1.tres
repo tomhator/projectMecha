@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_mobility_1"
+display_name = "기동 향상"
+description = "서보 모터를 업그레이드해 반응속도를 높인다.\n행동력 +1"
+point_cost = 1
+required_node_id = ""
+stat_action_count_bonus = 1
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

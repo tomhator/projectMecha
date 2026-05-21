@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_defense_1"
+display_name = "장갑 보강"
+description = "코어 장갑판을 두껍게 교체한다.\n최대 HP +40"
+point_cost = 1
+required_node_id = ""
+stat_hp_bonus = 40.0
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

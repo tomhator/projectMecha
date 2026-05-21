@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_attack_2"
+display_name = "화력 과부하"
+description = "냉각 한계를 무시하고 출력을 극대화한다.\n공격 배율 +15%"
+point_cost = 1
+required_node_id = "node_attack_1"
+stat_attack_multiplier_bonus = 0.15
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

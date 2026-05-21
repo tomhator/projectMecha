@@ -1,132 +1,227 @@
 extends Control
 
-const CORE_VANGUARD_PATH := "res://Resources/Cores/core_vanguard.tres"
-const CORE_STRIKER_PATH := "res://Resources/Cores/core_striker.tres"
-const CORE_BULWARK_PATH := "res://Resources/Cores/core_bulwark.tres"
+const TREE_POINTS: int = 3
 
-const CARD_SIZE := Vector2(200.0, 240.0)
+const NODE_PATHS: Array[String] = [
+	"res://Resources/AbilityTree/node_attack_1.tres",
+	"res://Resources/AbilityTree/node_attack_2.tres",
+	"res://Resources/AbilityTree/node_attack_core.tres",
+	"res://Resources/AbilityTree/node_defense_1.tres",
+	"res://Resources/AbilityTree/node_defense_2.tres",
+	"res://Resources/AbilityTree/node_defense_core.tres",
+	"res://Resources/AbilityTree/node_mobility_1.tres",
+	"res://Resources/AbilityTree/node_mobility_2.tres",
+	"res://Resources/AbilityTree/node_mobility_core.tres",
+]
+
+const BRANCH_ORDER: Array[String] = ["attack", "defense", "mobility"]
+const BRANCH_LABELS: Dictionary = {
+	"attack": "[ 공격 분기 ]",
+	"defense": "[ 방어 분기 ]",
+	"mobility": "[ 기동 분기 ]",
+}
 
 @onready var cards_row: HBoxContainer = $MarginRoot/CenterArea/CardsRow
 @onready var sortie_button: Button = $MarginRoot/CenterArea/SortieButton
+@onready var title_label: Label = $MarginRoot/CenterArea/TitleLabel
 
-var _selected_path: String = ""
-var _card_panels: Array[Panel] = []
+var _nodes: Array[AbilityTreeNode] = []
+var _selected_ids: Array[String] = []
+var _remaining_points: int = TREE_POINTS
+var _points_label: Label = null
+var _card_meta: Dictionary = {}  # node_id → { panel, button }
 
 
 func _ready() -> void:
-	sortie_button.disabled = true
+	title_label.text = "어빌리티 트리"
+	sortie_button.disabled = false
 	sortie_button.text = "출격"
-	_build_cards()
-
-
-func _build_cards() -> void:
-	var defs: Array[Dictionary] = [
-		{
-			"path": CORE_VANGUARD_PATH,
-			"title": "범용 코어",
-			"subtitle": "Vanguard",
-			"desc": "평균적인 스탯, 제약 없음."
-		},
-		{
-			"path": CORE_STRIKER_PATH,
-			"title": "경량 코어",
-			"subtitle": "Striker",
-			"desc": "공격력 보정 / 턴당 스킬 2회 / 하중 제한↓"
-		},
-		{
-			"path": CORE_BULWARK_PATH,
-			"title": "방어 코어",
-			"subtitle": "Bulwark",
-			"desc": "체력↑ / 공격력↓ / 공격 횟수↓"
-		},
-	]
-
-	for def: Dictionary in defs:
-		var card: Panel = _make_core_card(def)
-		cards_row.add_child(card)
-		_card_panels.append(card)
-
+	_load_nodes()
+	_build_points_label()
+	_build_tree_ui()
 	sortie_button.pressed.connect(_on_sortie_pressed)
 
 
-func _make_core_card(def: Dictionary) -> Panel:
+func _load_nodes() -> void:
+	for path: String in NODE_PATHS:
+		var node: AbilityTreeNode = load(path) as AbilityTreeNode
+		if node != null:
+			_nodes.append(node)
+
+
+func _build_points_label() -> void:
+	_points_label = Label.new()
+	_points_label.add_theme_font_size_override("font_size", 15)
+	_points_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	$MarginRoot/CenterArea.add_child(_points_label)
+	$MarginRoot/CenterArea.move_child(_points_label, 1)
+	_refresh_points_label()
+
+
+func _refresh_points_label() -> void:
+	_points_label.text = "포인트: %d / %d  |  코어 스킬: %s" % [
+		_remaining_points, TREE_POINTS,
+		_get_active_core_skill_name()
+	]
+
+
+func _get_active_core_skill_name() -> String:
+	for id: String in _selected_ids:
+		var node: AbilityTreeNode = _find_node(id)
+		if node != null and node.unlocks_core_skill != null:
+			return node.unlocks_core_skill.skill_name
+	return "없음"
+
+
+func _build_tree_ui() -> void:
+	var branches: Dictionary = {}
+	for key: String in BRANCH_ORDER:
+		branches[key] = []
+
+	for n: AbilityTreeNode in _nodes:
+		for key: String in BRANCH_ORDER:
+			if n.node_id.begins_with("node_" + key):
+				branches[key].append(n)
+				break
+
+	for key: String in BRANCH_ORDER:
+		var col := VBoxContainer.new()
+		col.custom_minimum_size = Vector2(210, 0)
+		col.add_theme_constant_override("separation", 8)
+		cards_row.add_child(col)
+
+		var branch_title := Label.new()
+		branch_title.text = BRANCH_LABELS[key]
+		branch_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		branch_title.add_theme_font_size_override("font_size", 13)
+		col.add_child(branch_title)
+
+		var sorted: Array = branches[key].duplicate()
+		sorted.sort_custom(func(a: AbilityTreeNode, b: AbilityTreeNode) -> bool:
+			return a.node_id < b.node_id
+		)
+		for n: AbilityTreeNode in sorted:
+			col.add_child(_make_node_card(n))
+
+
+func _make_node_card(node: AbilityTreeNode) -> Panel:
 	var panel := Panel.new()
-	panel.custom_minimum_size = CARD_SIZE
-	var base := StyleBoxFlat.new()
-	base.bg_color = Color(0.14, 0.16, 0.2, 1.0)
-	base.set_border_width_all(1)
-	base.border_color = Color(0.35, 0.38, 0.44, 1.0)
-	base.set_corner_radius_all(8)
-	panel.add_theme_stylebox_override("panel", base)
+	panel.custom_minimum_size = Vector2(200, 130)
+
 	var vb := VBoxContainer.new()
 	vb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	vb.offset_left = 10.0
-	vb.offset_right = -10.0
-	vb.offset_top = 10.0
-	vb.offset_bottom = -10.0
-	vb.add_theme_constant_override("separation", 6)
+	vb.offset_left = 8.0; vb.offset_right = -8.0
+	vb.offset_top = 8.0; vb.offset_bottom = -8.0
+	vb.add_theme_constant_override("separation", 4)
 	panel.add_child(vb)
 
-	var tex := TextureRect.new()
-	tex.custom_minimum_size = Vector2(180.0, 72.0)
-	tex.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	var img: Image = Image.create(int(tex.custom_minimum_size.x), int(tex.custom_minimum_size.y), false, Image.FORMAT_RGBA8)
-	img.fill(Color(0.15, 0.2, 0.28, 1.0))
-	tex.texture = ImageTexture.create_from_image(img)
-	vb.add_child(tex)
+	var name_lbl := Label.new()
+	name_lbl.text = node.display_name
+	name_lbl.add_theme_font_size_override("font_size", 12)
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb.add_child(name_lbl)
 
-	var t := Label.new()
-	t.text = def["title"] as String
-	t.add_theme_font_size_override("font_size", 16)
-	t.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(t)
+	var desc_lbl := Label.new()
+	desc_lbl.text = node.description
+	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.add_theme_font_size_override("font_size", 10)
+	desc_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vb.add_child(desc_lbl)
 
-	var st := Label.new()
-	st.text = def["subtitle"] as String
-	st.add_theme_font_size_override("font_size", 11)
-	st.add_theme_color_override("font_color", Color(0.65, 0.7, 0.78))
-	st.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vb.add_child(st)
+	var cost_lbl := Label.new()
+	cost_lbl.text = "비용: %d pt" % node.point_cost
+	cost_lbl.add_theme_font_size_override("font_size", 10)
+	cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vb.add_child(cost_lbl)
 
-	var d := Label.new()
-	d.text = def["desc"] as String
-	d.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	d.add_theme_font_size_override("font_size", 11)
-	d.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vb.add_child(d)
+	var btn := Button.new()
+	btn.pressed.connect(_on_node_toggled.bind(node))
+	vb.add_child(btn)
 
-	var sel := Button.new()
-	sel.text = "이 코어 선택"
-	sel.pressed.connect(_on_card_select.bind(def["path"] as String, panel))
-	vb.add_child(sel)
-
+	_card_meta[node.node_id] = {"panel": panel, "button": btn}
+	_refresh_card(node)
 	return panel
 
 
-func _on_card_select(path: String, panel: Panel) -> void:
-	_selected_path = path
-	sortie_button.disabled = false
-	for p: Panel in _card_panels:
-		var st := StyleBoxFlat.new()
-		if p == panel:
-			st.bg_color = Color(0.22, 0.32, 0.48, 1.0)
-			st.set_border_width_all(2)
-			st.border_color = Color(0.5, 0.75, 1.0, 1.0)
-		else:
-			st.bg_color = Color(0.14, 0.16, 0.2, 1.0)
-			st.set_border_width_all(1)
-			st.border_color = Color(0.35, 0.38, 0.44, 1.0)
-		st.set_corner_radius_all(8)
-		p.add_theme_stylebox_override("panel", st)
+func _on_node_toggled(node: AbilityTreeNode) -> void:
+	if _selected_ids.has(node.node_id):
+		if _can_deselect(node):
+			_selected_ids.erase(node.node_id)
+			_remaining_points += node.point_cost
+	else:
+		if _remaining_points >= node.point_cost and _can_select(node):
+			_selected_ids.append(node.node_id)
+			_remaining_points -= node.point_cost
+
+	_refresh_all_cards()
+	_refresh_points_label()
+
+
+func _can_select(node: AbilityTreeNode) -> bool:
+	if node.required_node_id.is_empty():
+		return true
+	return _selected_ids.has(node.required_node_id)
+
+
+func _can_deselect(node: AbilityTreeNode) -> bool:
+	for other_id: String in _selected_ids:
+		if other_id == node.node_id:
+			continue
+		var other: AbilityTreeNode = _find_node(other_id)
+		if other != null and other.required_node_id == node.node_id:
+			return false
+	return true
+
+
+func _find_node(node_id: String) -> AbilityTreeNode:
+	for n: AbilityTreeNode in _nodes:
+		if n.node_id == node_id:
+			return n
+	return null
+
+
+func _refresh_all_cards() -> void:
+	for n: AbilityTreeNode in _nodes:
+		_refresh_card(n)
+
+
+func _refresh_card(node: AbilityTreeNode) -> void:
+	var meta: Dictionary = _card_meta.get(node.node_id, {})
+	if meta.is_empty():
+		return
+	var panel: Panel = meta["panel"]
+	var btn: Button = meta["button"]
+
+	var is_selected: bool = _selected_ids.has(node.node_id)
+	var can_sel: bool = _can_select(node) and _remaining_points >= node.point_cost
+
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(6)
+	style.set_border_width_all(1)
+
+	if is_selected:
+		style.bg_color = Color(0.18, 0.38, 0.60, 1.0)
+		style.border_color = Color(0.50, 0.80, 1.00, 1.0)
+		btn.text = "해제"
+		btn.disabled = false
+	elif can_sel:
+		style.bg_color = Color(0.14, 0.20, 0.14, 1.0)
+		style.border_color = Color(0.35, 0.70, 0.35, 1.0)
+		btn.text = "선택"
+		btn.disabled = false
+	else:
+		style.bg_color = Color(0.10, 0.10, 0.12, 1.0)
+		style.border_color = Color(0.25, 0.25, 0.28, 1.0)
+		btn.text = "선택"
+		btn.disabled = true
+
+	panel.add_theme_stylebox_override("panel", style)
 
 
 func _on_sortie_pressed() -> void:
-	if _selected_path.is_empty():
-		return
-	var core: CoreData = load(_selected_path) as CoreData
-	if core == null:
-		push_error("코어 데이터를 찾을 수 없습니다: " + _selected_path)
-		return
-	GameState.start_run(core)
+	GameState.start_run()
+	for node_id: String in _selected_ids:
+		var node: AbilityTreeNode = _find_node(node_id)
+		if node != null:
+			GameState.apply_tree_node(node)
 	DungeonManager.start_dungeon()

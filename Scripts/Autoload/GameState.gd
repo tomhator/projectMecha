@@ -1,10 +1,14 @@
-# 런 메타 정보
 extends Node
+
+const CORE_BASE_PATH := "res://Resources/Cores/core_base.tres"
 
 # --- 런 메타 정보 ---
 var is_run_active: bool = false
 var current_floor: int = 0
 var current_core: CoreData = null
+
+# --- 어빌리티 트리 ---
+var active_core_skill: SkillData = null
 
 # --- 메카 런타임 상태 ---
 var current_hp: float = 0.0
@@ -22,7 +26,6 @@ var equipped_parts: Dictionary = {
 }
 
 # 인벤토리 상태
-# 부품 데이터 배열
 var inventory: Array[PartsData] = []
 
 # 재화
@@ -34,14 +37,16 @@ var attack_multiplier: float = 1.0
 # -----------------------------------
 
 
-func start_run(core: CoreData) -> void:
+func start_run() -> void:
+	var template: CoreData = load(CORE_BASE_PATH) as CoreData
+	current_core = template.duplicate() as CoreData
 	is_run_active = true
 	current_floor = 1
-	current_core = core
+	active_core_skill = null
 	EventBus.floor_changed.emit(current_floor)
 	current_hp = current_core.core_hp
 	current_shield = current_core.core_shield
-	current_payload = 0.0 # 시작 시 장착된 부품 없음
+	current_payload = 0.0
 	current_action_count = current_core.core_action_count
 	attack_multiplier = current_core.core_attack_multiplier
 	equipped_parts = {
@@ -51,9 +56,28 @@ func start_run(core: CoreData) -> void:
 		CoreData.CoreSlot.LEG: null
 	}
 	credits = 0
+	inventory = []
 	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
 	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
-	inventory = []
+
+
+func apply_tree_node(node: AbilityTreeNode) -> void:
+	attack_multiplier += node.stat_attack_multiplier_bonus
+	if node.stat_hp_bonus != 0.0:
+		current_core.core_hp += node.stat_hp_bonus
+		current_hp += node.stat_hp_bonus
+	if node.stat_shield_bonus != 0.0:
+		current_core.core_shield += node.stat_shield_bonus
+		current_shield += node.stat_shield_bonus
+	if node.stat_action_count_bonus != 0:
+		current_core.core_action_count += node.stat_action_count_bonus
+		current_action_count += node.stat_action_count_bonus
+	if node.unlocks_core_skill != null:
+		active_core_skill = node.unlocks_core_skill
+	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
+	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
+	EventBus.action_count_changed.emit(self, current_action_count)
+
 
 func end_run() -> void:
 	is_run_active = false
@@ -119,10 +143,10 @@ func spend_credits(amount: int) -> bool:
 
 # HP/Shield
 func take_damage(amount: float) -> void:
-	var absorbed: float = minf(current_shield, amount) # 방어력 적용
+	var absorbed: float = minf(current_shield, amount)
 	current_shield -= absorbed
-	current_hp -= amount - absorbed # 피해 적용
-	current_hp = maxf(current_hp, 0.0) # HP가 0 이하가 되지 않도록 함
+	current_hp -= amount - absorbed
+	current_hp = maxf(current_hp, 0.0)
 	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
 	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
 

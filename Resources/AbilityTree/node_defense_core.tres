@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_iron_shield.tres" id="2_skill"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_defense_core"
+display_name = "철갑 방어 [코어 스킬]"
+description = "두꺼운 철갑을 전개해 쉴드를 급속 충전한다.\n코어 스킬: 철갑 방어 언락"
+point_cost = 1
+required_node_id = "node_defense_2"
+unlocks_core_skill = ExtResource("2_skill")
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

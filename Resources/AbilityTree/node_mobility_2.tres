@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_mobility_2"
+display_name = "가속 부스터"
+description = "부스터를 2중으로 장착해 기동성을 극대화한다.\n행동력 +1"
+point_cost = 1
+required_node_id = "node_mobility_1"
+stat_action_count_bonus = 1
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"
