@@ -1,3 +1,5 @@
 {
-    "godotTools.editorPath.godot4": "c:\\Users\\theoe\\gameDev\\Godot_v4.6.2-stable_win64.exe"
+    "godotTools.editorPath.godot4": "${env:PROJECT_MECHA_GODOT4}",
+    "projectMecha.godotPath.macos": "/Users/yusung/Desktop/고도/Godot.app/Contents/MacOS/Godot",
+    "projectMecha.godotPath.windows": "c:\\Users\\theoe\\gameDev\\Godot_v4.6.2-stable_win64.exe"
 }

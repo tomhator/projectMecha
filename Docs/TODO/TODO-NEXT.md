@@ -1,7 +1,7 @@
 ---
 tags: [project/project-mecha, document/todo]
 date: 2026-05-21
-updated: 2026-05-21
+updated: 2026-05-22
 status: active
 ---
 
@@ -73,7 +73,7 @@ status: active
 
 ## P3 — 인프라 (별도 세션)
 
-- [ ] `.claude/hooks/` 검사 스크립트 3종 + `settings.json`
+- [x] `.claude/hooks/` 검사 스크립트 3종 + `settings.json` (자동 검증 v1, 2026-05-22)
 - [ ] 도메인 `CLAUDE.md` 4종 (Combat, Entities, Autoload, Skills)
 - [ ] `.claude/commands/` 4종 (new-skill, new-enemy, combat-debug, parts-update)
 

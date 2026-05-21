@@ -29,6 +29,8 @@
     - `SESSION_CONTEXT/`: 세션 인수인계·백업. 현재 세션은 루트, 과거 기록은 `SESSION_CONTEXT/old/`.
 - `.cursor/`: Cursor AI 에이전트 관련 설정 및 규칙.
     - `rules/`: AI 에이전트 동작 및 커밋 규칙 (`.mdc`).
+- `.claude/`: Claude Code 에이전트 훅 및 설정.
+    - `hooks/`: gstack 확인 및 프로젝트 검증 훅.
 - `Resources/`: 데이터 모델 스크립트(`.gd`) 및 인스턴스(`.tres`).
     - `Cores/`: 코어 데이터 리소스 (`.tres`). 단일 코어 `core_base.tres`만 사용.
     - `AbilityTree/`: 어빌리티 트리 노드 리소스 (`.tres`). 공격/방어/기동 3분기, 각 3노드.
@@ -53,8 +55,9 @@
     - `UI/`: 공용 UI 컴포넌트.
         - `RunStatusStrip.tscn` / `RunStatusStrip.gd`: 런 상단 HUD(층·HP/쉴드 바+현재값·크레딧·설정 스텁). 주요 런 씬에 인스턴스.
         - `CombatUi.tscn` / `CombatUI.gd`: 전투 UI(좌 플레이어/우 적·행동력·스킬·다중 적 타겟팅).
-- `Scripts/`: 전역 유틸리티 및 싱글톤(AutoLoad).
+- `Scripts/`: 전역 유틸리티, 검증 스크립트 및 싱글톤(AutoLoad).
     - `Autoload/`: `EventBus`, `GameState`, `DungeonManager`, `PartsFactory`, `RewardManager` 등 전역 시스템.
+    - `Validation/`: Godot 4 문법 패턴, 프로젝트 문서, `gdparse`, Godot headless 로드 검사 스크립트.
 
 ---
 
