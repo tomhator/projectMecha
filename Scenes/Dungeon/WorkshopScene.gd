@@ -72,13 +72,17 @@ func _on_upgrade_part_selected(part: PartsData) -> void:
 	if not GameState.spend_credits(60):
 		upgrade_panel.visible = false
 		return
+	var upgraded: Array[SkillData] = []
 	for skill: SkillData in part.parts_skills:
-		if skill.skill_damage > 0.0:
-			skill.skill_damage *= 1.2
-		if skill.skill_defense > 0.0:
-			skill.skill_defense *= 1.2
-		if skill.skill_heal > 0.0:
-			skill.skill_heal *= 1.2
+		var s: SkillData = skill.duplicate() as SkillData
+		if s.skill_damage > 0.0:
+			s.skill_damage *= 1.2
+		if s.skill_defense > 0.0:
+			s.skill_defense *= 1.2
+		if s.skill_heal > 0.0:
+			s.skill_heal *= 1.2
+		upgraded.append(s)
+	part.parts_skills = upgraded
 	upgrade_panel.visible = false
 	print("[작업대] 부품 업그레이드: %s 스킬 수치 +20%%" % part.parts_name)
 

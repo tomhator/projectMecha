@@ -39,15 +39,28 @@ func _weighted_sample(paths: Array[String], weights: Array[float], n: int) -> Ar
 		var total := 0.0
 		for w: float in remaining_weights:
 			total += w
+		if total <= 0.0:
+			# 유효 가중치 없음 — 남은 항목 중 무작위 선택
+			var idx := randi() % remaining_paths.size()
+			result.append(remaining_paths[idx])
+			remaining_paths.remove_at(idx)
+			remaining_weights.remove_at(idx)
+			continue
 		var r := randf() * total
 		var cumulative := 0.0
+		var picked := false
 		for j in remaining_paths.size():
 			cumulative += remaining_weights[j]
 			if r <= cumulative:
 				result.append(remaining_paths[j])
 				remaining_paths.remove_at(j)
 				remaining_weights.remove_at(j)
+				picked = true
 				break
+		if not picked and not remaining_paths.is_empty():
+			result.append(remaining_paths[0])
+			remaining_paths.remove_at(0)
+			remaining_weights.remove_at(0)
 
 	return result
 
@@ -68,7 +81,7 @@ func _refresh_parts_pool() -> void:
 			if not dir.current_is_dir() and file_name.ends_with(".tres"):
 				var full_path := "%s/%s" % [folder, file_name]
 				var template: PartsData = load(full_path) as PartsData
-				if template != null:
+				if template != null and template.drop_weight > 0.0:
 					_all_parts.append(full_path)
 					_all_weights.append(template.drop_weight)
 			file_name = dir.get_next()

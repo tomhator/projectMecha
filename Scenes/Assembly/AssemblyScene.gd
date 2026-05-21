@@ -267,7 +267,7 @@ func _on_close_pressed() -> void:
 # ── 하중 표시 갱신 ────────────────────────
 func _update_payload() -> void:
 	var cur: float = GameState.current_payload
-	var max_p: float = GameState.current_core.core_max_payload
+	var max_p: float = GameState.get_max_payload()
 	payload_label.text = "하중: %.0f / %.0f" % [cur, max_p]
 
 	payload_bar.max_value = max_p
