@@ -34,6 +34,7 @@ func decide_next_actions() -> void:
 	_prune_defeated_arms()
 	if active_arms.is_empty():
 		print("[수집가] 팔 전멸 — 재수집 시작")
+		EventBus.boss_arms_respawning.emit()
 		_spawn_arms(MAX_ARMS)
 		next_actions.clear()
 		_publish_snipe_preview()

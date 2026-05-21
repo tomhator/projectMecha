@@ -12,5 +12,5 @@ skill_damage = 16.0
 skill_action_cost = 2
 skill_target = 1
 target_slot = -1
-armor_penetration = 10.0
+armor_penetration = 0.10
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

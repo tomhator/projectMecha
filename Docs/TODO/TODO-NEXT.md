@@ -84,6 +84,14 @@ status: active
 
 ---
 
+## P2 — CEO Review 도출 (2026-05-21)
+
+- [ ] **스킬 쿨다운 시스템** — TurnManager 턴마다 쿨다운 감소, get_available_skills 쿨다운 필터. SkillData.buff_turns 필드·EventBus 신호 이미 준비됨. 공수: S.
+- [ ] **멀티타겟 스킬 (AoE)** — SkillData.multi_target 필드 존재. TurnManager.on_skill_selected에서 적 전체를 target으로 전달하는 로직 필요. 공수: M.
+- [ ] **_affix_bonus_sum 리팩터링** — affix 10개 이상 도달 시 if-else 체인 → Dictionary/Callable 기반 매핑. `MechaEntity.gd:_affix_bonus_sum()`. 공수: S.
+
+---
+
 ## 완료 참고 (2026-05-21 세션 — 체크 불필요)
 
 Phase A·B 작업 0~9 (저격·파괴 연동 + 수집가 보스). 상세: [[2026-05-21]], [[TODO/old/TODO-2026-05-21]].

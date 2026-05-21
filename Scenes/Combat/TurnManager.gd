@@ -28,6 +28,9 @@ func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:
 	start_player_turn()
 
 func start_player_turn() -> void:
+	for enemy: EnemyEntity in enemies:
+		if not enemy.is_defeated():
+			enemy.tick_debuffs()
 	current_phase = TurnPhase.PLAYER_TURN
 	actions_left = GameState.current_action_count
 	current_turn += 1

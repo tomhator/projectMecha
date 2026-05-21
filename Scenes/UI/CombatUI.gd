@@ -56,6 +56,19 @@ var _enemy_snipe_slots: Dictionary = {}  # enemy_instance_id -> int(slot)
 var _active_snipe_slot: int = SNIPE_SLOT_NONE
 var _snipe_pulse_tween: Tween = null
 
+const SHAKE_THRESHOLD: float = 15.0
+const FLOAT_COLORS: Dictionary = {
+	"damage": Color(1.0, 0.3, 0.3),
+	"heal":   Color(0.3, 1.0, 0.3),
+	"shield": Color(0.3, 0.7, 1.0),
+}
+const LOG_MAX_LINES: int = 8
+var _log_lines: Array[String] = []
+var _combat_log_label: RichTextLabel = null
+var _shake_tween: Tween = null
+var _prev_player_hp: float = 0.0
+var _prev_player_shield: float = 0.0
+
 
 func _ready() -> void:
 	EventBus.hp_changed.connect(_on_hp_changed)
@@ -66,15 +79,20 @@ func _ready() -> void:
 	EventBus.enemy_snipe_preview_changed.connect(_on_enemy_snipe_preview_changed)
 	EventBus.part_stolen.connect(_on_part_stolen)
 	EventBus.enemy_added.connect(_on_enemy_added)
+	EventBus.skill_debuff_applied.connect(_on_debuff_applied)
+	EventBus.boss_arms_respawning.connect(_on_boss_arms_respawning)
 	battle_hbox.resized.connect(_apply_battle_column_split)
 	_build_mech_layers()
 	_build_parts_hud()
+	_build_combat_log()
 	_refresh_player_strip_from_state()
 	_ensure_player_target_strip()
 	if end_turn_button != null and not end_turn_button.pressed.is_connected(_on_end_turn_button_pressed):
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	_set_end_turn_button_enabled(false)
 	_apply_battle_column_split.call_deferred()
+	_prev_player_hp = GameState.current_hp
+	_prev_player_shield = GameState.current_shield
 
 
 func _on_combat_turn_changed(turn: int) -> void:
@@ -86,6 +104,8 @@ func _on_part_durability_changed(part: PartsData) -> void:
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
 		if GameState.equipped_parts[slot] == part:
 			_refresh_hud_icon(slot)
+			if part.is_broken():
+				add_log("[파괴] %s" % part.parts_name)
 			break
 
 
@@ -649,7 +669,7 @@ func _damage_preview_text_for_hover(enemy: EnemyEntity) -> String:
 	var sh_gain: float = m.get_preview_effective_shield_heal(_pending_skill)
 	var parts: PackedStringArray = []
 	if dmg > 0.0:
-		var split: Vector2 = enemy.preview_incoming_damage_split(dmg)
+		var split: Vector2 = enemy.preview_incoming_damage_split(dmg, _pending_skill.armor_penetration)
 		parts.append("예상 피해 %.0f (쉴드 %.0f · HP %.0f)" % [dmg, split.x, split.y])
 	var self_bits: PackedStringArray = []
 	if _pending_skill.skill_heal > 0.0:
@@ -1031,10 +1051,13 @@ func _apply_snipe_highlight() -> void:
 			_snipe_pulse_tween.tween_property(target_layer, "modulate:a", 1.0, 0.3)
 
 
-func _on_skill_used_global(entity: Node, _skill: SkillData) -> void:
+func _on_skill_used_global(entity: Node, skill: SkillData) -> void:
+	var who: String = "플레이어"
 	if entity is EnemyEntity:
+		who = (entity as EnemyEntity).enemy_name
 		_update_enemy_preview()
 		_recompute_snipe_highlight()
+	add_log("[%s] %s" % [who, skill.skill_name])
 
 
 func _on_hp_changed(entity: Node, new_hp: float, max_hp: float) -> void:
@@ -1043,13 +1066,27 @@ func _on_hp_changed(entity: Node, new_hp: float, max_hp: float) -> void:
 		var id: int = e.get_instance_id()
 		if _enemy_hp_bars.has(id):
 			var hb: ProgressBar = _enemy_hp_bars[id] as ProgressBar
+			var delta: float = new_hp - hb.value
 			hb.max_value = maxf(max_hp, 1.0)
 			hb.value = new_hp
+			if delta < -0.1:
+				var pos: Vector2 = hb.global_position + Vector2(hb.size.x * 0.5, 0.0)
+				_spawn_floating_label("-%.0f" % absf(delta), pos, FLOAT_COLORS["damage"])
 		_set_enemy_hp_number_text(id, new_hp, max_hp)
 		_update_enemy_preview()
 		_recompute_snipe_highlight()
 		return
 	if entity == GameState:
+		var delta: float = new_hp - _prev_player_hp
+		_prev_player_hp = new_hp
+		if delta < -0.1 and player_column != null:
+			var pos: Vector2 = player_column.global_position + Vector2(player_column.size.x * 0.5, player_column.size.y * 0.3)
+			_spawn_floating_label("-%.0f" % absf(delta), pos, FLOAT_COLORS["damage"])
+			if absf(delta) > SHAKE_THRESHOLD:
+				trigger_screen_shake()
+		elif delta > 0.1 and player_column != null:
+			var pos: Vector2 = player_column.global_position + Vector2(player_column.size.x * 0.5, player_column.size.y * 0.3)
+			_spawn_floating_label("+%.0f" % delta, pos, FLOAT_COLORS["heal"])
 		_refresh_player_preview_label()
 
 
@@ -1064,4 +1101,75 @@ func _on_shield_changed(entity: Node, new_shield: float, max_shield: float) -> v
 		_set_enemy_shield_number_text(id, new_shield, max_shield)
 		return
 	if entity == GameState:
+		var delta: float = new_shield - _prev_player_shield
+		_prev_player_shield = new_shield
+		if player_column != null:
+			if delta < -0.1:
+				var pos: Vector2 = player_column.global_position + Vector2(player_column.size.x * 0.5, player_column.size.y * 0.4)
+				_spawn_floating_label("-%.0f" % absf(delta), pos, FLOAT_COLORS["damage"])
+			elif delta > 0.1:
+				var pos: Vector2 = player_column.global_position + Vector2(player_column.size.x * 0.5, player_column.size.y * 0.4)
+				_spawn_floating_label("+%.0f" % delta, pos, FLOAT_COLORS["shield"])
 		_refresh_player_preview_label()
+
+
+# ── 플로팅 데미지 레이블 ─────────────────────────────────────────────────────
+
+func _spawn_floating_label(text: String, global_pos: Vector2, color: Color) -> void:
+	var lbl := Label.new()
+	lbl.text = text
+	lbl.modulate = color
+	lbl.z_index = 100
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.position = to_local(global_pos) + Vector2(randf_range(-10.0, 10.0), -20.0)
+	add_child(lbl)
+	var start_y: float = lbl.position.y
+	var t := lbl.create_tween()
+	t.tween_property(lbl, "position:y", start_y - 40.0, 0.8)
+	t.parallel().tween_property(lbl, "modulate:a", 0.0, 0.5).set_delay(0.3)
+	t.tween_callback(lbl.queue_free)
+
+
+# ── 카메라 셰이크 ─────────────────────────────────────────────────────────────
+
+func trigger_screen_shake(intensity: float = 1.0) -> void:
+	if _shake_tween != null and _shake_tween.is_valid():
+		_shake_tween.kill()
+	_shake_tween = create_tween()
+	for _i in 3:
+		var offset := Vector2(randf_range(-5.0, 5.0), randf_range(-3.0, 3.0)) * intensity
+		_shake_tween.tween_property(self, "position", offset, 0.05)
+	_shake_tween.tween_property(self, "position", Vector2.ZERO, 0.05)
+
+
+# ── 전투 로그 패널 ────────────────────────────────────────────────────────────
+
+func _build_combat_log() -> void:
+	_combat_log_label = RichTextLabel.new()
+	_combat_log_label.bbcode_enabled = false
+	_combat_log_label.fit_content = false
+	_combat_log_label.scroll_active = false
+	_combat_log_label.custom_minimum_size = Vector2(0.0, 110.0)
+	_combat_log_label.add_theme_font_size_override("normal_font_size", 11)
+	_combat_log_label.size_flags_vertical = Control.SIZE_SHRINK_END
+	_combat_log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	player_column.add_child(_combat_log_label)
+
+func add_log(text: String) -> void:
+	_log_lines.append(text)
+	if _log_lines.size() > LOG_MAX_LINES:
+		_log_lines.pop_front()
+	if _combat_log_label != null:
+		_combat_log_label.text = "\n".join(_log_lines)
+
+
+# ── 디버프·재수집 핸들러 ──────────────────────────────────────────────────────
+
+func _on_debuff_applied(target: Node, skill: SkillData, _debuff_type: int) -> void:
+	if target is EnemyEntity:
+		add_log("[디버프] %s ← %s" % [(target as EnemyEntity).enemy_name, skill.skill_name])
+
+func _on_boss_arms_respawning() -> void:
+	add_log("[수집가] 새 팔을 수집합니다...")
+	await get_tree().create_timer(0.5).timeout
+	add_log("[수집가] 팔 수집 완료")

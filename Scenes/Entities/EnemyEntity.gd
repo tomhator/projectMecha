@@ -14,6 +14,7 @@ var current_hp: float = 0.0
 var current_shield: float = 0.0
 var next_actions: Array[SkillData] = []
 var _preview_target_slot: int = SNIPE_SLOT_NONE
+var _active_debuffs: Dictionary = {}  # SkillData.SkillDebuff (int) → turns_remaining
 
 func setup() -> void:
 	current_hp = enemy_max_hp
@@ -29,12 +30,12 @@ func setup_from_data(data: EnemyData) -> void:
 	enemy_action_count = data.enemy_action_count
 	skills = data.skills
 
-func take_damage(damage: float) -> void:
+func take_damage(damage: float, penetration: float = 0.0) -> void:
 	damage = maxf(damage, 0.0)
-	# 쉴드·HP가 이전 프레임/버그로 범위를 벗어나면 흡수 계산이 깨질 수 있음 → 먼저 클램프
 	current_shield = clampf(current_shield, 0.0, enemy_max_shield)
 	current_hp = clampf(current_hp, 0.0, enemy_max_hp)
-	var absorbed: float = minf(current_shield, damage)
+	var pen := clampf(penetration, 0.0, 1.0)
+	var absorbed: float = minf(current_shield, damage * (1.0 - pen))
 	current_shield -= absorbed
 	current_hp -= (damage - absorbed)
 	current_hp = clampf(current_hp, 0.0, enemy_max_hp)
@@ -45,6 +46,8 @@ func take_damage(damage: float) -> void:
 		absorb_note = " — 쉴드 %.0f 흡수, HP에 %.0f" % [absorbed, to_hp]
 	elif damage > 0.0:
 		absorb_note = " — 쉴드 없음, HP에 전부"
+	if pen > 0.0:
+		absorb_note += " [관통 %.0f%%]" % (pen * 100)
 	print("  > [%s] 피격: %.0f 데미지%s → HP: %.0f | 쉴드: %.0f" % [
 		enemy_name, damage, absorb_note, current_hp, current_shield
 	])
@@ -57,10 +60,11 @@ func take_damage(damage: float) -> void:
 
 
 ## `take_damage`와 동일한 흡수 규칙으로, 들어오는 피해가 쉴드·HP에 어떻게 나뉘는지 미리 계산 (UI 프리뷰용).
-func preview_incoming_damage_split(damage: float) -> Vector2:
+func preview_incoming_damage_split(damage: float, penetration: float = 0.0) -> Vector2:
 	damage = maxf(damage, 0.0)
 	var sh: float = clampf(current_shield, 0.0, enemy_max_shield)
-	var absorbed: float = minf(sh, damage)
+	var pen := clampf(penetration, 0.0, 1.0)
+	var absorbed: float = minf(sh, damage * (1.0 - pen))
 	var to_hp: float = damage - absorbed
 	return Vector2(absorbed, to_hp)
 
@@ -79,7 +83,7 @@ func _execute_single_action(action: SkillData, target: Node) -> void:
 	if action.skill_damage > 0.0:
 		var hits: int = maxi(action.hit_count, 1)
 		for _i in hits:
-			target.take_damage(action.skill_damage * attack_multiplier)
+			target.take_damage(action.skill_damage * attack_multiplier, action.armor_penetration)
 		if action.target_slot != SkillData.TargetSlot.NONE:
 			_apply_snipe_to_slot(target, action.target_slot)
 	if action.skill_defense > 0.0:
@@ -154,6 +158,23 @@ func _player_has_part_at(slot_index: int) -> bool:
 		if int(slot) == slot_index:
 			return GameState.equipped_parts[slot] != null
 	return false
+
+func _apply_debuff(debuff_type: int, turns: int = 2) -> void:
+	_active_debuffs[debuff_type] = turns
+	print("  > [%s] 디버프 적용: %d (%d턴)" % [enemy_name, debuff_type, turns])
+
+func has_any_debuff() -> bool:
+	return not _active_debuffs.is_empty()
+
+func tick_debuffs() -> void:
+	var expired: Array = []
+	for debuff: int in _active_debuffs:
+		_active_debuffs[debuff] -= 1
+		if _active_debuffs[debuff] <= 0:
+			expired.append(debuff)
+	for d: int in expired:
+		_active_debuffs.erase(d)
+
 
 func _heal_hp(amount: float) -> void:
 	current_hp = minf(current_hp + amount, enemy_max_hp)

@@ -26,6 +26,7 @@ signal boss_arm_spawned(arm: EnemyEntity)
 signal enemy_added(enemy: EnemyEntity)
 
 signal part_durability_changed(part: PartsData)
+signal boss_arms_respawning
 
 signal inventory_changed(inventory: Array)
 

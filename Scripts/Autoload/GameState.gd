@@ -142,8 +142,9 @@ func spend_credits(amount: int) -> bool:
 	return true
 
 # HP/Shield
-func take_damage(amount: float) -> void:
-	var absorbed: float = minf(current_shield, amount)
+func take_damage(amount: float, penetration: float = 0.0) -> void:
+	var pen := clampf(penetration, 0.0, 1.0)
+	var absorbed: float = minf(current_shield, amount * (1.0 - pen))
 	current_shield -= absorbed
 	current_hp -= amount - absorbed
 	current_hp = maxf(current_hp, 0.0)

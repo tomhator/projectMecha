@@ -83,7 +83,7 @@ func use_skill(skill: SkillData, target: Node) -> void:
 	if skill.skill_damage > 0.0:
 		if target != null and target.has_method("take_damage"):
 			var actual_damage: float = skill.skill_damage * GameState.attack_multiplier * mult
-			target.take_damage(actual_damage)
+			target.take_damage(actual_damage, skill.armor_penetration)
 			print("  > 공격: %s (%.0f 데미지%s)" % [skill.skill_name, actual_damage, _mult_note(mult)])
 
 	if skill.skill_defense > 0.0:
@@ -95,6 +95,10 @@ func use_skill(skill: SkillData, target: Node) -> void:
 		var actual_heal: float = skill.skill_heal * mult
 		GameState.heal_hp(actual_heal)
 		print("  > 회복: %s (HP +%.0f%s)" % [skill.skill_name, actual_heal, _mult_note(mult)])
+
+	if skill.has_debuff and target != null and target.has_method("_apply_debuff"):
+		target._apply_debuff(skill.debuff_type)
+		EventBus.skill_debuff_applied.emit(target, skill, skill.debuff_type)
 
 	EventBus.skill_used.emit(self, skill)
 	_arm_serious_punch_if_needed(skill)
@@ -195,11 +199,11 @@ func _mult_note(mult: float) -> String:
 	return " [과부하-20%]"  # 0.8
 
 # GameState에 HP가 있으므로 위임 — 인터페이스 통일 목적
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, penetration: float = 0.0) -> void:
 	print("  > 플레이어 피격: %.0f 데미지 (HP: %.0f → %.0f)" % [
 		amount,
 		GameState.current_hp,
 		maxf(GameState.current_hp - amount, 0.0)
 	])
-	GameState.take_damage(amount)
+	GameState.take_damage(amount, penetration)
 	_activate_counter_instinct_on_hit()
