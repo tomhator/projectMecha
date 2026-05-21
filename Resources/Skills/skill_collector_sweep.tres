@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_c911"]
+
+[resource]
+script = ExtResource("1_c911")
+skill_id = 911
+skill_name = "광역 스윕"
+skill_type = 0
+skill_description = "수평으로 크게 휩쓴다."
+skill_damage = 15.0
+skill_action_cost = 2
+skill_target = 1
+target_slot = -1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

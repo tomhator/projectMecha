@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_c912"]
+
+[resource]
+script = ExtResource("1_c912")
+skill_id = 912
+skill_name = "연속 집기"
+skill_type = 0
+skill_description = "집게로 빠르게 3연타한다."
+skill_damage = 6.0
+skill_action_cost = 2
+skill_target = 1
+target_slot = -1
+hit_count = 3
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

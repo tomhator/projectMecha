@@ -21,6 +21,9 @@ signal skill_target_changed(entity: Node, skill: SkillData, target: SkillData.Sk
 signal skill_damage_changed(entity: Node, skill: SkillData, new_damage: float)
 signal skill_defense_changed(entity: Node, skill: SkillData, new_defense: float)
 signal enemy_snipe_preview_changed(enemy: EnemyEntity, target_slot: int, active: bool)
+signal part_stolen(part: PartsData, slot: int)
+signal boss_arm_spawned(arm: EnemyEntity)
+signal enemy_added(enemy: EnemyEntity)
 
 signal part_durability_changed(part: PartsData)
 

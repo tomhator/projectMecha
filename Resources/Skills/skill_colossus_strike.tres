@@ -11,5 +11,5 @@ skill_description = "전신의 화력을 집중시킨 압도적인 일격. 피�
 skill_damage = 28.0
 skill_action_cost = 4
 skill_target = 1
-target_slot = 2
+target_slot = -1
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

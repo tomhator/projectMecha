@@ -18,6 +18,8 @@ func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:
 	player_mecha = mecha
 	enemies = enemy_list
 	current_turn = 0
+	if not EventBus.boss_arm_spawned.is_connected(add_enemy):
+		EventBus.boss_arm_spawned.connect(add_enemy)
 	player_mecha.setup()
 	for enemy: EnemyEntity in enemies:
 		enemy.setup()
@@ -81,10 +83,22 @@ func _get_usable_skills() -> Array[SkillData]:
 		func(s: SkillData) -> bool: return s.skill_action_cost <= actions_left
 	)
 
+func add_enemy(enemy: EnemyEntity) -> void:
+	if enemy in enemies:
+		return
+	enemies.append(enemy)
+	print("[TurnManager] 적 추가: %s (현재 적 수: %d)" % [enemy.enemy_name, enemies.size()])
+	EventBus.enemy_added.emit(enemy)
+
+
 func _check_combat_end() -> bool:
 	if GameState.current_hp <= 0.0:
 		_end_combat(false)
 		return true
+	for enemy: EnemyEntity in enemies:
+		if enemy is BossCollectorEntity and enemy.is_defeated():
+			_end_combat(true)
+			return true
 	var all_defeated: bool = enemies.all(
 		func(e: EnemyEntity) -> bool: return e.is_defeated()
 	)

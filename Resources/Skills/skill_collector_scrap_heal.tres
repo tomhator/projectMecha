@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_c915"]
+
+[resource]
+script = ExtResource("1_c915")
+skill_id = 915
+skill_name = "고철 흡수"
+skill_type = 2
+skill_description = "주변 고철을 빨아들여 코어 HP를 회복한다."
+skill_heal = 40.0
+skill_action_cost = 2
+skill_target = 0
+target_slot = -1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

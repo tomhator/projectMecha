@@ -11,5 +11,5 @@ skill_description = "중장갑 팔로 적을 강타한다."
 skill_damage = 14.0
 skill_action_cost = 2
 skill_target = 1
-target_slot = 0
+target_slot = -1
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_c917"]
+
+[resource]
+script = ExtResource("1_c917")
+skill_id = 917
+skill_name = "팔 탈취"
+skill_type = 0
+skill_description = "플레이어의 팔 파츠를 강탈해 새 팔로 전환한다."
+skill_action_cost = 3
+skill_target = 1
+target_slot = -1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

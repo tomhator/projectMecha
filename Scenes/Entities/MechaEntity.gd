@@ -19,8 +19,38 @@ func setup() -> void:
 
 func get_available_skills() -> Array[SkillData]:
 	return available_skills.filter(func(s: SkillData) -> bool:
-		return s.skill_type != SkillData.SkillType.PASSIVE
+		if s.skill_type == SkillData.SkillType.PASSIVE:
+			return false
+		var part: PartsData = _skill_to_part.get(s)
+		if part != null and part.is_broken():
+			return false
+		return true
 	)
+
+
+func get_part_at_slot(slot_index: int) -> PartsData:
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		if int(slot) == slot_index:
+			return GameState.equipped_parts[slot]
+	return null
+
+
+## 지정 슬롯의 파츠를 강탈당함. 슬롯을 비우고 스킬 목록에서 제거.
+func steal_part_at_slot(slot_index: int) -> PartsData:
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		if int(slot) != slot_index:
+			continue
+		var part: PartsData = GameState.equipped_parts[slot]
+		if part == null:
+			return null
+		GameState.equipped_parts[slot] = null
+		for skill: SkillData in part.parts_skills:
+			available_skills.erase(skill)
+			_skill_to_part.erase(skill)
+		EventBus.part_stolen.emit(part, slot_index)
+		print("[MechaEntity] '%s' 강탈됨 — 슬롯 %d 비워짐" % [part.parts_name, slot_index])
+		return part
+	return null
 
 
 ## `use_skill`의 공격 피해량과 동일한 계수 (UI 예상 피해용).
@@ -105,6 +135,10 @@ func _is_low_hp_state() -> bool:
 
 
 func _affix_bonus_sum(part: PartsData, target: Node, consume_temp: bool) -> float:
+	# 파괴된 파츠는 Affix 효과 없음
+	# TODO: zombie_process affix 구현 시 → and not _has_affix(part, "zombie_process")
+	if part != null and part.is_broken():
+		return 0.0
 	var sum: float = 0.0
 	if _has_affix(part, "mindless"):
 		sum -= 0.10

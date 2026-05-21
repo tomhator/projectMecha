@@ -20,7 +20,7 @@ const ENEMY_POOL_ELITE: Array[String] = [
 	"res://Resources/Enemies/enemy_fortress.tres",
 ]
 const ENEMY_POOL_BOSS: Array[String] = [
-	"res://Resources/Enemies/enemy_colossus.tres",
+	"res://Resources/Enemies/enemy_collector.tres",
 ]
 
 

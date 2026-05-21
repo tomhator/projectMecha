@@ -7,9 +7,16 @@ extends Node
 var enemies: Array[EnemyEntity] = []
 
 func _ready() -> void:
+	if not EventBus.boss_arm_spawned.is_connected(_on_boss_arm_spawned):
+		EventBus.boss_arm_spawned.connect(_on_boss_arm_spawned)
+
 	var enemy_data_list: Array[EnemyData] = DungeonManager.get_enemies_for_current_room()
 	for data: EnemyData in enemy_data_list:
-		var entity := EnemyEntity.new()
+		var entity: EnemyEntity
+		if data.enemy_id == BossCollectorEntity.COLLECTOR_ENEMY_ID:
+			entity = BossCollectorEntity.new()
+		else:
+			entity = EnemyEntity.new()
 		entity.name = data.enemy_name
 		add_child(entity)
 		entity.setup_from_data(data)
@@ -22,6 +29,13 @@ func _ready() -> void:
 
 	player_mecha.add_to_group("player")
 	turn_manager.start_combat(player_mecha, enemies)
+
+func _on_boss_arm_spawned(arm: EnemyEntity) -> void:
+	if arm.get_parent() == null:
+		add_child(arm)
+	arm.name = arm.enemy_name
+	turn_manager.add_enemy(arm)
+
 
 func _on_combat_ended(player_won: bool) -> void:
 	if player_won:

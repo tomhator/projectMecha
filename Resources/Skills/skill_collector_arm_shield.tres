@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_c914"]
+
+[resource]
+script = ExtResource("1_c914")
+skill_id = 914
+skill_name = "방어막"
+skill_type = 1
+skill_description = "철판으로 코어를 감싼다."
+skill_defense = 20.0
+skill_action_cost = 1
+skill_target = 0
+target_slot = -1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

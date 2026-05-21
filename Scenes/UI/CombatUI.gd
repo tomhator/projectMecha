@@ -64,6 +64,8 @@ func _ready() -> void:
 	EventBus.combat_turn_changed.connect(_on_combat_turn_changed)
 	EventBus.part_durability_changed.connect(_on_part_durability_changed)
 	EventBus.enemy_snipe_preview_changed.connect(_on_enemy_snipe_preview_changed)
+	EventBus.part_stolen.connect(_on_part_stolen)
+	EventBus.enemy_added.connect(_on_enemy_added)
 	battle_hbox.resized.connect(_apply_battle_column_split)
 	_build_mech_layers()
 	_build_parts_hud()
@@ -85,6 +87,34 @@ func _on_part_durability_changed(part: PartsData) -> void:
 		if GameState.equipped_parts[slot] == part:
 			_refresh_hud_icon(slot)
 			break
+
+
+func _on_part_stolen(_part: PartsData, _slot: int) -> void:
+	_build_parts_hud()
+	_refresh_player_preview_label()
+	var mecha: MechaEntity = _get_player_mecha()
+	if mecha == null:
+		return
+	var usable: Array[SkillData] = mecha.get_available_skills().filter(
+		func(s: SkillData) -> bool: return s.skill_action_cost <= _actions_remaining
+	)
+	_rebuild_skill_buttons(usable)
+
+
+func _on_enemy_added(enemy: EnemyEntity) -> void:
+	if enemy not in _current_enemies:
+		_current_enemies.append(enemy)
+	_rebuild_enemy_bars(_current_enemies)
+	_update_enemy_preview()
+	_prune_stale_snipe_sources()
+	_recompute_snipe_highlight()
+
+
+func _get_player_mecha() -> MechaEntity:
+	for node: Node in get_tree().get_nodes_in_group("player"):
+		if node is MechaEntity:
+			return node as MechaEntity
+	return null
 
 
 func _apply_battle_column_split() -> void:

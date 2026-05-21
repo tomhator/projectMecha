@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_c916"]
+
+[resource]
+script = ExtResource("1_c916")
+skill_id = 916
+skill_name = "몸통 박치기"
+skill_type = 0
+skill_description = "팔 없이 코어 자체를 던진다."
+skill_damage = 18.0
+skill_action_cost = 3
+skill_target = 1
+target_slot = -1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_sn901"]
+
+[resource]
+script = ExtResource("1_sn901")
+skill_id = 901
+skill_name = "팔 저격"
+skill_type = 0
+skill_description = "플레이어 팔 슬롯을 노려 공격하고 내구도를 깎는다."
+skill_damage = 18.0
+skill_action_cost = 2
+skill_target = 1
+target_slot = 0
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

@@ -70,16 +70,41 @@ func is_defeated() -> bool:
 
 func execute_actions(target: Node) -> void:
 	for action: SkillData in next_actions:
-		print("[%s] '%s' 사용" % [enemy_name, action.skill_name])
-		if action.skill_damage > 0.0:
-			target.take_damage(action.skill_damage * attack_multiplier)
-		if action.skill_defense > 0.0:
-			_heal_shield(action.skill_defense)
-		if action.skill_heal > 0.0:
-			_heal_hp(action.skill_heal)
-			print("  > [%s] HP +%.0f" % [enemy_name, action.skill_heal])
-		EventBus.skill_used.emit(self, action)
+		_execute_single_action(action, target)
 	decide_next_actions()
+
+
+func _execute_single_action(action: SkillData, target: Node) -> void:
+	print("[%s] '%s' 사용" % [enemy_name, action.skill_name])
+	if action.skill_damage > 0.0:
+		var hits: int = maxi(action.hit_count, 1)
+		for _i in hits:
+			target.take_damage(action.skill_damage * attack_multiplier)
+		if action.target_slot != SkillData.TargetSlot.NONE:
+			_apply_snipe_to_slot(target, action.target_slot)
+	if action.skill_defense > 0.0:
+		_heal_shield(action.skill_defense)
+	if action.skill_heal > 0.0:
+		_heal_hp(action.skill_heal)
+		print("  > [%s] HP +%.0f" % [enemy_name, action.skill_heal])
+	EventBus.skill_used.emit(self, action)
+
+
+func _apply_snipe_to_slot(target: Node, slot_index: int) -> void:
+	if not target.has_method("get_part_at_slot"):
+		return
+	var part: PartsData = target.get_part_at_slot(slot_index)
+	if part == null:
+		print("  > [저격] 슬롯 %d 비어 있음 — 내구도 효과 무효" % slot_index)
+		return
+	if part.is_broken():
+		print("  > [저격] %s 이미 파괴됨 — 내구도 효과 무효" % part.parts_name)
+		return
+	part.durability = maxi(part.durability - 1, 0)
+	EventBus.part_durability_changed.emit(part)
+	print("  > [저격] %s 내구도 감소 → %d" % [part.parts_name, part.durability])
+	if part.is_broken():
+		print("  > [파츠 파괴] %s" % part.parts_name)
 
 func decide_next_actions() -> void:
 	next_actions.clear()
@@ -118,8 +143,17 @@ func _resolve_snipe_preview_slot() -> int:
 			continue
 		if action.target_slot == SNIPE_SLOT_NONE:
 			continue
+		if not _player_has_part_at(action.target_slot):
+			continue
 		return action.target_slot
 	return SNIPE_SLOT_NONE
+
+
+func _player_has_part_at(slot_index: int) -> bool:
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		if int(slot) == slot_index:
+			return GameState.equipped_parts[slot] != null
+	return false
 
 func _heal_hp(amount: float) -> void:
 	current_hp = minf(current_hp + amount, enemy_max_hp)
