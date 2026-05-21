@@ -1,46 +1,50 @@
 You must answer in Korean.
 
-## Commit Rules
-When you are asked to commit changes, you MUST always create or update a TODO file (e.g., `Docs/WorkNote/TODO-YYYY-MM-DD.md` or `TODO-NEXT.md`) outlining the next tasks to be done. This ensures that any future session or agent can easily pick up where you left off. Include this TODO file in your commit.
+## 공통 규칙 참조
 
-## gstack (REQUIRED — global install)
+프로젝트 공통 규칙(작업 체크리스트, 코드 규칙, 커밋 규칙, AI 협업 워크플로우)은
+**`AGENTS.md`** 를 먼저 읽고 따른다. 이 파일은 Claude 전용 추가 설정만 담는다.
 
-**Before doing ANY work, verify gstack is installed:**
+---
+
+## gstack (REQUIRED — Claude Code 전용)
+
+**작업 시작 전 gstack 설치 여부를 확인한다:**
 
 ```bash
 test -d ~/.claude/skills/gstack/bin && echo "GSTACK_OK" || echo "GSTACK_MISSING"
 ```
 
-If GSTACK_MISSING: STOP. Do not proceed. Tell the user:
+GSTACK_MISSING 이면 즉시 중단하고 사용자에게 아래를 안내한다:
 
-> gstack is required for all AI-assisted work in this repo.
-> Install it:
+> gstack이 설치되어 있지 않습니다. 아래 명령으로 설치하세요:
 > ```bash
 > git clone --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
 > cd ~/.claude/skills/gstack && ./setup --team
 > ```
-> Then restart your AI coding tool.
+> 설치 후 Claude Code를 재시작하세요.
 
-Do not skip skills, ignore gstack errors, or work around missing gstack.
+gstack 오류를 무시하거나 우회하지 않는다.
+gstack 파일 경로: `~/.claude/skills/gstack/`
+웹 브라우징은 `/browse` 를 사용한다.
 
-Using gstack skills: After install, skills like /qa, /ship, /review, /investigate,
-and /browse are available. Use /browse for all web browsing.
-Use ~/.claude/skills/gstack/... for gstack file paths (the global path).
+---
 
-## Skill routing
+## 스킬 라우팅 (Claude Code + gstack 전용)
 
-When the user's request matches an available skill, invoke it via the Skill tool. When in doubt, invoke the skill.
+사용자 요청이 아래 스킬과 일치하면 즉시 해당 스킬을 호출한다.
 
-Key routing rules:
-- Product ideas/brainstorming → invoke /office-hours
-- Strategy/scope → invoke /plan-ceo-review
-- Architecture → invoke /plan-eng-review
-- Design system/plan review → invoke /design-consultation or /plan-design-review
-- Full review pipeline → invoke /autoplan
-- Bugs/errors → invoke /investigate
-- QA/testing site behavior → invoke /qa or /qa-only
-- Code review/diff check → invoke /review
-- Visual polish → invoke /design-review
-- Ship/deploy/PR → invoke /ship or /land-and-deploy
-- Save progress → invoke /context-save
-- Resume context → invoke /context-restore
+| 요청 유형 | 스킬 |
+|----------|------|
+| 제품 아이디어/브레인스토밍 | `/office-hours` |
+| 전략/범위 결정 | `/plan-ceo-review` |
+| 아키텍처 설계 | `/plan-eng-review` |
+| 디자인 시스템/계획 검토 | `/design-consultation` 또는 `/plan-design-review` |
+| 전체 리뷰 파이프라인 | `/autoplan` |
+| 버그/오류 | `/investigate` |
+| QA/사이트 동작 테스트 | `/qa` 또는 `/qa-only` |
+| 코드 리뷰/diff 확인 | `/review` |
+| 시각적 개선 | `/design-review` |
+| 배포/PR | `/ship` 또는 `/land-and-deploy` |
+| 진행 저장 | `/context-save` |
+| 컨텍스트 복원 | `/context-restore` |

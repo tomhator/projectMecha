@@ -90,6 +90,73 @@ enum SkillType { ATTACK, DEFENSE, HEAL, PASSIVE }
 
 ---
 
+## AI 협업 워크플로우
+
+모든 AI 어시스턴트(Claude, Cursor, Gemini 등)가 공통으로 따르는 협업 규칙이다.
+
+### 1. 스펙 리뷰 — 코드 작성 전 계획 검토
+
+2개 이상의 파일을 수정하거나 새 시스템을 도입하는 경우, 코드를 작성하기 **전에** 반드시 아래 순서를 따른다:
+
+1. 작업 계획을 텍스트로 먼저 작성한다 (변경 파일 목록, 변경 이유, 영향 범위)
+2. 사용자에게 계획을 제시하고 승인을 받는다
+3. 승인 후 구현한다
+
+단순 1줄 버그픽스는 이 절차를 생략할 수 있다.
+
+---
+
+### 2. 스킬 기반 리팩토링 — 반복 작업 패턴
+
+자주 반복되는 작업은 아래 커스텀 커맨드 가이드를 따른다.
+가이드 파일은 `.claude/commands/` 에 있다.
+
+| 작업 | 커맨드 파일 |
+|------|------------|
+| 새 스킬 리소스 생성 | `.claude/commands/new-skill.md` |
+| 새 적 추가 | `.claude/commands/new-enemy.md` |
+| 전투 버그 조사 | `.claude/commands/combat-debug.md` |
+| 파츠 시스템 수정 | `.claude/commands/parts-update.md` |
+
+새 반복 패턴이 생기면 `.claude/commands/` 에 커맨드 파일을 추가한다.
+
+---
+
+### 3. 도메인 단위 코드 관리
+
+파일 종류가 아닌 **도메인** 단위로 작업 범위를 제한한다.
+각 도메인 디렉토리에는 전용 컨텍스트 파일이 있다.
+
+| 도메인 | 경로 | 컨텍스트 파일 |
+|--------|------|--------------|
+| 턴제 전투 | `Scenes/Combat/` | `Scenes/Combat/CLAUDE.md` |
+| 메카·적 엔티티 | `Scenes/Entities/` | `Scenes/Entities/CLAUDE.md` |
+| 전역 싱글톤 | `Scripts/Autoload/` | `Scripts/Autoload/CLAUDE.md` |
+| 스킬 리소스 | `Resources/Skills/` | `Resources/Skills/CLAUDE.md` |
+
+해당 도메인 작업 시 반드시 도메인 컨텍스트 파일을 먼저 읽는다.
+한 번에 두 개 이상의 도메인을 수정해야 하면 스펙 리뷰(위 1번)를 먼저 거친다.
+
+---
+
+### 4. 자동 검사 시스템
+
+코드 수정 후 아래 항목을 반드시 확인한다.
+
+| 검사 항목 | 시점 | 방법 |
+|----------|------|------|
+| GDScript 문법 오류 | 파일 수정 후 | `gdparse <파일>.gd` (gdtoolkit 설치 시) |
+| TODO 파일 존재 | 커밋 전 | `Docs/WorkNote/TODO-YYYY-MM-DD.md` 확인 |
+| 계획 문서 존재 | 대규모 수정 전 | 스펙 리뷰 절차 준수 |
+
+Claude Code 사용 시 위 검사는 `.claude/hooks/` 훅으로 자동화되어 있다.
+다른 도구 사용 시 수동으로 위 체크리스트를 따른다.
+
+---
+
 ## 관련 문서
 
-- [[Docs/GameDesignDocument]] — 전체 게임 설계
+- `ARCHITECTURE.md` — 전체 파일 구조 및 기술 아키텍처
+- `Docs/GameDesignDocument.md` — 전체 게임 설계
+- `Docs/PartsSystem.md` — 부품 시스템 상세
+- `Docs/WorkNote/` — 작업 일지 및 TODO
