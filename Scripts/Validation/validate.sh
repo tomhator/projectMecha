@@ -21,6 +21,27 @@ run_check() {
   fi
 }
 
+run_godot_checked() {
+  local bin="$1"
+  shift
+  local output
+  local status
+
+  output="$("$bin" "$@" 2>&1)"
+  status=$?
+  printf '%s\n' "$output"
+
+  if [ "$status" -ne 0 ]; then
+    return "$status"
+  fi
+
+  if printf '%s\n' "$output" | grep -E '^(SCRIPT ERROR|ERROR):' >/dev/null 2>&1; then
+    return 1
+  fi
+
+  return 0
+}
+
 find_godot_bin() {
   if [ -n "$GODOT_BIN" ]; then
     printf '%s\n' "$GODOT_BIN"
@@ -105,13 +126,27 @@ run_godot_headless() {
     return 0
   fi
 
-  "$bin" --headless --path . --quit
+  run_godot_checked "$bin" --headless --path . --quit
+}
+
+run_godot_script() {
+  local script_path="$1"
+  local bin
+
+  if ! bin="$(find_godot_bin)"; then
+    echo "SKIP godot script: command not found (set GODOT_BIN to override)"
+    return 0
+  fi
+
+  run_godot_checked "$bin" --headless --path . --script "$script_path"
 }
 
 run_check "Godot 4 syntax pattern scan" bash Scripts/Validation/check_godot4_syntax_patterns.sh
 run_check "Project docs check" bash Scripts/Validation/check_project_docs.sh
 run_check "GDScript parser" run_gdparse
 run_check "Godot headless project load" run_godot_headless
+run_check "Resource integrity" run_godot_script res://Scripts/Validation/check_resource_integrity.gd
+run_check "Scene smoke" run_godot_script res://Scripts/Validation/check_scene_smoke.gd
 
 if [ "$failed" -eq 0 ]; then
   echo "Validation complete: PASS"

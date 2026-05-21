@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_is001")
-skill_id = 201
+skill_id = 215
 skill_name = "철갑 방어"
 skill_type = 1
 skill_description = "두꺼운 철갑을 전개해 쉴드를 충전한다."
