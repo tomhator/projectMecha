@@ -13,11 +13,13 @@ var player_mecha: MechaEntity = null
 var enemies: Array[EnemyEntity] = []
 var actions_left: int = 0
 var current_turn: int = 0
+var _counted_defeated_enemies: Array[EnemyEntity] = []
 
 func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:
 	player_mecha = mecha
 	enemies = enemy_list
 	current_turn = 0
+	_counted_defeated_enemies.clear()
 	if not EventBus.boss_arm_spawned.is_connected(add_enemy):
 		EventBus.boss_arm_spawned.connect(add_enemy)
 	player_mecha.setup()
@@ -31,6 +33,9 @@ func start_player_turn() -> void:
 	for enemy: EnemyEntity in enemies:
 		if not enemy.is_defeated():
 			enemy.tick_debuffs()
+	_count_new_defeats()
+	if _check_combat_end():
+		return
 	current_phase = TurnPhase.PLAYER_TURN
 	actions_left = GameState.current_action_count
 	current_turn += 1
@@ -53,6 +58,7 @@ func on_skill_selected(skill: SkillData, target: Node) -> void:
 	print("[플레이어] '%s' 사용 → 타겟: %s" % [skill.skill_name, target_name])
 	player_mecha.use_skill(skill, target)
 	actions_left -= skill.skill_action_cost
+	_count_new_defeats()
 	if _check_combat_end():
 		return
 	var usable: Array[SkillData] = _get_usable_skills()
@@ -77,6 +83,7 @@ func start_enemy_turn() -> void:
 	for enemy: EnemyEntity in enemies:
 		if not enemy.is_defeated():
 			enemy.execute_actions(player_mecha)
+			_count_new_defeats()
 			if _check_combat_end():
 				return
 	start_player_turn()
@@ -92,6 +99,15 @@ func add_enemy(enemy: EnemyEntity) -> void:
 	enemies.append(enemy)
 	print("[TurnManager] 적 추가: %s (현재 적 수: %d)" % [enemy.enemy_name, enemies.size()])
 	EventBus.enemy_added.emit(enemy)
+
+func get_defeated_enemy_count() -> int:
+	return _counted_defeated_enemies.size()
+
+
+func _count_new_defeats() -> void:
+	for enemy: EnemyEntity in enemies:
+		if enemy.is_defeated() and not _counted_defeated_enemies.has(enemy):
+			_counted_defeated_enemies.append(enemy)
 
 
 func _check_combat_end() -> bool:

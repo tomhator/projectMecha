@@ -26,9 +26,11 @@ const ENEMY_POOL_BOSS: Array[String] = [
 
 var _floors: Array = [] # 10층 * 각 층의 선택지 목록
 var _current_choice: RoomData = null #현재 층에서 플레이어가 선택한 방
+var _last_combat_defeated_enemy_count: int = 0
 
 func start_dungeon() -> void:
     _floors.clear()
+    _last_combat_defeated_enemy_count = 0
     _generate_floors()
     get_tree().change_scene_to_file(DUNGEON_MAP_SCENE)
 
@@ -40,6 +42,7 @@ func get_current_choices() -> Array:
 
 func select_room(room: RoomData) -> void:
     _current_choice = room
+    _last_combat_defeated_enemy_count = 0
     _transition_to_room(room)
 
 func on_room_cleared() -> void:
@@ -73,6 +76,12 @@ func _should_give_reward(room: RoomData) -> bool:
 
 func get_current_room() -> RoomData:
     return _current_choice
+
+func record_combat_result(defeated_enemy_count: int) -> void:
+    _last_combat_defeated_enemy_count = maxi(defeated_enemy_count, 0)
+
+func get_last_combat_defeated_enemy_count() -> int:
+    return _last_combat_defeated_enemy_count
 
 func on_run_failed() -> void:
     GameState.end_run()

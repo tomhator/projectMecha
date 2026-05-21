@@ -20,6 +20,10 @@ func _ready() -> void:
 	]
 	GameState.add_credits(credit_amount)
 
+	if _is_combat_room(room):
+		_show_combat_rewards(grade, credit_amount)
+		return
+
 	var choices: Array[PartsData] = RewardManager.generate_choices(grade)
 	for part: PartsData in choices:
 		var btn: Button = Button.new()
@@ -50,6 +54,33 @@ func _short_card_title(part: PartsData) -> String:
 		PartsData.PartsType.keys()[part.parts_type],
 		part.parts_name
 	]
+
+
+func _show_combat_rewards(grade: PartsData.PartsGrade, credit_amount: int) -> void:
+	var defeated_count: int = DungeonManager.get_last_combat_defeated_enemy_count()
+	var drops: Array[PartsData] = RewardManager.generate_combat_drops(grade, defeated_count)
+	title_label.text = "전투 보상 — 격파 %d기  |  드롭 %d개  |  크레딧 +%d" % [
+		defeated_count,
+		drops.size(),
+		credit_amount
+	]
+	for part: PartsData in drops:
+		GameState.add_to_inventory(part)
+		var btn: Button = Button.new()
+		btn.text = _short_card_title(part)
+		btn.custom_minimum_size = CARD_SIZE
+		btn.disabled = true
+		reward_container.add_child(btn)
+	if drops.is_empty():
+		var label := Label.new()
+		label.text = "드롭 파츠 없음"
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		reward_container.add_child(label)
+	var continue_btn := Button.new()
+	continue_btn.text = "계속"
+	continue_btn.custom_minimum_size = Vector2(120.0, 44.0)
+	continue_btn.pressed.connect(DungeonManager.continue_after_reward)
+	reward_container.add_child(continue_btn)
 
 
 func _on_reward_card_pressed(part: PartsData) -> void:
@@ -87,6 +118,18 @@ func _determine_grade(room: RoomData) -> PartsData.PartsGrade:
 		RoomData.RoomType.CHEST:
 			return PartsData.PartsGrade.EPIC if randf() < 0.25 else PartsData.PartsGrade.RARE
 		_: return PartsData.PartsGrade.COMMON
+
+
+func _is_combat_room(room: RoomData) -> bool:
+	if room == null:
+		return false
+	match room.room_type:
+		RoomData.RoomType.BATTLE_NORMAL, \
+		RoomData.RoomType.BATTLE_ELITE, \
+		RoomData.RoomType.BOSS:
+			return true
+		_:
+			return false
 
 
 func _determine_credits(room: RoomData) -> int:

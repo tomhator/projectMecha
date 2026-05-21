@@ -40,6 +40,7 @@ func _on_boss_arm_spawned(arm: EnemyEntity) -> void:
 func _on_combat_ended(player_won: bool) -> void:
 	if player_won:
 		print("Player won")
+		DungeonManager.record_combat_result(turn_manager.get_defeated_enemy_count())
 		DungeonManager.on_room_cleared()
 	else:
 		print("Player lost")

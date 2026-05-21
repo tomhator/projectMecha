@@ -6,6 +6,8 @@ const PARTS_DIRS: Array[String] = [
 	"res://Resources/Parts/back",
 	"res://Resources/Parts/leg",
 ]
+const DROP_COUNT_ZERO_CHANCE := 0.4
+const DROP_COUNT_ONE_CHANCE := 0.5
 
 var _all_parts: Array[String] = []
 var _all_weights: Array[float] = []
@@ -28,6 +30,22 @@ func generate_choices(grade: PartsData.PartsGrade, count: int = 3) -> Array[Part
 		if template != null:
 			result.append(PartsFactory.generate(template, grade))
 	return result
+
+
+func generate_combat_drops(grade: PartsData.PartsGrade, defeated_enemy_count: int) -> Array[PartsData]:
+	var drop_count := 0
+	for _i: int in maxi(defeated_enemy_count, 0):
+		drop_count += _roll_drop_count_for_enemy()
+	return generate_choices(grade, drop_count)
+
+
+func _roll_drop_count_for_enemy() -> int:
+	var roll := randf()
+	if roll < DROP_COUNT_ZERO_CHANCE:
+		return 0
+	if roll < DROP_COUNT_ZERO_CHANCE + DROP_COUNT_ONE_CHANCE:
+		return 1
+	return 2
 
 
 func _weighted_sample(paths: Array[String], weights: Array[float], n: int) -> Array[String]:
