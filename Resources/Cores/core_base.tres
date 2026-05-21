@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="CoreData" format=3 uid="uid://b9xkctr2vdmq1"]
+
+[ext_resource type="Script" uid="uid://csie4yk7lg32n" path="res://Resources/CoreData.gd" id="1_base"]
+
+[resource]
+script = ExtResource("1_base")
+core_id = 0
+core_name = "기본 코어"
+core_description = "어빌리티 트리를 통해 성장하는 범용 코어."
+core_slots = Array[int]([0, 1, 2, 3])
+core_hp = 100.0
+core_shield = 20.0
+core_attack_multiplier = 1.0
+core_max_payload = 100.0
+core_action_count = 2
+metadata/_custom_type_script = "uid://csie4yk7lg32n"

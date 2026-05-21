@@ -9,7 +9,8 @@ var _serious_punch_pending: bool = false
 func setup() -> void:
 	available_skills.clear()
 	_skill_to_part.clear()
-	available_skills.append_array(GameState.current_core.core_skills)
+	if GameState.active_core_skill != null:
+		available_skills.append(GameState.active_core_skill)
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
 		var part: PartsData = GameState.equipped_parts[slot]
 		if part != null:
