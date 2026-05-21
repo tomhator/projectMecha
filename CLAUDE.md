@@ -7,6 +7,33 @@ You must answer in Korean.
 
 ---
 
+## PR 생성 절차 (필수 — 매번 반복)
+
+PR을 생성하기 전에 반드시 아래 절차를 수행한다.
+
+```bash
+# 1. main 최신화
+git fetch origin main
+
+# 2. 현재 브랜치에 rebase
+git rebase origin/main
+
+# 3. 충돌 발생 시 해결 후 계속
+git rebase --continue   # 충돌 해결 후
+
+# 4. 강제 푸시 (rebase 후 필요)
+git push -u origin <branch-name> --force-with-lease
+
+# 5. PR 생성
+```
+
+**규칙:**
+- PR 생성 전 rebase를 건너뛰지 않는다.
+- 충돌이 발생하면 해결 후 진행한다. 충돌을 무시하거나 merge로 대체하지 않는다.
+- rebase 완료 후 push는 반드시 `--force-with-lease` 옵션을 사용한다.
+
+---
+
 ## gstack (REQUIRED — Claude Code 전용)
 
 **작업 시작 전 gstack 설치 여부를 확인한다:**
