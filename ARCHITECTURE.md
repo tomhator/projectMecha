@@ -23,8 +23,10 @@
 - `Asset/`: 모델, 텍스처, 오디오 등 리소스 파일.
 - `Docs/`: 기획서 및 기술 문서.
     - `UI/`: UI 마스터 스펙 (`HUD.md` 등).
-    - `WorkNote/`: 작업 일지.
-    - `SESSION_CONTEXT/`: 세션 인수인계 및 백업 문서.
+    - `WorkNote/`: 작업 일지 (`YYYY-MM-DD.md`).
+    - `TODO/`: 활성 backlog (`TODO-NEXT.md`). 완료·이월 목록은 `TODO/old/`.
+    - `DEV-GUIDE/`: 구현 가이드 아카이브 (`DEV-GUIDE/old/`).
+    - `SESSION_CONTEXT/`: 세션 인수인계·백업. 현재 세션은 루트, 과거 기록은 `SESSION_CONTEXT/old/`.
 - `.cursor/`: Cursor AI 에이전트 관련 설정 및 규칙.
     - `rules/`: AI 에이전트 동작 및 커밋 규칙 (`.mdc`).
 - `Resources/`: 데이터 모델 스크립트(`.gd`) 및 인스턴스(`.tres`).

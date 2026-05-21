@@ -68,7 +68,7 @@ chore   - 기타 잡무
 예시: `feat: 부품 장착 드래그앤드롭 구현`
 
 커밋 시 반드시 `Docs/WorkNote/YYYY-MM-DD.md` 작성 또는 업데이트.
-또한, 다음 작업을 명확히 하기 위해 반드시 `Docs/WorkNote/TODO-YYYY-MM-DD.md` (또는 `TODO-NEXT.md`) 파일을 생성하거나 업데이트하여 다음 할 일을 기록해야 합니다.
+또한, 다음 작업을 명확히 하기 위해 `Docs/TODO/TODO-NEXT.md` (통합 backlog)를 생성하거나 업데이트하여 다음 할 일을 기록해야 합니다.
 
 ---
 
@@ -146,7 +146,7 @@ enum SkillType { ATTACK, DEFENSE, HEAL, PASSIVE }
 | 검사 항목 | 시점 | 방법 |
 |----------|------|------|
 | GDScript 문법 오류 | 파일 수정 후 | `gdparse <파일>.gd` (gdtoolkit 설치 시) |
-| TODO 파일 존재 | 커밋 전 | `Docs/WorkNote/TODO-YYYY-MM-DD.md` 확인 |
+| TODO 파일 존재 | 커밋 전 | `Docs/TODO/TODO-NEXT.md` 확인 |
 | 계획 문서 존재 | 대규모 수정 전 | 스펙 리뷰 절차 준수 |
 
 Claude Code 사용 시 위 검사는 `.claude/hooks/` 훅으로 자동화되어 있다.
@@ -159,4 +159,6 @@ Claude Code 사용 시 위 검사는 `.claude/hooks/` 훅으로 자동화되어 
 - `ARCHITECTURE.md` — 전체 파일 구조 및 기술 아키텍처
 - `Docs/GameDesignDocument.md` — 전체 게임 설계
 - `Docs/PartsSystem.md` — 부품 시스템 상세
-- `Docs/WorkNote/` — 작업 일지 및 TODO
+- `Docs/WorkNote/` — 작업 일지
+- `Docs/TODO/TODO-NEXT.md` — 활성 backlog
+- `Docs/DEV-GUIDE/old/` — 구현 가이드 아카이브

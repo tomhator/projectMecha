@@ -60,7 +60,7 @@ chore    - 기타 잡무 (설정 변경 등)
 
 ### C. 다음 작업 TODO 파일 작성
 - **조건**: 모든 커밋 시 필수
-- **작업**: 커밋 후 진행할 다음 작업 목록을 담은 TODO 파일을 `Docs/WorkNote/TODO-YYYY-MM-DD.md` (또는 `Docs/WorkNote/TODO-NEXT.md`) 형태로 작성하여 저장합니다.
+- **작업**: 커밋 후 진행할 다음 작업 목록을 `Docs/TODO/TODO-NEXT.md`에 작성·갱신합니다. (날짜별 스냅샷이 필요하면 `Docs/TODO/old/TODO-YYYY-MM-DD.md`에 보관)
 - **목적**: 다른 세션이나 에이전트가 작업을 이어받을 때, 다음에 어떤 작업을 해야 하는지 명확히 알 수 있도록 하기 위함입니다.
 
 ## 3. 커밋 실행
