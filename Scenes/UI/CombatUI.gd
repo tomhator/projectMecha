@@ -126,6 +126,7 @@ func _on_part_stolen(_part: PartsData, _slot: int) -> void:
 
 
 func _on_enemy_added(enemy: EnemyEntity) -> void:
+	_prune_invalid_current_enemies()
 	if enemy not in _current_enemies:
 		_current_enemies.append(enemy)
 	_rebuild_enemy_bars(_current_enemies)
@@ -577,6 +578,7 @@ func _on_skill_button_pressed(skill: SkillData) -> void:
 
 
 func _living_enemies() -> Array[EnemyEntity]:
+	_prune_invalid_current_enemies()
 	var out: Array[EnemyEntity] = []
 	for e: EnemyEntity in _current_enemies:
 		if not e.is_defeated():
@@ -722,6 +724,7 @@ func _pick_default_target(skill: SkillData) -> Node:
 
 
 func _update_enemy_preview() -> void:
+	_prune_invalid_current_enemies()
 	for enemy: EnemyEntity in _current_enemies:
 		var id: int = enemy.get_instance_id()
 		if not _enemy_forecast_labels.has(id) or not _enemy_hover_preview_labels.has(id):
@@ -763,7 +766,8 @@ func _damage_preview_text_for_hover(enemy: EnemyEntity) -> String:
 	var parts: PackedStringArray = []
 	if dmg > 0.0:
 		var split: Vector2 = enemy.preview_incoming_damage_split(dmg, _pending_skill.armor_penetration)
-		parts.append("예상 피해 %.0f (쉴드 %.0f · HP %.0f)" % [dmg, split.x, split.y])
+		var effective_damage: float = split.x + split.y
+		parts.append("예상 피해 %.0f (쉴드 %.0f · HP %.0f)" % [effective_damage, split.x, split.y])
 	var self_bits: PackedStringArray = []
 	if _pending_skill.skill_heal > 0.0:
 		self_bits.append("나 HP +%.0f" % hp_gain)
@@ -915,8 +919,13 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 	_enemy_forecast_labels.clear()
 	_enemy_hover_preview_labels.clear()
 	_enemy_target_buttons.clear()
+	var collector_lanes: Dictionary = {}
+	if _has_collector_formation(enemies):
+		collector_lanes = _build_collector_lanes()
 
 	for enemy: EnemyEntity in enemies:
+		if not is_instance_valid(enemy):
+			continue
 		var eid: int = enemy.get_instance_id()
 		var btn := Button.new()
 		btn.flat = true
@@ -969,6 +978,20 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 		name_label.clip_text = true
 		name_label.max_lines_visible = 2
 		vbox.add_child(name_label)
+
+		var role_label := _collector_role_label(enemy)
+		if not role_label.is_empty():
+			var role := Label.new()
+			role.text = role_label
+			role.add_theme_font_size_override("font_size", 10)
+			role.add_theme_color_override("font_color", _collector_role_color(enemy))
+			role.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			role.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			role.clip_text = true
+			role.custom_minimum_size = Vector2(0.0, 12.0)
+			vbox.add_child(role)
+			if enemy is BossCollectorEntity:
+				_style_collector_core_button(btn, enemy as BossCollectorEntity)
 
 		var sprite_frame := Panel.new()
 		sprite_frame.custom_minimum_size = ENEMY_SPRITE_SIZE
@@ -1053,10 +1076,112 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 			_enemy_shield_value_labels[eid] = sh_val
 			_set_enemy_shield_number_text(eid, enemy.current_shield, enemy.enemy_max_shield)
 
-		enemy_container.add_child(btn)
+		var slot_parent: Control = enemy_container
+		if not collector_lanes.is_empty():
+			slot_parent = _collector_lane_for(enemy, collector_lanes)
+		slot_parent.add_child(btn)
 
 	_update_enemy_preview()
 	_recompute_snipe_highlight()
+
+
+func _has_collector_formation(enemies: Array[EnemyEntity]) -> bool:
+	for enemy: EnemyEntity in enemies:
+		if not is_instance_valid(enemy):
+			continue
+		if enemy is BossCollectorEntity:
+			return true
+	return false
+
+
+func _prune_invalid_current_enemies() -> void:
+	var living_refs: Array[EnemyEntity] = []
+	for enemy: EnemyEntity in _current_enemies:
+		if is_instance_valid(enemy):
+			living_refs.append(enemy)
+	_current_enemies = living_refs
+
+
+func _build_collector_lanes() -> Dictionary:
+	var formation := HBoxContainer.new()
+	formation.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	formation.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	formation.alignment = BoxContainer.ALIGNMENT_CENTER
+	formation.add_theme_constant_override("separation", 10)
+	enemy_container.add_child(formation)
+	return {
+		"front": _add_collector_lane(formation, "전열"),
+		"mid": _add_collector_lane(formation, "팔"),
+		"back": _add_collector_lane(formation, "코어"),
+	}
+
+
+func _add_collector_lane(formation: HBoxContainer, title: String) -> HBoxContainer:
+	var lane := VBoxContainer.new()
+	lane.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	lane.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	lane.alignment = BoxContainer.ALIGNMENT_CENTER
+	lane.add_theme_constant_override("separation", 4)
+	formation.add_child(lane)
+
+	var label := Label.new()
+	label.text = title
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", Color(0.70, 0.76, 0.86, 1.0))
+	lane.add_child(label)
+
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 6)
+	lane.add_child(row)
+	return row
+
+
+func _collector_lane_for(enemy: EnemyEntity, lanes: Dictionary) -> Control:
+	if enemy is BossCollectorEntity:
+		return lanes["back"] as Control
+	if enemy is CollectorArmEntity and (enemy as CollectorArmEntity).is_defense_arm:
+		return lanes["front"] as Control
+	return lanes["mid"] as Control
+
+
+func _collector_role_label(enemy: EnemyEntity) -> String:
+	if enemy is BossCollectorEntity:
+		var boss := enemy as BossCollectorEntity
+		if boss.is_exposed():
+			return "코어 노출"
+		var protection: int = int(round(boss.get_core_protection_ratio() * 100.0))
+		return "코어 보호 %d%%" % protection
+	if enemy is CollectorArmEntity and (enemy as CollectorArmEntity).is_defense_arm:
+		return "방어 팔"
+	if enemy is CollectorArmEntity:
+		return "보호 팔"
+	return ""
+
+
+func _collector_role_color(enemy: EnemyEntity) -> Color:
+	if enemy is BossCollectorEntity and (enemy as BossCollectorEntity).is_exposed():
+		return Color(1.0, 0.70, 0.28, 1.0)
+	if enemy is CollectorArmEntity and (enemy as CollectorArmEntity).is_defense_arm:
+		return Color(0.44, 0.86, 1.0, 1.0)
+	return Color(0.88, 0.78, 0.54, 1.0)
+
+
+func _style_collector_core_button(btn: Button, boss: BossCollectorEntity) -> void:
+	var style := StyleBoxFlat.new()
+	style.set_corner_radius_all(6)
+	style.set_border_width_all(2)
+	if boss.is_exposed():
+		style.bg_color = Color(0.26, 0.15, 0.08, 0.88)
+		style.border_color = Color(1.0, 0.70, 0.28, 1.0)
+	else:
+		style.bg_color = Color(0.16, 0.10, 0.13, 0.70)
+		style.border_color = Color(0.82, 0.34, 0.42, 0.90)
+	btn.flat = false
+	btn.add_theme_stylebox_override("normal", style)
 
 
 func _enemy_sprite_texture(enemy: EnemyEntity) -> Texture2D:

@@ -35,6 +35,8 @@ func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:
 	_counted_defeated_enemies.clear()
 	if not EventBus.boss_arm_spawned.is_connected(add_enemy):
 		EventBus.boss_arm_spawned.connect(add_enemy)
+	if not EventBus.enemy_spawn_requested.is_connected(add_enemy):
+		EventBus.enemy_spawn_requested.connect(add_enemy)
 	player_mecha.setup()
 	for enemy: EnemyEntity in enemies:
 		enemy.setup()
@@ -100,12 +102,13 @@ func on_end_turn_requested() -> void:
 	start_enemy_turn()
 
 func start_enemy_turn() -> void:
+	_notify_collectors_player_turn_ended()
 	current_phase = TurnPhase.ENEMY_TURN
 	phase_changed.emit(current_phase)
 	print("--- [적 턴] ---")
 	for enemy: EnemyEntity in enemies:
 		if not enemy.is_defeated():
-			enemy.execute_actions(player_mecha)
+			enemy.execute_actions(player_mecha, enemies)
 			_prune_defeated_boss_arms()
 			_count_new_defeats()
 			if _check_combat_end():
@@ -123,6 +126,8 @@ func _get_display_skills() -> Array[SkillData]:
 func add_enemy(enemy: EnemyEntity) -> void:
 	if enemy in enemies:
 		return
+	if enemy.get_parent() == null and get_parent() != null:
+		get_parent().add_child(enemy)
 	enemies.append(enemy)
 	print("[TurnManager] 적 추가: %s (현재 적 수: %d)" % [enemy.enemy_name, enemies.size()])
 	EventBus.enemy_added.emit(enemy)
@@ -133,7 +138,7 @@ func get_defeated_enemy_count() -> int:
 
 func _count_new_defeats() -> void:
 	for enemy: EnemyEntity in enemies:
-		if enemy is CollectorArmEntity:
+		if enemy is CollectorArmEntity or not enemy.counts_for_combat_rewards:
 			continue
 		if enemy.is_defeated() and not _counted_defeated_enemies.has(enemy):
 			_counted_defeated_enemies.append(enemy)
@@ -152,12 +157,21 @@ func _prune_defeated_boss_arms() -> void:
 	if removed:
 		for enemy: EnemyEntity in enemies:
 			if enemy is BossCollectorEntity:
-				(enemy as BossCollectorEntity).prune_defeated_arms()
+				var collector := enemy as BossCollectorEntity
+				for removed_node: EnemyEntity in removed_nodes:
+					collector.on_arm_defeated(removed_node as CollectorArmEntity)
+				collector.prune_defeated_arms()
 		for removed_node: EnemyEntity in removed_nodes:
 			if removed_node.is_inside_tree():
 				removed_node.queue_free()
 			else:
 				removed_node.free()
+
+
+func _notify_collectors_player_turn_ended() -> void:
+	for enemy: EnemyEntity in enemies:
+		if enemy is BossCollectorEntity and not enemy.is_defeated():
+			(enemy as BossCollectorEntity).on_player_turn_ended()
 
 
 func _check_combat_end() -> bool:

@@ -5,6 +5,7 @@ class_name EnemyEntity
 @export var enemy_name: String = ""
 @export var enemy_tier: EnemyData.EnemyTier = EnemyData.EnemyTier.NORMAL
 @export var enemy_sprite: Texture2D = null
+@export var counts_for_combat_rewards: bool = true
 @export var enemy_max_hp: float = 0.0
 @export var enemy_max_shield: float = 0.0
 @export var attack_multiplier: float = 1.0
@@ -17,6 +18,7 @@ var current_shield: float = 0.0
 var next_actions: Array[SkillData] = []
 var _preview_target_slot: int = SNIPE_SLOT_NONE
 var _active_debuffs: Dictionary = {}  # SkillData.SkillDebuff (int) → turns_remaining
+var _skill_use_counts: Dictionary = {}  # SkillData -> executions this combat
 
 func setup() -> void:
 	current_hp = enemy_max_hp
@@ -28,6 +30,7 @@ func setup_from_data(data: EnemyData) -> void:
 	enemy_name = data.enemy_name
 	enemy_tier = data.enemy_tier
 	enemy_sprite = data.enemy_sprite
+	counts_for_combat_rewards = data.counts_for_combat_rewards
 	enemy_max_hp = data.enemy_max_hp
 	enemy_max_shield = data.enemy_max_shield
 	attack_multiplier = data.attack_multiplier
@@ -76,25 +79,32 @@ func preview_incoming_damage_split(damage: float, penetration: float = 0.0) -> V
 func is_defeated() -> bool:
 	return current_hp <= 0.0
 
-func execute_actions(target: Node) -> void:
+func execute_actions(target: Node, allies: Array = []) -> void:
 	for action: SkillData in next_actions:
-		_execute_single_action(action, target)
+		_execute_single_action(action, target, allies)
 	decide_next_actions()
 
 
-func _execute_single_action(action: SkillData, target: Node) -> void:
+func _execute_single_action(action: SkillData, target: Node, allies: Array = []) -> void:
 	print("[%s] '%s' 사용" % [enemy_name, action.skill_name])
+	var effect_target: Node = target
+	if action.skill_target == SkillData.SkillTarget.SELF:
+		effect_target = self
+	elif action.skill_target == SkillData.SkillTarget.ALLY:
+		effect_target = _resolve_ally_target(action, allies)
 	if action.skill_damage > 0.0:
 		var hits: int = maxi(action.hit_count, 1)
 		for _i in hits:
 			target.take_damage(action.skill_damage * attack_multiplier, action.armor_penetration)
 		if action.target_slot != SkillData.TargetSlot.NONE:
 			_apply_snipe_to_slot(target, action.target_slot)
-	if action.skill_defense > 0.0:
-		_heal_shield(action.skill_defense)
-	if action.skill_heal > 0.0:
-		_heal_hp(action.skill_heal)
-		print("  > [%s] HP +%.0f" % [enemy_name, action.skill_heal])
+	if action.skill_defense > 0.0 and effect_target is EnemyEntity:
+		(effect_target as EnemyEntity).restore_shield(action.skill_defense)
+	if action.skill_heal > 0.0 and effect_target is EnemyEntity:
+		(effect_target as EnemyEntity).restore_hp(action.skill_heal)
+	if action.summon_enemy != null and _can_execute_summon(action):
+		_summon_enemy(action.summon_enemy)
+	_skill_use_counts[action] = int(_skill_use_counts.get(action, 0)) + 1
 	EventBus.skill_used.emit(self, action)
 
 
@@ -121,14 +131,14 @@ func decide_next_actions() -> void:
 		return
 	var ap_remaining: int = enemy_action_count
 	var candidates: Array[SkillData] = skills.filter(
-		func(s: SkillData) -> bool: return s.skill_action_cost <= ap_remaining
+		func(s: SkillData) -> bool: return s.skill_action_cost <= ap_remaining and _can_preview_skill(s)
 	)
 	while not candidates.is_empty():
 		var chosen: SkillData = candidates[randi() % candidates.size()]
 		next_actions.append(chosen)
 		ap_remaining -= chosen.skill_action_cost
 		candidates = skills.filter(
-			func(s: SkillData) -> bool: return s.skill_action_cost <= ap_remaining
+			func(s: SkillData) -> bool: return s.skill_action_cost <= ap_remaining and _can_preview_skill(s)
 		)
 	print("[%s] 다음 행동 예고: %s" % [
 		enemy_name,
@@ -180,11 +190,13 @@ func tick_debuffs() -> void:
 		_active_debuffs.erase(d)
 
 
-func _heal_hp(amount: float) -> void:
+func restore_hp(amount: float) -> void:
+	var before: float = current_hp
 	current_hp = minf(current_hp + amount, enemy_max_hp)
 	EventBus.hp_changed.emit(self, current_hp, enemy_max_hp)
+	print("  > [%s] HP +%.0f" % [enemy_name, current_hp - before])
 
-func _heal_shield(amount: float) -> void:
+func restore_shield(amount: float) -> void:
 	var before: float = clampf(current_shield, 0.0, enemy_max_shield)
 	current_shield = before
 	var add: float = maxf(amount, 0.0)
@@ -200,3 +212,64 @@ func _heal_shield(amount: float) -> void:
 			)
 		else:
 			print("  > [%s] 쉴드 +%.0f (%.0f / %.0f)" % [enemy_name, gained, current_shield, enemy_max_shield])
+
+
+func _heal_hp(amount: float) -> void:
+	restore_hp(amount)
+
+
+func _heal_shield(amount: float) -> void:
+	restore_shield(amount)
+
+
+func _can_preview_skill(skill: SkillData) -> bool:
+	return skill.summon_enemy == null or _can_execute_summon(skill)
+
+
+func _can_execute_summon(skill: SkillData) -> bool:
+	if skill.summon_enemy == null:
+		return false
+	if skill.summon_limit_per_combat <= 0:
+		return true
+	return int(_skill_use_counts.get(skill, 0)) < skill.summon_limit_per_combat
+
+
+func _summon_enemy(data: EnemyData) -> void:
+	var summoned := EnemyEntity.new()
+	summoned.name = data.enemy_name
+	summoned.setup_from_data(data)
+	summoned.setup()
+	EventBus.enemy_spawn_requested.emit(summoned)
+
+
+func _resolve_ally_target(action: SkillData, allies: Array) -> EnemyEntity:
+	var living: Array[EnemyEntity] = []
+	for ally in allies:
+		if ally is EnemyEntity and not (ally as EnemyEntity).is_defeated():
+			living.append(ally as EnemyEntity)
+	if living.is_empty():
+		return self
+	if action.skill_heal > 0.0:
+		var selected_hp: EnemyEntity = living[0]
+		for ally: EnemyEntity in living:
+			if _hp_ratio(ally) < _hp_ratio(selected_hp):
+				selected_hp = ally
+		return selected_hp
+	if action.skill_defense > 0.0:
+		var shield_targets: Array[EnemyEntity] = living.filter(
+			func(ally: EnemyEntity) -> bool: return ally.enemy_max_shield > ally.current_shield
+		)
+		if shield_targets.is_empty():
+			return self
+		var selected_shield: EnemyEntity = shield_targets[0]
+		for ally: EnemyEntity in shield_targets:
+			if ally.current_shield < selected_shield.current_shield:
+				selected_shield = ally
+		return selected_shield
+	return self
+
+
+func _hp_ratio(enemy: EnemyEntity) -> float:
+	if enemy.enemy_max_hp <= 0.0:
+		return 1.0
+	return enemy.current_hp / enemy.enemy_max_hp

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill"]
+[ext_resource type="Resource" path="res://Resources/Enemies/enemy_scrap_minion.tres" id="2_minion"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = 1009
+skill_name = "고철 호출"
+skill_type = 3
+skill_description = "한 번만 약한 고철 잡졸을 끌어들인다."
+skill_action_cost = 2
+skill_target = 0
+target_slot = -1
+summon_enemy = ExtResource("2_minion")
+summon_limit_per_combat = 1

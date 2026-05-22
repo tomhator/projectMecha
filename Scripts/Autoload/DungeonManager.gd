@@ -11,16 +11,14 @@ const REWARD_SCENE: String = "res://Scenes/Dungeon/RewardScene.tscn"
 
 # 적 풀
 const ENEMY_POOL_NORMAL: Array[String] = [
-	"res://Resources/Enemies/enemy_scrapper.tres",
-	"res://Resources/Enemies/enemy_guard_unit.tres",
-	"res://Resources/Enemies/enemy_rusher.tres",
+    "res://Resources/Enemies/enemy_junk_rammer.tres",
+    "res://Resources/Enemies/enemy_cutting_claw.tres",
+    "res://Resources/Enemies/enemy_patch_drone.tres",
+    "res://Resources/Enemies/enemy_signal_dummy.tres",
 ]
-const ENEMY_POOL_ELITE: Array[String] = [
-	"res://Resources/Enemies/enemy_warlord.tres",
-	"res://Resources/Enemies/enemy_fortress.tres",
-]
+const ENEMY_POOL_ELITE: Array[String] = []
 const ENEMY_POOL_BOSS: Array[String] = [
-	"res://Resources/Enemies/enemy_collector.tres",
+    "res://Resources/Enemies/enemy_collector.tres",
 ]
 
 

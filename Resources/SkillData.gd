@@ -3,7 +3,7 @@ extends Resource
 class_name SkillData
 
 enum SkillType { ATTACK, DEFENSE, HEAL, PASSIVE }
-enum SkillTarget { SELF, ENEMY }
+enum SkillTarget { SELF, ENEMY, ALLY }
 enum TargetSlot { NONE = -1, ARM_L = 0, ARM_R = 1, BACK = 2, LEG = 3 }
 enum CoreSkillRole { NONE, BASIC_ATTACK, PART_ABILITY }
 enum PartAbilityKind { NONE, EMERGENCY_SWAP, BROKEN_THROW, SCRAP_PATCH }
@@ -56,6 +56,8 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DO
 @export var is_toggle: bool = false
 @export var is_free_action: bool = false
 @export var permanent_max_hp: float = 0.0
+@export var summon_enemy: EnemyData = null
+@export var summon_limit_per_combat: int = 0
 
 
 func combat_tooltip_text(disable_reason: String = "") -> String:

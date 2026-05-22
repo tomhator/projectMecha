@@ -5,7 +5,6 @@ const SLOT_ARM_R: int = 1
 const SLOT_BACK: int = 2
 const TARGET_SLOT_NONE: int = -1
 const SKILL_TYPE_PASSIVE: int = 3
-const COLLECTOR_ENEMY_ID: int = 301
 
 const MECHA_SCRIPT_PATH: String = "res://Scenes/Entities/MechaEntity.gd"
 const ENEMY_SCRIPT_PATH: String = "res://Scenes/Entities/EnemyEntity.gd"
@@ -17,12 +16,14 @@ var _failed: bool = false
 
 func _initialize() -> void:
 	randomize()
-	_check_normal_enemies_have_no_snipe()
 	await _check_broken_part_skill_and_affix()
 	await _check_basic_attack_remains_when_parts_break()
 	await _check_core_part_abilities()
 	await _check_back_snipe()
-	await _check_collector_boss_flow()
+	await _check_breaker_arm_snipe()
+	await _check_support_ally_targets()
+	await _check_caller_summon_flow()
+	await _check_collector_protection_and_exposure()
 	if _failed:
 		print("P0 combat flows: FAIL")
 		quit(1)
@@ -46,13 +47,6 @@ func _game_state() -> Node:
 	if game_state == null:
 		_fail("Missing GameState autoload")
 	return game_state
-
-
-func _event_bus() -> Node:
-	var event_bus := root.get_node_or_null("EventBus")
-	if event_bus == null:
-		_fail("Missing EventBus autoload")
-	return event_bus
 
 
 func _reset_run() -> void:
@@ -91,10 +85,18 @@ func _enemy_from_data(path: String) -> Node:
 	var data := _load_resource(path)
 	if data == null:
 		return null
-	var script_path: String = "res://Scenes/Entities/BossCollectorEntity.gd" if int(data.get("enemy_id")) == COLLECTOR_ENEMY_ID else "res://Scenes/Entities/EnemyEntity.gd"
-	var enemy: Node = load(script_path).new()
+	var enemy := _new_enemy()
 	enemy.call("setup_from_data", data)
 	return enemy
+
+
+func _collector_from_data() -> Node:
+	var data := _load_resource("res://Resources/Enemies/enemy_collector.tres")
+	if data == null:
+		return null
+	var boss: Node = load("res://Scenes/Entities/BossCollectorEntity.gd").new()
+	boss.call("setup_from_data", data)
+	return boss
 
 
 func _set_equipped_part(slot: int, part: Resource) -> void:
@@ -114,17 +116,13 @@ func _dispose_node(node: Node) -> void:
 		node.free()
 
 
-func _check_normal_enemies_have_no_snipe() -> void:
-	for path: String in [
-		"res://Resources/Enemies/enemy_scrapper.tres",
-		"res://Resources/Enemies/enemy_rusher.tres",
-	]:
-		var data := _load_resource(path)
-		if data == null:
-			continue
-		for skill in data.get("skills"):
-			_assert_true(int(skill.get("target_slot")) == TARGET_SLOT_NONE, "%s has snipe skill: %s" % [data.get("enemy_name"), skill.get("skill_name")])
-	print("P0 OK: normal enemies have no snipe previews")
+func _has_descendant_label_text(node: Node, text: String) -> bool:
+	if node is Label and (node as Label).text == text:
+		return true
+	for child: Node in node.get_children():
+		if _has_descendant_label_text(child, text):
+			return true
+	return false
 
 
 func _check_broken_part_skill_and_affix() -> void:
@@ -288,73 +286,214 @@ func _check_back_snipe() -> void:
 	print("P0 OK: BACK snipe durability and empty slot behavior")
 
 
-func _check_collector_boss_flow() -> void:
+func _check_breaker_arm_snipe() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	var breaker := _enemy_from_data("res://Resources/Enemies/enemy_cutting_claw.tres")
+	var arm := _load_part("res://Resources/Parts/arm_l/arm_l_gr21.tres")
+	var arm_cut := _load_resource("res://Resources/Skills/skill_arm_cut.tres")
+	if arm == null or arm_cut == null or breaker == null:
+		_dispose_node(mecha)
+		_dispose_node(breaker)
+		return
+	root.add_child(mecha)
+	root.add_child(breaker)
+	arm.set("durability", 3)
+	_set_equipped_part(SLOT_ARM_L, arm)
+	mecha.call("setup")
+	breaker.call("setup")
+	breaker.get("next_actions").clear()
+	breaker.get("next_actions").append(arm_cut)
+	breaker.call("_publish_snipe_preview")
+	_assert_true(int(breaker.get("_preview_target_slot")) == SLOT_ARM_L, "Breaker ARM preview did not target ARM_L")
+	var durability_before: int = int(arm.get("durability"))
+	breaker.call("execute_actions", mecha)
+	_assert_true(int(arm.get("durability")) == durability_before - 1, "Breaker ARM cut did not reduce durability")
+
+	_set_equipped_part(SLOT_ARM_L, null)
+	mecha.call("setup")
+	breaker.get("next_actions").clear()
+	breaker.get("next_actions").append(arm_cut)
+	breaker.call("_publish_snipe_preview")
+	_assert_true(int(breaker.get("_preview_target_slot")) == TARGET_SLOT_NONE, "Empty ARM slot still showed Breaker preview")
+	_game_state().set("current_shield", 0.0)
+	var hp_before: float = float(_game_state().get("current_hp"))
+	breaker.call("execute_actions", mecha)
+	_assert_true(float(_game_state().get("current_hp")) < hp_before, "Empty ARM Breaker hit did not damage HP")
+	_dispose_node(mecha)
+	_dispose_node(breaker)
+	await process_frame
+	print("P0 OK: Breaker ARM preview and durability flow")
+
+
+func _check_support_ally_targets() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	var drone := _enemy_from_data("res://Resources/Enemies/enemy_patch_drone.tres")
+	var weak_ally := _enemy_from_data("res://Resources/Enemies/enemy_junk_rammer.tres")
+	var shield_ally := _new_enemy()
+	var repair := _load_resource("res://Resources/Skills/skill_emergency_repair_enemy.tres")
+	var patch_shield := _load_resource("res://Resources/Skills/skill_patch_shield.tres")
+	if drone == null or weak_ally == null or repair == null or patch_shield == null:
+		_dispose_node(mecha)
+		_dispose_node(drone)
+		_dispose_node(weak_ally)
+		_dispose_node(shield_ally)
+		return
+	root.add_child(mecha)
+	root.add_child(drone)
+	root.add_child(weak_ally)
+	root.add_child(shield_ally)
+	drone.call("setup")
+	weak_ally.call("setup")
+	shield_ally.set("enemy_name", "실드 지원 검증 적")
+	shield_ally.set("enemy_max_hp", 10.0)
+	shield_ally.set("enemy_max_shield", 10.0)
+	shield_ally.set("current_hp", 10.0)
+	shield_ally.set("current_shield", 0.0)
+	weak_ally.call("take_damage", 12.0)
+	var weak_hp_before: float = float(weak_ally.get("current_hp"))
+	drone.get("next_actions").clear()
+	drone.get("next_actions").append(repair)
+	drone.call("execute_actions", mecha, [drone, weak_ally, shield_ally])
+	_assert_true(float(weak_ally.get("current_hp")) > weak_hp_before, "Support repair did not heal lowest HP ratio ally")
+
+	drone.set("current_shield", drone.get("enemy_max_shield"))
+	var shield_before: float = float(shield_ally.get("current_shield"))
+	drone.get("next_actions").clear()
+	drone.get("next_actions").append(patch_shield)
+	drone.call("execute_actions", mecha, [drone, weak_ally, shield_ally])
+	_assert_true(float(shield_ally.get("current_shield")) > shield_before, "Support shield did not protect lowest shield ally")
+	_dispose_node(mecha)
+	_dispose_node(drone)
+	_dispose_node(weak_ally)
+	_dispose_node(shield_ally)
+	await process_frame
+	print("P0 OK: Support ally heal and shield targeting")
+
+
+func _check_caller_summon_flow() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	var caller := _enemy_from_data("res://Resources/Enemies/enemy_signal_dummy.tres")
+	var manager := _new_turn_manager()
+	var scrap_call := _load_resource("res://Resources/Skills/skill_scrap_call.tres")
+	if caller == null or scrap_call == null:
+		_dispose_node(mecha)
+		_dispose_node(caller)
+		_dispose_node(manager)
+		return
+	root.add_child(mecha)
+	root.add_child(caller)
+	root.add_child(manager)
+	manager.call("start_combat_untyped", mecha, [caller])
+	caller.get("next_actions").clear()
+	caller.get("next_actions").append(scrap_call)
+	caller.call("execute_actions", mecha, [caller])
+	await process_frame
+	_assert_true(manager.get("enemies").size() == 2, "Caller did not add exactly one summoned enemy")
+	_assert_true(not bool(caller.call("_can_execute_summon", scrap_call)), "Caller summon remained available after one use")
+	var summoned: Node = manager.get("enemies")[1]
+	caller.call("take_damage", 999.0)
+	manager.call("_count_new_defeats")
+	_assert_true(not bool(manager.call("_check_combat_end")), "Summoned enemy did not keep combat active")
+	summoned.call("take_damage", 999.0)
+	manager.call("_count_new_defeats")
+	_assert_true(int(manager.call("get_defeated_enemy_count")) == 1, "Summoned enemy counted toward combat drops")
+	_assert_true(bool(manager.call("_check_combat_end")), "Caller combat did not end after summon defeat")
+	_dispose_node(manager)
+	_dispose_node(mecha)
+	for enemy in [caller, summoned]:
+		_dispose_node(enemy)
+	await process_frame
+	print("P0 OK: Caller one-shot summon and drop exclusion")
+
+
+func _check_collector_protection_and_exposure() -> void:
 	_reset_run()
 	var mecha := _new_mecha()
 	var manager := _new_turn_manager()
-	var boss := _enemy_from_data("res://Resources/Enemies/enemy_collector.tres")
+	var boss := _collector_from_data()
 	var player_arm := _load_part("res://Resources/Parts/arm_r/arm_r_gr21.tres")
-	if player_arm != null:
-		_set_equipped_part(SLOT_ARM_R, player_arm)
+	if boss == null or player_arm == null:
+		_dispose_node(manager)
+		_dispose_node(mecha)
+		_dispose_node(boss)
+		return
 	root.add_child(mecha)
 	root.add_child(manager)
 	root.add_child(boss)
+	_set_equipped_part(SLOT_ARM_R, player_arm)
 	manager.call("start_combat_untyped", mecha, [boss])
 	await process_frame
 	_assert_true(manager.get("enemies").size() == 5, "Collector start should have core + 4 arms")
-	_assert_true(boss.get("active_arms").size() == 4, "Collector active arms should start at 4")
+	_assert_true(boss.get("active_arms").size() == 4, "Collector should start with 4 arms")
 
-	var first_arm: Node = boss.get("active_arms")[0]
-	first_arm.call("take_damage", 999.0)
+	for arm: Node in boss.get("active_arms"):
+		arm.set("is_defense_arm", false)
+	var normal_protection: float = float(boss.call("get_core_protection_ratio"))
+	_assert_true(is_equal_approx(normal_protection, 0.48), "Collector normal arm protection should be 48%")
+	boss.set("current_shield", 0.0)
+	var protected_hp_before: float = float(boss.get("current_hp"))
+	boss.call("take_damage", 100.0)
+	_assert_true(is_equal_approx(protected_hp_before - float(boss.get("current_hp")), 52.0), "Collector core damage did not apply arm protection")
+
+	var defense_arm: Node = boss.get("active_arms")[0]
+	defense_arm.set("is_defense_arm", true)
+	_assert_true(is_equal_approx(float(boss.call("get_core_protection_ratio")), 0.60), "Collector defense arm protection should reach 60% cap")
+	var combat_ui: Node = load("res://Scenes/UI/CombatUi.tscn").instantiate()
+	root.add_child(combat_ui)
+	await process_frame
+	combat_ui.call("_rebuild_enemy_bars", manager.get("enemies"))
+	var enemy_container: Node = combat_ui.get("enemy_container")
+	_assert_true(_has_descendant_label_text(enemy_container, "전열"), "Collector UI missing front lane")
+	_assert_true(_has_descendant_label_text(enemy_container, "팔"), "Collector UI missing arm lane")
+	_assert_true(_has_descendant_label_text(enemy_container, "코어"), "Collector UI missing core lane")
+	var target_buttons: Dictionary = combat_ui.get("_enemy_target_buttons")
+	_assert_true(target_buttons.has(boss.get_instance_id()), "Collector core target button missing in formation")
+	_dispose_node(combat_ui)
+	await process_frame
+
+	var arm_hp_before: float = float(boss.get("current_hp"))
+	defense_arm.call("take_damage", 999.0)
 	manager.call("_prune_defeated_boss_arms")
-	_assert_true(manager.get("enemies").size() == 4, "Defeated collector arm remains in enemies")
-	_assert_true(boss.get("active_arms").size() == 3, "Defeated collector arm remains active")
+	_assert_true(is_equal_approx(arm_hp_before - float(boss.get("current_hp")), 10.0), "Collector arm break did not deal direct core HP damage")
+	_assert_true(float(boss.call("get_core_protection_ratio")) < 0.60, "Collector protection did not drop after arm removal")
 
-	for arm in boss.get("active_arms").duplicate():
+	boss.call("_apply_arm_theft", mecha)
+	await process_frame
+	var stolen_found: bool = false
+	for arm: Node in boss.get("active_arms"):
+		if String(arm.get("enemy_name")).begins_with("강탈된 "):
+			stolen_found = true
+	_assert_true(stolen_found, "Collector arm theft did not create a stolen protection arm")
+
+	for arm: Node in boss.get("active_arms").duplicate():
 		arm.call("take_damage", 999.0)
 	manager.call("_prune_defeated_boss_arms")
-	boss.call("decide_next_actions")
+	_assert_true(bool(boss.call("is_exposed")), "Collector did not expose core after all arms broke")
+	_assert_true(boss.get("active_arms").is_empty(), "Collector recollected arms immediately after exposure")
+	_assert_true(is_equal_approx(float(boss.call("get_core_protection_ratio")), 0.0), "Exposed Collector core still had arm protection")
+
+	manager.call("start_enemy_turn")
 	await process_frame
-	_assert_true(boss.get("active_arms").size() == 4, "Collector did not recollect 4 arms")
-	_assert_true(manager.get("enemies").size() == 5, "Recollected arms not added to enemies")
+	_assert_true(boss.get("active_arms").is_empty(), "Collector recollected before the next player turn ended")
+	manager.call("start_enemy_turn")
+	await process_frame
+	_assert_true(boss.get("active_arms").size() == 4, "Collector did not recollect after exposure window")
 
-	var arm_part := _load_part("res://Resources/Parts/arm_r/arm_r_gr21.tres")
-	if arm_part != null:
-		_set_equipped_part(SLOT_ARM_R, arm_part)
-		mecha.call("setup")
-		for arm in boss.get("active_arms").duplicate():
-			arm.call("take_damage", 999.0)
-		manager.call("_prune_defeated_boss_arms")
-		boss.call("_apply_arm_theft", mecha)
-		await process_frame
-		_assert_true(_get_equipped_part(SLOT_ARM_R) == null, "Arm theft did not empty player ARM slot")
-		var stolen_found: bool = false
-		for enemy in manager.get("enemies"):
-			if String(enemy.get("enemy_name")).begins_with("강탈된 "):
-				stolen_found = true
-		_assert_true(stolen_found, "Stolen arm entity not added to enemies")
+	boss.set("current_hp", 10.0)
+	var last_arm: Node = boss.get("active_arms")[0]
+	last_arm.call("take_damage", 999.0)
+	manager.call("_prune_defeated_boss_arms")
+	_assert_true(bool(manager.call("_check_combat_end")), "Collector core defeat from arm break did not end combat")
+	_assert_true(int(manager.get("current_phase")) == 2, "Collector arm-break core defeat did not set combat end")
 
-	boss.call("take_damage", 9999.0)
-	_assert_true(bool(manager.call("_check_combat_end")), "Collector core defeat did not end combat")
-	_assert_true(int(manager.get("current_phase")) == 2, "Collector core defeat did not set combat end")
-	var nodes_to_dispose: Array = []
+	var nodes_to_dispose: Array = [manager, mecha, boss]
 	for enemy in manager.get("enemies"):
 		if enemy not in nodes_to_dispose:
 			nodes_to_dispose.append(enemy)
-	for arm in boss.get("active_arms"):
-		if arm not in nodes_to_dispose:
-			nodes_to_dispose.append(arm)
-	nodes_to_dispose.append(manager)
-	nodes_to_dispose.append(mecha)
-	var event_bus := _event_bus()
-	if event_bus != null:
-		var arm_signal := Signal(event_bus, "boss_arm_spawned")
-		var add_enemy_callable := Callable(manager, "add_enemy")
-		if arm_signal.is_connected(add_enemy_callable):
-			arm_signal.disconnect(add_enemy_callable)
 	for node in nodes_to_dispose:
 		_dispose_node(node)
 	await process_frame
-	await process_frame
-	await process_frame
-	print("P0 OK: collector boss arms, theft, and core victory")
+	print("P0 OK: Collector protection, arm break damage, exposure, theft, and recollection")

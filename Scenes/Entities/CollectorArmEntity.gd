@@ -3,6 +3,8 @@ class_name CollectorArmEntity
 
 var boss_core: EnemyEntity = null
 var stolen_from_part: PartsData = null
+var is_defense_arm: bool = false
+var contributes_core_protection: bool = true
 
 
 static func create_default(arm_type: String, arm_skill: SkillData) -> CollectorArmEntity:
@@ -13,6 +15,7 @@ static func create_default(arm_type: String, arm_skill: SkillData) -> CollectorA
 	arm.attack_multiplier = 1.3
 	arm.enemy_action_count = 2
 	arm.skills = [arm_skill]
+	arm.is_defense_arm = arm_skill != null and arm_skill.skill_name == "방어막"
 	return arm
 
 
@@ -24,15 +27,16 @@ static func create_from_stolen(part: PartsData) -> CollectorArmEntity:
 	arm.enemy_max_shield = 0.0
 	arm.attack_multiplier = 1.3
 	arm.enemy_action_count = 2
+	arm.is_defense_arm = false
 	if not part.parts_skills.is_empty():
 		arm.skills = [part.parts_skills[0]]
 	return arm
 
 
-func _execute_single_action(action: SkillData, target: Node) -> void:
+func _execute_single_action(action: SkillData, target: Node, allies: Array = []) -> void:
 	if action.skill_name == "방어막" and boss_core != null and boss_core.has_method("apply_core_shield_heal"):
 		print("[%s] '%s' 사용 → 코어 쉴드 강화" % [enemy_name, action.skill_name])
 		boss_core.apply_core_shield_heal(action.skill_defense)
 		EventBus.skill_used.emit(self, action)
 		return
-	super._execute_single_action(action, target)
+	super._execute_single_action(action, target, allies)

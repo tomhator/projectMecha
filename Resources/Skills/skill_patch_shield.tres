@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = 1006
+skill_name = "패치 실드"
+skill_type = 1
+skill_description = "쉴드가 낮은 아군에게 임시 보호막을 덧댄다."
+skill_defense = 6.0
+skill_action_cost = 2
+skill_target = 2
+target_slot = -1

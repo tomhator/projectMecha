@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" path="res://Resources/EnemyData.gd" id="2_enemy"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_claw_bash.tres" id="3_bash"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_arm_cut.tres" id="4_cut"]
+
+[resource]
+script = ExtResource("2_enemy")
+enemy_id = 12
+enemy_name = "절단 집게"
+enemy_tier = 0
+enemy_description = "플레이어의 주력 팔 파츠를 물고 늘어지는 매립지 Breaker."
+enemy_max_hp = 14.0
+enemy_max_shield = 0.0
+attack_multiplier = 1.0
+enemy_action_count = 2
+skills = Array[ExtResource("1_skill_type")]([ExtResource("3_bash"), ExtResource("4_cut")])

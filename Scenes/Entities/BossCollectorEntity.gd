@@ -3,8 +3,15 @@ class_name BossCollectorEntity
 
 const COLLECTOR_ENEMY_ID: int = 301
 const MAX_ARMS: int = 4
+const ARM_PROTECTION_RATIO: float = 0.12
+const DEFENSE_ARM_PROTECTION_RATIO: float = 0.12
+const MAX_CORE_PROTECTION_RATIO: float = 0.60
+const ARM_BREAK_CORE_DAMAGE: float = 10.0
+const EXPOSED_PLAYER_TURN_ENDS: int = 2
 
 var active_arms: Array[CollectorArmEntity] = []
+var _exposed_turn_ends_remaining: int = 0
+var _recollection_ready: bool = false
 
 var skill_arm_theft_ref: SkillData = preload("res://Resources/Skills/skill_arm_theft.tres")
 var arm_skill_pool: Array[SkillData] = [
@@ -19,6 +26,8 @@ var arm_skill_pool: Array[SkillData] = [
 func setup() -> void:
 	current_hp = enemy_max_hp
 	current_shield = enemy_max_shield
+	_exposed_turn_ends_remaining = 0
+	_recollection_ready = false
 	_spawn_arms(MAX_ARMS)
 	decide_next_actions()
 	print("[%s] 등장 | HP: %.0f | 쉴드: %.0f | 팔: %d" % [
@@ -33,17 +42,16 @@ func setup_from_data(data: EnemyData) -> void:
 func decide_next_actions() -> void:
 	_prune_defeated_arms()
 	if active_arms.is_empty():
-		print("[수집가] 팔 전멸 — 재수집 시작")
-		EventBus.boss_arms_respawning.emit()
-		_spawn_arms(MAX_ARMS)
-		next_actions.clear()
-		_publish_snipe_preview()
-		return
+		_begin_exposure_if_needed()
 	var theft_available: bool = active_arms.size() < MAX_ARMS
 	_decide_with_theft_option(theft_available)
 
 
-func execute_actions(target: Node) -> void:
+func execute_actions(target: Node, _allies: Array = []) -> void:
+	if _recollection_ready and active_arms.is_empty():
+		_recollect_arms()
+		decide_next_actions()
+		return
 	for action: SkillData in next_actions:
 		if action == skill_arm_theft_ref:
 			_apply_arm_theft(target)
@@ -58,6 +66,53 @@ func apply_core_shield_heal(amount: float) -> void:
 
 func prune_defeated_arms() -> void:
 	_prune_defeated_arms()
+	_begin_exposure_if_needed()
+
+
+func take_damage(damage: float, penetration: float = 0.0) -> void:
+	var protected_damage: float = damage * (1.0 - get_core_protection_ratio())
+	super.take_damage(protected_damage, penetration)
+
+
+func preview_incoming_damage_split(damage: float, penetration: float = 0.0) -> Vector2:
+	var protected_damage: float = damage * (1.0 - get_core_protection_ratio())
+	return super.preview_incoming_damage_split(protected_damage, penetration)
+
+
+func get_core_protection_ratio() -> float:
+	if is_exposed():
+		return 0.0
+	var protection: float = 0.0
+	for arm: CollectorArmEntity in active_arms:
+		if arm == null or arm.is_defeated() or not arm.contributes_core_protection:
+			continue
+		protection += ARM_PROTECTION_RATIO
+		if arm.is_defense_arm:
+			protection += DEFENSE_ARM_PROTECTION_RATIO
+	return minf(protection, MAX_CORE_PROTECTION_RATIO)
+
+
+func is_exposed() -> bool:
+	return active_arms.is_empty() and _exposed_turn_ends_remaining > 0
+
+
+func is_recollection_ready() -> bool:
+	return _recollection_ready
+
+
+func on_player_turn_ended() -> void:
+	if _exposed_turn_ends_remaining <= 0:
+		return
+	_exposed_turn_ends_remaining -= 1
+	if _exposed_turn_ends_remaining <= 0:
+		_recollection_ready = true
+		print("[수집가] 노출 종료 — 다음 행동에서 재수집")
+
+
+func on_arm_defeated(arm: CollectorArmEntity) -> void:
+	if arm == null:
+		return
+	_apply_arm_break_core_damage()
 
 
 func _decide_with_theft_option(include_theft: bool) -> void:
@@ -121,6 +176,32 @@ func _prune_defeated_arms() -> void:
 		if arm != null and not arm.is_defeated():
 			living.append(arm)
 	active_arms = living
+
+
+func _begin_exposure_if_needed() -> void:
+	if not active_arms.is_empty() or _exposed_turn_ends_remaining > 0 or _recollection_ready:
+		return
+	_exposed_turn_ends_remaining = EXPOSED_PLAYER_TURN_ENDS
+	next_actions.clear()
+	_publish_snipe_preview()
+	print("[수집가] 팔 전멸 — 코어 노출")
+
+
+func _recollect_arms() -> void:
+	print("[수집가] 재수집 시작")
+	EventBus.boss_arms_respawning.emit()
+	_recollection_ready = false
+	_exposed_turn_ends_remaining = 0
+	_spawn_arms(MAX_ARMS)
+
+
+func _apply_arm_break_core_damage() -> void:
+	var before: float = current_hp
+	current_hp = maxf(current_hp - ARM_BREAK_CORE_DAMAGE, 0.0)
+	EventBus.hp_changed.emit(self, current_hp, enemy_max_hp)
+	print("  > [수집가] 팔 파괴 충격: 코어 HP %.0f 감소 → %.0f" % [before - current_hp, current_hp])
+	if is_defeated():
+		print("  > [수집가] 코어 붕괴!")
 
 
 func _apply_arm_theft(target: Node) -> void:

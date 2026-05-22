@@ -36,8 +36,8 @@
     - `AbilityTree/`: 어빌리티 트리 노드 리소스 (`.tres`). 5티어×공격/방어/유틸 3선택.
     - `Parts/`: 부품 데이터 리소스 (`.tres`).
     - `Skills/`: 스킬 데이터 리소스 (`.tres`).
-    - `Enemies/`: 적 데이터 리소스 (`.tres`). 데모 보스: `enemy_collector.tres` (수집가).
-    - `Skills/`: 스킬 데이터 리소스 (`.tres`). 기본 코어 공격·파츠 활용 어빌리티·저격·수집가 전용 스킬 포함.
+    - `Enemies/`: 적 데이터 리소스 (`.tres`). 매립지 일반 역할 병종 4종, Caller 호출 전용 고철 잡졸, 수집가 보스 포함.
+    - `Skills/`: 스킬 데이터 리소스 (`.tres`). 기본 코어 공격·파츠 활용 어빌리티·매립지 병종·저격·수집가 전용 스킬 포함.
     - `Test/`: 개발용 테스트 리소스.
 - `Scenes/`: 게임의 각 화면 및 시스템 씬.
     - `Assembly/`: 메카 조립 씬.
@@ -50,11 +50,11 @@
     - `Entities/`: 메카 및 적 엔티티 관련 스크립트.
         - `MechaEntity.gd`: 플레이어 스킬·affix·`get_part_at_slot`·`steal_part_at_slot`.
         - `EnemyEntity.gd`: 적 행동·저격 내구도·예고 슬롯 발행.
-        - `CollectorArmEntity.gd`: 수집가 보스 팔 서브 엔티티.
-        - `BossCollectorEntity.gd`: 수집가 코어(팔 스폰·재수집·팔 탈취).
+        - `CollectorArmEntity.gd`: 수집가 보스 팔 서브 엔티티(방어 팔 보호 역할 포함).
+        - `BossCollectorEntity.gd`: 수집가 코어(팔 보호·노출·재수집·팔 탈취).
     - `UI/`: 공용 UI 컴포넌트.
         - `RunStatusStrip.tscn` / `RunStatusStrip.gd`: 런 상단 HUD(층·HP/쉴드 바+현재값·크레딧·설정 스텁). 주요 런 씬에 인스턴스.
-        - `CombatUi.tscn` / `CombatUI.gd`: 전투 UI(좌 플레이어/우 적·행동력·스킬·다중 적 타겟팅).
+        - `CombatUi.tscn` / `CombatUI.gd`: 전투 UI(좌 플레이어/우 적·행동력·스킬·다중 적 타겟팅·수집가 formation).
 - `Scripts/`: 전역 유틸리티, 검증 스크립트 및 싱글톤(AutoLoad).
     - `Autoload/`: `EventBus`, `GameState`, `DungeonManager`, `PartsFactory`, `RewardManager` 등 전역 시스템.
     - `Validation/`: Godot 4 문법 패턴, 프로젝트 문서, `gdparse`, Godot headless 로드, 리소스 무결성, 주요 씬 스모크 검사 스크립트.
