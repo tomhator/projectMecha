@@ -3,7 +3,7 @@ tags: [project/project-mecha, document/parts-system, status/in-progress]
 status: in-progress
 version: 0.6
 created: 2026-05-11
-updated: 2026-05-18
+updated: 2026-05-22
 ---
 
 # 파츠 시스템 명세 (Parts System Specification)
@@ -233,7 +233,7 @@ LEG 파츠는 장착 시 최대 하중을 늘려준다. 수치는 [[PartsCatalog
 
 초기 손상도는 등급에 따라 결정된다 (§2 참고).
 
-**이벤트 손상과 UI:** 조우 이벤트 B 등으로 손상을 줄 때는 `durability`를 감소시킨다. 조립·인벤토리 카드의 경고(⚠)는 `durability < max_durability`일 때 표시한다. `durability <= 0`은 파괴(§6.2)이며 스킬 잠금·Affix 비활성화는 전투 로직에서 처리한다.
+**이벤트 손상과 UI:** 조우 이벤트 B 등으로 손상을 줄 때는 `durability`를 감소시킨다. 조립 화면의 인벤토리·소켓은 파츠 아이콘만 표시하고 상세 정보는 hover 툴팁으로 노출한다. 손상 경고는 `durability < max_durability`일 때 아이콘 상태 마커로 표시한다. `durability <= 0`은 파괴(§6.2)이며 스킬 잠금·Affix 비활성화는 전투 로직에서 처리한다.
 
 ### 6.2 파괴 상태
 

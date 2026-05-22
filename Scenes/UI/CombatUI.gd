@@ -4,10 +4,13 @@ class_name CombatUI
 signal skill_selected(skill: SkillData, target: Node)
 signal end_turn_requested
 
-const BATTLE_H_SEP: float = 24.0
-const ENEMY_COL_WIDTH_FRAC: float = 0.6
-const ENEMY_COL_MIN_W: float = 200.0
-const ENEMY_COL_MAX_W: float = 500.0
+const BATTLE_H_SEP: float = 32.0
+const PLAYER_STAGE_WIDTH: float = 240.0
+const ENEMY_COL_MIN_W: float = 420.0
+const ENEMY_COL_MAX_W: float = 760.0
+const SKILL_SLOT_SIZE: Vector2 = Vector2(72.0, 72.0)
+const ENEMY_SLOT_SIZE: Vector2 = Vector2(140.0, 268.0)
+const ENEMY_SPRITE_SIZE: Vector2 = Vector2(108.0, 116.0)
 const HUD_CORE_CELL: int = -1
 const SNIPE_SLOT_NONE: int = -1
 
@@ -143,11 +146,10 @@ func _apply_battle_column_split() -> void:
 	if total < 2.0:
 		return
 	var avail: float = maxf(total - BATTLE_H_SEP, 0.0)
-	var right_w: float = clampf(avail * ENEMY_COL_WIDTH_FRAC, ENEMY_COL_MIN_W, ENEMY_COL_MAX_W)
-	var left_budget: float = avail - right_w
-	if left_budget < 64.0:
-		right_w = maxf(avail - 64.0, 0.0)
-		right_w = clampf(right_w, 0.0, ENEMY_COL_MAX_W)
+	player_column.custom_minimum_size = Vector2(PLAYER_STAGE_WIDTH, 0.0)
+	var right_w: float = clampf(avail - PLAYER_STAGE_WIDTH, ENEMY_COL_MIN_W, ENEMY_COL_MAX_W)
+	if avail < PLAYER_STAGE_WIDTH + ENEMY_COL_MIN_W:
+		right_w = maxf(avail - PLAYER_STAGE_WIDTH, 220.0)
 	enemy_column.custom_minimum_size = Vector2(right_w, 0.0)
 
 
@@ -468,12 +470,20 @@ func _rebuild_skill_buttons(available_skills: Array[SkillData]) -> void:
 	_skill_buttons.clear()
 	for skill: SkillData in available_skills:
 		var btn: Button = Button.new()
-		btn.text = "%s [%d]" % [skill.skill_name, skill.skill_action_cost]
+		btn.text = ""
+		btn.icon = skill.icon_texture(56)
+		btn.expand_icon = true
+		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		btn.custom_minimum_size = SKILL_SLOT_SIZE
+		btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		btn.focus_mode = Control.FOCUS_NONE
 		var disable_reason: String = _skill_disable_reason(skill)
+		btn.tooltip_text = skill.combat_tooltip_text(disable_reason)
+		btn.set_meta("skill_tooltip", skill.combat_tooltip_text())
+		_add_skill_ap_badge(btn, skill.skill_action_cost)
 		if not disable_reason.is_empty():
 			btn.disabled = true
-			btn.tooltip_text = disable_reason
 			_skill_disable_reasons[skill] = disable_reason
 		else:
 			btn.pressed.connect(_on_skill_button_pressed.bind(skill))
@@ -492,6 +502,37 @@ func _skill_disable_reason(skill: SkillData) -> String:
 	if skill.skill_action_cost > _actions_remaining:
 		return "AP 부족 (%d 필요 / %d 보유)" % [skill.skill_action_cost, _actions_remaining]
 	return ""
+
+
+func _add_skill_ap_badge(btn: Button, action_cost: int) -> void:
+	var badge := Panel.new()
+	badge.anchor_left = 1.0
+	badge.anchor_top = 1.0
+	badge.anchor_right = 1.0
+	badge.anchor_bottom = 1.0
+	badge.offset_left = -27.0
+	badge.offset_top = -25.0
+	badge.offset_right = -5.0
+	badge.offset_bottom = -5.0
+	badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.12, 0.16, 0.96)
+	style.set_border_width_all(1)
+	style.border_color = Color(0.55, 0.88, 0.98, 1.0)
+	style.set_corner_radius_all(3)
+	badge.add_theme_stylebox_override("panel", style)
+	btn.add_child(badge)
+
+	var label := Label.new()
+	label.text = "%d" % action_cost
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 11)
+	label.add_theme_color_override("font_color", Color(0.92, 0.98, 1.0, 1.0))
+	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	badge.add_child(label)
 
 
 func _on_skill_button_pressed(skill: SkillData) -> void:
@@ -576,11 +617,12 @@ func _set_skill_buttons_disabled(disabled: bool, except_skill: SkillData = null)
 		var b: Button = _skill_buttons[s] as Button
 		var fixed_disabled: bool = _skill_disable_reasons.has(s)
 		b.disabled = fixed_disabled
+		var base_tooltip: String = str(b.get_meta("skill_tooltip", ""))
 		if fixed_disabled:
-			b.tooltip_text = _skill_disable_reasons[s]
+			b.tooltip_text = s.combat_tooltip_text(_skill_disable_reasons[s])
 			_clear_skill_button_decoration(b)
 			continue
-		b.tooltip_text = ""
+		b.tooltip_text = base_tooltip
 		if disabled and except_skill != null and s == except_skill:
 			_style_skill_button_pending(b)
 		else:
@@ -883,8 +925,9 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 		btn.pressed.connect(_on_enemy_target_clicked.bind(enemy))
 		btn.mouse_entered.connect(_on_enemy_hover.bind(enemy, true))
 		btn.mouse_exited.connect(_on_enemy_hover.bind(enemy, false))
-		btn.custom_minimum_size = Vector2(72.0, 120.0)
-		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		btn.custom_minimum_size = ENEMY_SLOT_SIZE
+		btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		btn.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		_enemy_target_buttons[eid] = btn
 
 		var vbox := VBoxContainer.new()
@@ -921,7 +964,35 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 		var name_label := Label.new()
 		name_label.text = enemy.enemy_name
 		name_label.add_theme_font_size_override("font_size", 13)
+		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		name_label.clip_text = true
+		name_label.max_lines_visible = 2
 		vbox.add_child(name_label)
+
+		var sprite_frame := Panel.new()
+		sprite_frame.custom_minimum_size = ENEMY_SPRITE_SIZE
+		sprite_frame.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		sprite_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var frame_style := StyleBoxFlat.new()
+		frame_style.bg_color = Color(0.10, 0.12, 0.15, 0.95)
+		frame_style.set_border_width_all(1)
+		frame_style.border_color = Color(0.34, 0.38, 0.46, 1.0)
+		frame_style.set_corner_radius_all(4)
+		sprite_frame.add_theme_stylebox_override("panel", frame_style)
+		vbox.add_child(sprite_frame)
+
+		var sprite := TextureRect.new()
+		sprite.texture = _enemy_sprite_texture(enemy)
+		sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		sprite_frame.add_child(sprite)
+		sprite.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		sprite.offset_left = 8.0
+		sprite.offset_right = -8.0
+		sprite.offset_top = 8.0
+		sprite.offset_bottom = -8.0
 
 		var hp_row := Control.new()
 		hp_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -986,6 +1057,31 @@ func _rebuild_enemy_bars(enemies: Array[EnemyEntity]) -> void:
 
 	_update_enemy_preview()
 	_recompute_snipe_highlight()
+
+
+func _enemy_sprite_texture(enemy: EnemyEntity) -> Texture2D:
+	if enemy.enemy_sprite != null:
+		return enemy.enemy_sprite
+
+	var image := Image.create(112, 96, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.0, 0.0, 0.0, 0.0))
+	var color := _enemy_placeholder_color(enemy.enemy_tier)
+	image.fill_rect(Rect2i(33, 16, 46, 50), color.darkened(0.28))
+	image.fill_rect(Rect2i(40, 9, 32, 19), color)
+	image.fill_rect(Rect2i(20, 29, 22, 14), color.lightened(0.10))
+	image.fill_rect(Rect2i(70, 29, 22, 14), color.lightened(0.10))
+	image.fill_rect(Rect2i(38, 63, 14, 22), color)
+	image.fill_rect(Rect2i(60, 63, 14, 22), color)
+	image.fill_rect(Rect2i(27, 83, 27, 7), color.darkened(0.08))
+	image.fill_rect(Rect2i(58, 83, 27, 7), color.darkened(0.08))
+	return ImageTexture.create_from_image(image)
+
+
+func _enemy_placeholder_color(tier: EnemyData.EnemyTier) -> Color:
+	match tier:
+		EnemyData.EnemyTier.ELITE: return Color(0.94, 0.56, 0.24, 1.0)
+		EnemyData.EnemyTier.BOSS: return Color(0.88, 0.28, 0.40, 1.0)
+		_: return Color(0.72, 0.44, 0.38, 1.0)
 
 
 func _set_enemy_hp_number_text(id: int, cur: float, maxv: float) -> void:

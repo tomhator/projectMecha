@@ -195,8 +195,8 @@ func _wrap_inventory_square(inner: Control) -> AspectRatioContainer:
 	var ar := AspectRatioContainer.new()
 	ar.ratio = 1.0
 	ar.custom_minimum_size = Vector2(float(INVENTORY_CELL_PX), float(INVENTORY_CELL_PX))
-	ar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	ar.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	ar.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	ar.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	ar.add_child(inner)
 	return ar
 

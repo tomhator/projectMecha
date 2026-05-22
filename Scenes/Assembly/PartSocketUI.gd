@@ -11,11 +11,9 @@ signal part_dropped(part: PartsData, slot: CoreData.CoreSlot)
 # ── 내부 변수 ────────────────────────────
 var equipped_part: PartsData = null
 
-# 레이블 참조 (내부에서 직접 생성)
-var _slot_name_label: Label
-var _part_name_label: Label
-var _skill_label: Label
-var _durability_label: Label
+# 아이콘 참조 (내부에서 직접 생성)
+var _icon_rect: TextureRect
+var _condition_marker: Panel
 
 # ── 스타일 상수 ──────────────────────────
 const COLOR_EMPTY: Color             = Color(0.25, 0.25, 0.30, 1.0)
@@ -39,6 +37,7 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	# 부모가 레이아웃 전달하기 전까지 최소 터치 영역
 	custom_minimum_size = Vector2(72, 72)
+	tooltip_text = _slot_tooltip_text()
 
 	_build_styles()
 	_build_ui()
@@ -64,42 +63,35 @@ func end_drag_inventory_highlight() -> void:
 # 부모(AssemblyScene)가 ChassisPanel 너비에 맞춰 호출
 func set_layout_size(s: Vector2) -> void:
 	custom_minimum_size = s
-	if _skill_label != null:
-		_skill_label.custom_minimum_size = Vector2(maxf(0.0, s.x - 16.0), 0.0)
 
 # ── UI 자체 생성 ─────────────────────────
 func _build_ui() -> void:
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left   = 8
-	vbox.offset_right  = -8
-	vbox.offset_top    = 6
-	vbox.offset_bottom = -6
-	vbox.add_theme_constant_override("separation", 2)
-	add_child(vbox)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_theme_constant_override("margin_right", 10)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	add_child(margin)
 
-	_slot_name_label = Label.new()
-	_slot_name_label.add_theme_font_size_override("font_size", 11)
-	_slot_name_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-	_slot_name_label.text = _slot_display_name()
-	vbox.add_child(_slot_name_label)
+	_icon_rect = TextureRect.new()
+	_icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	margin.add_child(_icon_rect)
 
-	_part_name_label = Label.new()
-	_part_name_label.add_theme_font_size_override("font_size", 14)
-	_part_name_label.text = "빈 슬롯"
-	vbox.add_child(_part_name_label)
-
-	_skill_label = Label.new()
-	_skill_label.add_theme_font_size_override("font_size", 10)
-	_skill_label.add_theme_color_override("font_color", Color(0.7, 0.8, 0.9))
-	_skill_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_skill_label.custom_minimum_size = Vector2(1, 0)
-	vbox.add_child(_skill_label)
-
-	_durability_label = Label.new()
-	_durability_label.add_theme_font_size_override("font_size", 10)
-	_durability_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	vbox.add_child(_durability_label)
+	_condition_marker = Panel.new()
+	_condition_marker.anchor_left = 1.0
+	_condition_marker.anchor_top = 0.0
+	_condition_marker.anchor_right = 1.0
+	_condition_marker.anchor_bottom = 0.0
+	_condition_marker.offset_left = -18.0
+	_condition_marker.offset_top = 8.0
+	_condition_marker.offset_right = -8.0
+	_condition_marker.offset_bottom = 18.0
+	_condition_marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_condition_marker.visible = false
+	add_child(_condition_marker)
 
 # ── 퍼블릭 ───────────────────────────────
 func set_equipped(part: PartsData) -> void:
@@ -152,39 +144,71 @@ func _part_type_matches(parts_type: PartsData.PartsType) -> bool:
 		CoreData.CoreSlot.LEG:   return parts_type == PartsData.PartsType.LEG
 	return false
 
-func _slot_display_name() -> String:
+func _slot_tooltip_text() -> String:
 	match slot_type:
-		CoreData.CoreSlot.ARM_L: return "[ 왼팔 ]"
-		CoreData.CoreSlot.ARM_R: return "[ 오른팔 ]"
-		CoreData.CoreSlot.BACK:  return "[ 등 ]"
-		CoreData.CoreSlot.LEG:   return "[ 다리 ]"
-	return "[ 슬롯 ]"
+		CoreData.CoreSlot.ARM_L: return "왼팔 슬롯"
+		CoreData.CoreSlot.ARM_R: return "오른팔 슬롯"
+		CoreData.CoreSlot.BACK: return "등 슬롯"
+		CoreData.CoreSlot.LEG: return "다리 슬롯"
+	return "파츠 슬롯"
 
 func _refresh_display() -> void:
 	if equipped_part == null:
-		_part_name_label.text = "빈 슬롯"
-		_part_name_label.remove_theme_color_override("font_color")
-		_skill_label.text = ""
-		_durability_label.text = ""
+		_icon_rect.texture = _placeholder_icon_texture()
+		tooltip_text = _slot_tooltip_text()
+		_refresh_condition_marker(Color.TRANSPARENT)
 		_apply_style(_style_empty)
 	else:
-		_part_name_label.text = equipped_part.parts_name
+		_icon_rect.texture = equipped_part.icon_texture()
+		tooltip_text = equipped_part.assembly_tooltip_text()
+		var marker_color: Color
 		if equipped_part.is_broken():
-			_part_name_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
+			marker_color = Color(1.0, 0.3, 0.3)
 		elif equipped_part.is_worn():
-			_part_name_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.28))
+			marker_color = Color(1.0, 0.72, 0.28)
 		else:
-			_part_name_label.remove_theme_color_override("font_color")
-		_skill_label.text = equipped_part.parts_description
-		var dur_str: String = "■".repeat(equipped_part.durability) + "□".repeat(equipped_part.max_durability - equipped_part.durability)
-		_durability_label.text = dur_str
-		if equipped_part.is_broken():
-			_durability_label.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3))
-		elif equipped_part.is_worn():
-			_durability_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.28))
-		else:
-			_durability_label.add_theme_color_override("font_color", Color(0.45, 0.85, 0.55))
+			marker_color = Color.TRANSPARENT
+		_refresh_condition_marker(marker_color)
 		_apply_style(_style_filled)
+
+
+func _refresh_condition_marker(color: Color) -> void:
+	_condition_marker.visible = color.a > 0.0
+	if not _condition_marker.visible:
+		return
+	var marker_style := StyleBoxFlat.new()
+	marker_style.bg_color = color
+	marker_style.set_border_width_all(1)
+	marker_style.border_color = color.lightened(0.22)
+	marker_style.set_corner_radius_all(2)
+	_condition_marker.add_theme_stylebox_override("panel", marker_style)
+
+
+func _placeholder_icon_texture() -> Texture2D:
+	var side: int = 64
+	var image := Image.create(side, side, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.0, 0.0, 0.0, 0.0))
+	var outline := Color(0.42, 0.46, 0.54, 0.55)
+	var body := Color(0.34, 0.38, 0.46, 0.30)
+	image.fill_rect(Rect2i(5, 5, side - 10, side - 10), outline)
+	image.fill_rect(Rect2i(9, 9, side - 18, side - 18), Color(0.0, 0.0, 0.0, 0.0))
+	match slot_type:
+		CoreData.CoreSlot.ARM_L:
+			image.fill_rect(Rect2i(15, 13, 22, 16), body)
+			image.fill_rect(Rect2i(28, 24, 14, 28), body)
+			image.fill_rect(Rect2i(31, 43, 22, 10), body)
+		CoreData.CoreSlot.ARM_R:
+			image.fill_rect(Rect2i(27, 13, 22, 16), body)
+			image.fill_rect(Rect2i(22, 24, 14, 28), body)
+			image.fill_rect(Rect2i(11, 43, 22, 10), body)
+		CoreData.CoreSlot.BACK:
+			image.fill_rect(Rect2i(13, 14, 38, 16), body)
+			image.fill_rect(Rect2i(18, 26, 28, 26), body)
+		CoreData.CoreSlot.LEG:
+			image.fill_rect(Rect2i(16, 12, 32, 14), body)
+			image.fill_rect(Rect2i(16, 25, 12, 25), body)
+			image.fill_rect(Rect2i(36, 25, 12, 25), body)
+	return ImageTexture.create_from_image(image)
 
 func _build_styles() -> void:
 	_style_empty = StyleBoxFlat.new()

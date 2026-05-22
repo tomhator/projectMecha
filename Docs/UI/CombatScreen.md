@@ -25,14 +25,13 @@
 │ │ [클릭 캐처 영역] │                                   │   │
 │ └──────────────────┴───────────────────────────────────┘   │
 ├────────────────────────────────────────────────────────────┤
-│ [파츠 상태 HUD]  │  행동력 오브  │  스킬 버튼들  │ Status │ 턴 종료 │
-│  (십자형, 좌하단) │               │               │        │  버튼   │
+│ [파츠 상태 HUD]  │  행동력 오브  │ 스킬 아이콘 슬롯 │ Status │ 턴 종료 │
+│  (십자형, 좌하단) │               │                 │        │  버튼   │
 └────────────────────────────────────────────────────────────┘
 ```
 
-- 좌·우 비율은 `CombatUI._apply_battle_column_split()`로 동적 계산.
-  - 가용 폭의 60%를 `EnemyColumn`에, 최소 200 / 최대 500 px로 클램프.
-  - 좌측 잔여폭이 64 미만이면 우측을 줄여 좌측을 확보.
+- 내 메카 시각 슬롯은 좌측 `PlayerColumn` 고정 폭 240 px 안에서 일정 크기를 유지한다.
+- 적 영역은 우측 `EnemyColumn` 최소 420 / 최대 760 px 범위에 두고 적 슬롯 자체는 고정 크기로 정렬한다.
 
 ---
 
@@ -164,7 +163,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 ## 3. 우측 — EnemyColumn (적)
 
-`EnemyContainer`는 `HBoxContainer`로, 각 적은 `Button` 카드 1개다.
+`EnemyContainer`는 `HBoxContainer`로, 각 적은 고정 크기 `Button` 슬롯 1개다. 슬롯 안에 실제 스프라이트 교체가 가능한 고정 비주얼 프레임을 둔다.
 
 ### 3.1 적 카드 구조 (VBox, separation 4)
 
@@ -173,6 +172,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 │ [예고 라벨]            │  ← _enemy_forecast_labels[id] (font 11, 주황)
 │ [호버 예상 라벨]       │  ← _enemy_hover_preview_labels[id] (font 11, 청록)
 │ 적 이름                 │  ← font 13
+│ [적 스프라이트 프레임]  │  ← 실제 텍스처 또는 임시 메카 sprite
 │ ┌─────────────────────┐ │
 │ │ ████░░░░ 42 / 100   │ │  ← HP 바 + 숫자 오버레이 (높이 16)
 │ └─────────────────────┘ │
@@ -261,7 +261,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 | 요소 | 노드 | 비고 |
 |------|------|-----|
 | 행동력 오브 | `ActionOrbsRow` (HBox of `ColorRect`) | 남은 액션만큼 초록, 나머지는 회색. 최대치는 `core_action_count`. |
-| 스킬 버튼 | `SkillContainer` (HBox of `Button`) | 텍스트: `"스킬명 [AP비용]"`. 대기 중인 스킬은 **시각 강조만** (`_style_skill_button_pending`, normal/hover/pressed 스타일박스에 적용). |
+| 스킬 슬롯 | `SkillContainer` (HBox of `Button`) | 고정 72×72 px 아이콘 슬롯. AP 비용은 작은 배지, 이름·설명·수치는 hover 툴팁. 대기 중인 스킬은 **시각 강조만** (`_style_skill_button_pending`, normal/hover/pressed 스타일박스에 적용). |
 | 상태 메시지 | `SelectionStatus` | `"스킬을 선택하세요."` / `"「X」 — 대상 적을 클릭하세요"` / `"「X」 — 내 메카(왼쪽 패널)을 클릭하세요"` / `"「X」 → 타겟이름"`. |
 | 턴 종료 버튼 | `EndTurnButton` | 우측 하단 고정. 플레이어 턴 + 행동력>0일 때 활성. 클릭 시 즉시 적 턴으로 진행. |
 
@@ -329,6 +329,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 - **파츠 상태 HUD는 십자형**: 조립씬 배치감과 동일하게 등/오른팔·코어·왼팔/다리 십자 구성.
 - **모든 스킬이 명시적 타겟팅**: 즉시 발동은 폐기 (광역/패시브가 생기면 별도 분기).
 - **스킬 버튼은 타겟 확정 전까지 항상 활성**: 대기 스킬 강조는 시각만, `disabled`는 AP부족·파괴 시만.
+- **스킬 슬롯은 아이콘 중심**: 고정 크기 아이콘과 AP 배지만 화면에 표시하고, 이름·설명·수치는 hover 툴팁에서 읽는다.
 - **턴 종료 버튼 제공**: 선택지가 없거나 불리한 교환을 피하고 싶을 때 플레이어가 수동으로 적 턴으로 넘길 수 있다.
 - **예고/예상 수치 라벨 분리**: 예고는 상시 유지, 호버 예상은 별도 2번째 라벨에 표시.
 - **회복량은 실제 적용량**: 코어 최대치로 클램프 후 값.

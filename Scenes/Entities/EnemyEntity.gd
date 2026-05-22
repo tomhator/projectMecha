@@ -3,6 +3,8 @@ extends Node
 class_name EnemyEntity
 
 @export var enemy_name: String = ""
+@export var enemy_tier: EnemyData.EnemyTier = EnemyData.EnemyTier.NORMAL
+@export var enemy_sprite: Texture2D = null
 @export var enemy_max_hp: float = 0.0
 @export var enemy_max_shield: float = 0.0
 @export var attack_multiplier: float = 1.0
@@ -24,6 +26,8 @@ func setup() -> void:
 
 func setup_from_data(data: EnemyData) -> void:
 	enemy_name = data.enemy_name
+	enemy_tier = data.enemy_tier
+	enemy_sprite = data.enemy_sprite
 	enemy_max_hp = data.enemy_max_hp
 	enemy_max_shield = data.enemy_max_shield
 	attack_multiplier = data.attack_multiplier

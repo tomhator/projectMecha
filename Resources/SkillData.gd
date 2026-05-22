@@ -16,6 +16,7 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DO
 @export var skill_name: String = ""
 @export var skill_type: SkillType = SkillType.ATTACK
 @export var skill_description: String = ""
+@export var skill_icon: Texture2D = null
 @export var core_skill_role: CoreSkillRole = CoreSkillRole.NONE
 @export var part_ability_kind: PartAbilityKind = PartAbilityKind.NONE
 
@@ -55,3 +56,94 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DO
 @export var is_toggle: bool = false
 @export var is_free_action: bool = false
 @export var permanent_max_hp: float = 0.0
+
+
+func combat_tooltip_text(disable_reason: String = "") -> String:
+	var lines: Array[String] = [
+		skill_name,
+		skill_description,
+		"AP %d | %s" % [skill_action_cost, _skill_type_display_name()],
+	]
+
+	var values: Array[String] = []
+	if skill_damage > 0.0:
+		values.append("피해 %.0f" % skill_damage)
+	if hit_count > 1:
+		values.append("%d회 타격" % hit_count)
+	if skill_defense > 0.0:
+		values.append("쉴드 %.0f" % skill_defense)
+	if skill_heal > 0.0:
+		values.append("회복 %.0f" % skill_heal)
+	if armor_penetration > 0.0:
+		values.append("관통 %.0f%%" % (armor_penetration * 100.0))
+	if not values.is_empty():
+		lines.append(" | ".join(values))
+	if not disable_reason.is_empty():
+		lines.append("사용 불가: %s" % disable_reason)
+	return "\n".join(lines)
+
+
+func icon_texture(size_px: int = 64) -> Texture2D:
+	if skill_icon != null:
+		return skill_icon
+
+	var side: int = maxi(size_px, 16)
+	var image := Image.create(side, side, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.0, 0.0, 0.0, 0.0))
+	var edge: int = maxi(int(side * 0.10), 2)
+	var color := _skill_type_color()
+	image.fill_rect(Rect2i(edge, edge, side - edge * 2, side - edge * 2), color.darkened(0.45))
+	match skill_type:
+		SkillType.ATTACK:
+			_draw_attack_icon(image, color)
+		SkillType.DEFENSE:
+			_draw_defense_icon(image, color)
+		SkillType.HEAL:
+			_draw_heal_icon(image, color)
+		SkillType.PASSIVE:
+			_draw_passive_icon(image, color)
+	return ImageTexture.create_from_image(image)
+
+
+func _skill_type_display_name() -> String:
+	match skill_type:
+		SkillType.ATTACK: return "공격"
+		SkillType.DEFENSE: return "방어"
+		SkillType.HEAL: return "회복"
+		SkillType.PASSIVE: return "패시브"
+	return "스킬"
+
+
+func _skill_type_color() -> Color:
+	match skill_type:
+		SkillType.ATTACK: return Color(0.96, 0.38, 0.28, 1.0)
+		SkillType.DEFENSE: return Color(0.30, 0.62, 0.96, 1.0)
+		SkillType.HEAL: return Color(0.34, 0.88, 0.50, 1.0)
+		SkillType.PASSIVE: return Color(0.92, 0.72, 0.28, 1.0)
+	return Color(0.78, 0.78, 0.80, 1.0)
+
+
+func _draw_attack_icon(image: Image, color: Color) -> void:
+	var side: int = image.get_width()
+	image.fill_rect(Rect2i(int(side * 0.22), int(side * 0.42), int(side * 0.50), int(side * 0.14)), color)
+	image.fill_rect(Rect2i(int(side * 0.58), int(side * 0.28), int(side * 0.14), int(side * 0.42)), color)
+	image.fill_rect(Rect2i(int(side * 0.28), int(side * 0.30), int(side * 0.16), int(side * 0.38)), color.lightened(0.12))
+
+
+func _draw_defense_icon(image: Image, color: Color) -> void:
+	var side: int = image.get_width()
+	image.fill_rect(Rect2i(int(side * 0.24), int(side * 0.22), int(side * 0.52), int(side * 0.16)), color)
+	image.fill_rect(Rect2i(int(side * 0.28), int(side * 0.34), int(side * 0.44), int(side * 0.30)), color.lightened(0.10))
+	image.fill_rect(Rect2i(int(side * 0.38), int(side * 0.62), int(side * 0.24), int(side * 0.14)), color)
+
+
+func _draw_heal_icon(image: Image, color: Color) -> void:
+	var side: int = image.get_width()
+	image.fill_rect(Rect2i(int(side * 0.40), int(side * 0.22), int(side * 0.20), int(side * 0.56)), color)
+	image.fill_rect(Rect2i(int(side * 0.22), int(side * 0.40), int(side * 0.56), int(side * 0.20)), color.lightened(0.10))
+
+
+func _draw_passive_icon(image: Image, color: Color) -> void:
+	var side: int = image.get_width()
+	image.fill_rect(Rect2i(int(side * 0.26), int(side * 0.26), int(side * 0.48), int(side * 0.48)), color)
+	image.fill_rect(Rect2i(int(side * 0.38), int(side * 0.12), int(side * 0.24), int(side * 0.76)), color.lightened(0.14))
