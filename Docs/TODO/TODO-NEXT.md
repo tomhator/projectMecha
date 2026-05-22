@@ -64,6 +64,7 @@ status: active
 ## P2 — 밸런스·기획 (데모 스코프)
 
 - [x] **어빌리티 트리 재기획** — 5티어 연구/출격 로드아웃, 기본 공격, 파츠 활용 어빌리티 구조로 재설계. 기본 공격이 파손 시 전투 안전판을 맡는다. (2026-05-22) [[Docs/AbilityTreeSystem]]
+- [ ] **코어 설계 화면 레이아웃 정리** — 연구 노드 셀 정사각형 중심 정렬, 출격 준비 좌우 분할, 선택 외장 기반 코어 프리뷰 구현. [[Docs/superpowers/specs/2026-05-22-core-select-layout-preview-design]]
 - [ ] **어빌리티 트리 5레벨 보너스 밸런싱** — 15개 노드의 효과 축을 실제 파츠 운영 패시브로 확정하고 수치 검증. [[Docs/AbilityTreeSystem]]
 - [ ] **파츠 조립 화면 인벤토리 재설계** — 인벤토리 구조·UX 전반 재검토 필요
 - [ ] **파츠·스킬·적 실제 아이콘/스프라이트 연결** — placeholder 비주얼을 `PartsData.parts_icon`, `SkillData.skill_icon`, `EnemyData.enemy_sprite` 자산으로 교체
