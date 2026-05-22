@@ -26,6 +26,24 @@ const DUNGEON_INTEL: PackedStringArray = [
 	"환경: 파츠 보상과 작업대가 중반부터 열려 교체 타이밍이 중요하다.",
 	"보스 힌트: 첫 보스 전후로 파손 파츠 활용 어빌리티가 확장된다.",
 ]
+const RESEARCH_CARD_SIZE: float = 268.0
+const RESEARCH_GRID_SEPARATION: int = 10
+const SORTIE_PREVIEW_WIDTH: float = 316.0
+const SORTIE_CONTROLS_WIDTH: float = 936.0
+const CORE_PREVIEW_TIER_SLOTS: Dictionary = {
+	1: "top_cover",
+	2: "front_hood",
+	3: "side_armor",
+	4: "rear_pack",
+	5: "core_spine",
+}
+const CORE_PREVIEW_SLOT_LABELS: Dictionary = {
+	"top_cover": "상판 덮개",
+	"front_hood": "전면 후드",
+	"side_armor": "측면 장갑",
+	"rear_pack": "후방 팩",
+	"core_spine": "코어 스파인",
+}
 
 @onready var cards_row: HBoxContainer = $MarginRoot/CenterArea/CardsRow
 @onready var sortie_button: Button = $MarginRoot/CenterArea/SortieButton
@@ -132,36 +150,108 @@ func _show_research_view() -> void:
 	_view_host.add_child(_make_note("잠긴 노드도 효과 축을 확인할 수 있다. 이전 티어에서 하나라도 구매하면 다음 티어 연구가 열린다."))
 	for tier: int in range(1, 6):
 		_view_host.add_child(_make_section_label("T%d 연구" % tier))
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 8)
+		var center := CenterContainer.new()
+		center.name = "ResearchTierCenter%d" % tier
+		center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var grid := GridContainer.new()
+		grid.name = "ResearchTierGrid%d" % tier
+		grid.columns = 3
+		grid.add_theme_constant_override("h_separation", RESEARCH_GRID_SEPARATION)
+		grid.add_theme_constant_override("v_separation", RESEARCH_GRID_SEPARATION)
 		for node: AbilityTreeNode in _nodes_for_tier(tier):
-			row.add_child(_make_research_card(node))
-		_view_host.add_child(row)
+			grid.add_child(_make_research_card(node))
+		center.add_child(grid)
+		_view_host.add_child(center)
 
 
 func _show_sortie_view() -> void:
 	_clear_view()
 	_refresh_meta_label()
-	_view_host.add_child(_make_dungeon_intel())
-	_view_host.add_child(_make_section_label("기본 공격 택 1"))
-	_view_host.add_child(_make_skill_choice_row(_basic_attacks, true))
-	_view_host.add_child(_make_section_label("어빌리티 트리 로드아웃"))
+
+	var split := HBoxContainer.new()
+	split.name = "SortieSplit"
+	split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	split.add_theme_constant_override("separation", 14)
+	split.add_child(_make_core_preview())
+
+	var controls_scroll := ScrollContainer.new()
+	controls_scroll.name = "SortieControlsScroll"
+	controls_scroll.custom_minimum_size = Vector2(SORTIE_CONTROLS_WIDTH, 500.0)
+	controls_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	controls_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	controls_scroll.add_child(_make_sortie_controls())
+	split.add_child(controls_scroll)
+	_view_host.add_child(split)
+
+
+func _make_sortie_controls() -> VBoxContainer:
+	var controls := VBoxContainer.new()
+	controls.name = "SortieControls"
+	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	controls.add_theme_constant_override("separation", 12)
+	controls.add_child(_make_dungeon_intel())
+	controls.add_child(_make_section_label("기본 공격 택 1"))
+	controls.add_child(_make_skill_choice_row(_basic_attacks, true))
+	controls.add_child(_make_section_label("어빌리티 트리 로드아웃"))
 	for tier: int in range(1, 6):
-		_view_host.add_child(_make_sortie_tier_row(tier))
-	_view_host.add_child(_make_section_label("파츠 활용 어빌리티 택 1"))
-	_view_host.add_child(_make_skill_choice_row(_part_abilities, false))
-	_view_host.add_child(_make_loadout_preview())
+		controls.add_child(_make_sortie_tier_row(tier))
+	controls.add_child(_make_section_label("파츠 활용 어빌리티 택 1"))
+	controls.add_child(_make_skill_choice_row(_part_abilities, false))
+	controls.add_child(_make_loadout_preview())
 
 	var start_button := Button.new()
 	start_button.text = "출격"
 	start_button.custom_minimum_size = Vector2(220.0, 44.0)
 	start_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	start_button.pressed.connect(_on_sortie_pressed)
-	_view_host.add_child(start_button)
+	controls.add_child(start_button)
+	return controls
+
+
+func _make_core_preview() -> Panel:
+	var panel := _make_card_panel(Vector2(SORTIE_PREVIEW_WIDTH, 500.0), Color(0.10, 0.14, 0.18))
+	panel.name = "CorePreview"
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	var body: VBoxContainer = panel.get_child(0) as VBoxContainer
+	body.add_child(_make_card_title("현재 코어 외형"))
+	body.add_child(_make_wrapped_label("이번 출격에 장착한 티어 외장을 기준으로 표시한다.", 11))
+
+	var frame := VBoxContainer.new()
+	frame.name = "CorePreviewFrame"
+	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	frame.add_theme_constant_override("separation", 8)
+	for tier: int in range(1, 6):
+		frame.add_child(_make_core_preview_slot(tier))
+	body.add_child(frame)
+
+	var attack_name: String = GameState.active_basic_attack.skill_name if GameState.active_basic_attack != null else "없음"
+	var ability_name: String = GameState.active_part_ability.skill_name if GameState.active_part_ability != null else "없음"
+	body.add_child(_make_wrapped_label("기본 공격: %s\n파츠 활용: %s" % [attack_name, ability_name], 11))
+	body.add_child(_make_wrapped_label(_stat_preview_text(), 11))
+	return panel
+
+
+func _make_core_preview_slot(tier: int) -> Panel:
+	var node: AbilityTreeNode = _selected_node_for_tier(tier)
+	var color: Color = Color(0.20, 0.23, 0.28) if node == null else TRACK_COLORS[node.track]
+	var panel := _make_card_panel(Vector2(0.0, 62.0), color)
+	panel.name = "CorePreviewSlot%d" % tier
+	var body: VBoxContainer = panel.get_child(0) as VBoxContainer
+	var slot_key: String = str(CORE_PREVIEW_TIER_SLOTS.get(tier, ""))
+	var slot_name: String = str(CORE_PREVIEW_SLOT_LABELS.get(slot_key, slot_key))
+	var variant_text: String = "비어 있음"
+	if node != null:
+		slot_name = str(CORE_PREVIEW_SLOT_LABELS.get(node.visual_slot, node.visual_slot))
+		variant_text = "%s [%s] / %s" % [node.display_name, TRACK_LABELS[node.track], node.visual_variant]
+	body.add_child(_make_card_title("T%d %s" % [tier, slot_name]))
+	body.add_child(_make_wrapped_label(variant_text, 10))
+	return panel
 
 
 func _make_research_card(node: AbilityTreeNode) -> Panel:
-	var panel := _make_card_panel(Vector2(300.0, 196.0), TRACK_COLORS[node.track])
+	var panel := _make_card_panel(Vector2(RESEARCH_CARD_SIZE, RESEARCH_CARD_SIZE), TRACK_COLORS[node.track])
+	panel.name = "ResearchCard_%s" % node.node_id
 	var body: VBoxContainer = panel.get_child(0) as VBoxContainer
 	body.add_child(_make_card_title("%s [%s]" % [node.display_name, TRACK_LABELS[node.track]]))
 	body.add_child(_make_wrapped_label(node.description, 11))
