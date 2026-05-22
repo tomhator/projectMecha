@@ -50,6 +50,7 @@ const MECH_TEXTURE_PATHS: Dictionary = {
 }
 
 var _mech_layers: Dictionary = {}   # CoreData.CoreSlot → TextureRect (slot layers)
+var _core_visual_layers: Dictionary = {}  # Core exterior slot -> Panel
 var _hud_icons: Dictionary = {}     # CoreData.CoreSlot → Panel (status HUD)
 var _broken_skills: Dictionary = {}  # SkillData → true (파괴된 파츠 소속 스킬)
 var _enemy_snipe_slots: Dictionary = {}  # enemy_instance_id -> int(slot)
@@ -188,6 +189,7 @@ func _build_mech_layers() -> void:
 		_mech_illustration.add_child(rect)
 		if slot != null:
 			_mech_layers[slot] = rect
+	_build_core_visual_layers()
 
 
 func _load_mech_texture(texture_key: String, fallback_color: Color, layer_size: Vector2) -> Texture2D:
@@ -213,6 +215,7 @@ func _refresh_all_mech_layers() -> void:
 		CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.ARM_L
 	]:
 		_refresh_mech_layer(slot)
+	_refresh_core_visual_layers()
 
 
 func _refresh_mech_layer(slot: CoreData.CoreSlot) -> void:
@@ -221,6 +224,49 @@ func _refresh_mech_layer(slot: CoreData.CoreSlot) -> void:
 	var rect: TextureRect = _mech_layers[slot]
 	rect.visible = GameState.equipped_parts.get(slot) != null
 	_apply_snipe_highlight()
+
+
+func _build_core_visual_layers() -> void:
+	var specs: Dictionary = {
+		"top_cover": [Vector2(48, 24), Vector2(38, 10)],
+		"front_hood": [Vector2(72, 48), Vector2(24, 24)],
+		"side_armor": [Vector2(34, 48), Vector2(12, 42)],
+		"rear_pack": [Vector2(28, 30), Vector2(10, 34)],
+		"core_spine": [Vector2(56, 36), Vector2(8, 62)],
+	}
+	for visual_slot: String in specs:
+		var spec: Array = specs[visual_slot]
+		var panel := Panel.new()
+		panel.position = spec[0]
+		panel.size = spec[1]
+		panel.z_index = 5
+		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_mech_illustration.add_child(panel)
+		_core_visual_layers[visual_slot] = panel
+	_refresh_core_visual_layers()
+
+
+func _refresh_core_visual_layers() -> void:
+	for visual_slot: String in _core_visual_layers:
+		var panel: Panel = _core_visual_layers[visual_slot]
+		var variant: String = str(GameState.active_core_visuals.get(visual_slot, ""))
+		panel.visible = not variant.is_empty()
+		if variant.is_empty():
+			continue
+		var style := StyleBoxFlat.new()
+		style.bg_color = _core_visual_color(variant)
+		style.border_color = Color(0.8, 0.85, 0.9, 0.75)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(2)
+		panel.add_theme_stylebox_override("panel", style)
+
+
+func _core_visual_color(variant: String) -> Color:
+	if variant.begins_with("attack"):
+		return Color(0.86, 0.32, 0.24, 0.9)
+	if variant.begins_with("defense"):
+		return Color(0.26, 0.62, 0.92, 0.9)
+	return Color(0.42, 0.82, 0.40, 0.9)
 
 
 # ── 파츠 상태 HUD (좌하단 십자형) ────────────────────────────────────────────
@@ -438,6 +484,11 @@ func _rebuild_skill_buttons(available_skills: Array[SkillData]) -> void:
 func _skill_disable_reason(skill: SkillData) -> String:
 	if _broken_skills.has(skill):
 		return "파츠 파괴됨"
+	var mecha: MechaEntity = _get_player_mecha()
+	if mecha != null:
+		var part_ability_reason: String = mecha.get_part_ability_disable_reason(skill)
+		if not part_ability_reason.is_empty():
+			return part_ability_reason
 	if skill.skill_action_cost > _actions_remaining:
 		return "AP 부족 (%d 필요 / %d 보유)" % [skill.skill_action_cost, _actions_remaining]
 	return ""

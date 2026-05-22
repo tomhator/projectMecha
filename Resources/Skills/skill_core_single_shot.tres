@@ -5,10 +5,11 @@
 [resource]
 script = ExtResource("1_ss001")
 skill_id = 1
-skill_name = "단발 사격"
+skill_name = "속사 사격"
 skill_type = 0
-skill_description = "기본 화기로 단발을 발사한다."
-skill_damage = 8.0
-skill_action_cost = 2
+skill_description = "남는 행동력으로 빠르게 잇는 저비용 코어 사격."
+core_skill_role = 1
+skill_damage = 5.0
+skill_action_cost = 1
 skill_target = 1
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

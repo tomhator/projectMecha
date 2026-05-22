@@ -19,7 +19,8 @@ func _initialize() -> void:
 	randomize()
 	_check_normal_enemies_have_no_snipe()
 	await _check_broken_part_skill_and_affix()
-	await _check_auto_turn_end_when_no_usable_skills()
+	await _check_basic_attack_remains_when_parts_break()
+	await _check_core_part_abilities()
 	await _check_back_snipe()
 	await _check_collector_boss_flow()
 	if _failed:
@@ -156,7 +157,7 @@ func _check_broken_part_skill_and_affix() -> void:
 	print("P0 OK: broken part skill disabled and affix ignored")
 
 
-func _check_auto_turn_end_when_no_usable_skills() -> void:
+func _check_basic_attack_remains_when_parts_break() -> void:
 	_reset_run()
 	var mecha := _new_mecha()
 	var enemy := _new_enemy()
@@ -174,7 +175,7 @@ func _check_auto_turn_end_when_no_usable_skills() -> void:
 	var enemy_skill := enemy_skill_source.duplicate(true)
 	part.set("durability", 0)
 	_set_equipped_part(SLOT_ARM_L, part)
-	enemy.set("enemy_name", "행동 없음 검증 적")
+	enemy.set("enemy_name", "기본 공격 검증 적")
 	enemy.set("enemy_max_hp", 20.0)
 	enemy.set("enemy_action_count", 1)
 	enemy.get("skills").clear()
@@ -183,12 +184,67 @@ func _check_auto_turn_end_when_no_usable_skills() -> void:
 	enemy.get("skills").append(enemy_skill)
 	manager.call("start_combat_untyped", mecha, [enemy])
 	await process_frame
-	_assert_true(int(manager.get("current_turn")) >= 1 and int(manager.get("current_phase")) != 0, "No usable skills did not auto-end player turn")
+	_assert_true(int(manager.get("current_turn")) >= 1 and int(manager.get("current_phase")) == 0, "Basic attack did not keep the player turn active")
+	_assert_true(not mecha.call("get_available_skills").is_empty(), "No fallback basic attack available after part break")
 	_dispose_node(manager)
 	_dispose_node(mecha)
 	_dispose_node(enemy)
 	await process_frame
-	print("P0 OK: no usable skills auto-end player turn")
+	print("P0 OK: basic attack remains when part skills break")
+
+
+func _check_core_part_abilities() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	var enemy := _new_enemy()
+	root.add_child(mecha)
+	root.add_child(enemy)
+	enemy.set("enemy_name", "파츠 어빌리티 검증 적")
+	enemy.set("enemy_max_hp", 100.0)
+	enemy.set("current_hp", 100.0)
+
+	var emergency_swap := _load_resource("res://Resources/Skills/skill_core_emergency_swap.tres")
+	var broken_throw := _load_resource("res://Resources/Skills/skill_core_broken_throw.tres")
+	var scrap_patch := _load_resource("res://Resources/Skills/skill_core_scrap_patch.tres")
+	var old_arm := _load_part("res://Resources/Parts/arm_l/arm_l_gr21.tres")
+	var new_arm := _load_part("res://Resources/Parts/arm_l/arm_l_ml7.tres")
+	var scrap := _load_part("res://Resources/Parts/back/back_fr1.tres")
+	if emergency_swap == null or broken_throw == null or scrap_patch == null or old_arm == null or new_arm == null or scrap == null:
+		_dispose_node(mecha)
+		_dispose_node(enemy)
+		return
+
+	_set_equipped_part(SLOT_ARM_L, old_arm)
+	_game_state().get("inventory").append(new_arm)
+	_game_state().set("active_part_ability", emergency_swap)
+	mecha.call("setup")
+	mecha.call("use_skill", emergency_swap, mecha)
+	_assert_true(_get_equipped_part(SLOT_ARM_L) == new_arm, "Emergency swap did not equip inventory part")
+	_assert_true(bool(old_arm.call("is_broken")), "Emergency swap did not break replaced part")
+
+	scrap.set("durability", 0)
+	_game_state().get("inventory").append(scrap)
+	_game_state().set("active_part_ability", broken_throw)
+	mecha.call("setup")
+	var hp_before: float = float(enemy.get("current_hp"))
+	var throw_inventory_before: int = _game_state().get("inventory").size()
+	mecha.call("use_skill", broken_throw, enemy)
+	_assert_true(float(enemy.get("current_hp")) < hp_before, "Broken throw did not damage enemy")
+	_assert_true(_game_state().get("inventory").size() == throw_inventory_before - 1, "Broken throw did not consume broken part")
+
+	old_arm.set("durability", 0)
+	_game_state().get("inventory").append(old_arm)
+	_game_state().set("current_shield", 0.0)
+	_game_state().set("active_part_ability", scrap_patch)
+	mecha.call("setup")
+	var patch_inventory_before: int = _game_state().get("inventory").size()
+	mecha.call("use_skill", scrap_patch, mecha)
+	_assert_true(float(_game_state().get("current_shield")) > 0.0, "Scrap patch did not add shield")
+	_assert_true(_game_state().get("inventory").size() == patch_inventory_before - 1, "Scrap patch did not consume broken part")
+	_dispose_node(mecha)
+	_dispose_node(enemy)
+	await process_frame
+	print("P0 OK: core part abilities swap, throw, and patch")
 
 
 func _check_back_snipe() -> void:

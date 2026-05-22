@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_t4_attack_emergency_ignition"
+display_name = "비상 점화"
+description = "파츠 파손과 코어 위기를 공격 전환점으로 삼는다."
+tier = 4
+track = 0
+research_cost = 160
+level_cost_step = 42
+level_five_bonus_text = "5레벨: 위기 화력 보너스 예정"
+visual_slot = "rear_pack"
+visual_variant = "attack_igniter"
+stat_attack_multiplier_bonus = 0.02
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

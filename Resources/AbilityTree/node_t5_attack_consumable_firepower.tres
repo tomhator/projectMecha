@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_t5_attack_consumable_firepower"
+display_name = "소모성 화력 교리"
+description = "파츠 수명을 공격 폭발력으로 바꾸는 화력 빌드 캡스톤."
+tier = 5
+track = 0
+research_cost = 230
+level_cost_step = 54
+level_five_bonus_text = "5레벨: 소모 화력 교리 완성"
+visual_slot = "core_spine"
+visual_variant = "attack_doctrine"
+stat_attack_multiplier_bonus = 0.03
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

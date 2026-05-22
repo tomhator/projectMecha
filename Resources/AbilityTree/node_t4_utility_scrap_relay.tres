@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_t4_utility_scrap_relay"
+display_name = "잔해 재배치"
+description = "파손 파츠를 버려진 손실이 아니라 현장 전술 자원으로 본다."
+tier = 4
+track = 2
+research_cost = 160
+level_cost_step = 42
+level_five_bonus_text = "5레벨: 파손 파츠 활용 보너스 예정"
+visual_slot = "rear_pack"
+visual_variant = "utility_relay"
+stat_payload_bonus = 5.0
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

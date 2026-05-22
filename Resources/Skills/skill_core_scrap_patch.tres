@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = 303
+skill_name = "임시 덧대기"
+skill_type = 1
+skill_description = "파손 파츠 하나를 소모해 코어에 임시 방호판을 덧댄다."
+core_skill_role = 2
+part_ability_kind = 3
+skill_defense = 20.0
+skill_action_cost = 2
+skill_target = 0
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

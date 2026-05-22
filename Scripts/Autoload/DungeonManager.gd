@@ -56,7 +56,10 @@ func continue_after_reward() -> void:
 
 func _advance_to_next_floor() -> void:
     GameState.advance_floor()
+    if GameState.current_floor >= 10:
+        GameState.unlock_part_ability(302)
     if GameState.current_floor > 10:
+        GameState.unlock_part_ability(303)
         get_tree().change_scene_to_file(RUN_END_SCENE)
         return
     else:

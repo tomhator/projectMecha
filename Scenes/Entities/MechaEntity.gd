@@ -9,8 +9,10 @@ var _serious_punch_pending: bool = false
 func setup() -> void:
 	available_skills.clear()
 	_skill_to_part.clear()
-	if GameState.active_core_skill != null:
-		available_skills.append(GameState.active_core_skill)
+	if GameState.active_basic_attack != null:
+		available_skills.append(GameState.active_basic_attack)
+	if GameState.active_part_ability != null:
+		available_skills.append(GameState.active_part_ability)
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
 		var part: PartsData = GameState.equipped_parts[slot]
 		if part != null:
@@ -21,6 +23,8 @@ func setup() -> void:
 func get_available_skills() -> Array[SkillData]:
 	return available_skills.filter(func(s: SkillData) -> bool:
 		if s.skill_type == SkillData.SkillType.PASSIVE:
+			return false
+		if not get_part_ability_disable_reason(s).is_empty():
 			return false
 		var part: PartsData = _skill_to_part.get(s)
 		if part != null and part.is_broken():
@@ -41,6 +45,8 @@ func can_use_skill(skill: SkillData) -> bool:
 	if not available_skills.has(skill):
 		return false
 	if skill.skill_type == SkillData.SkillType.PASSIVE:
+		return false
+	if not get_part_ability_disable_reason(skill).is_empty():
 		return false
 	var part: PartsData = _skill_to_part.get(skill)
 	if part != null and part.is_broken():
@@ -97,6 +103,9 @@ func get_preview_effective_shield_heal(skill: SkillData) -> float:
 
 
 func use_skill(skill: SkillData, target: Node) -> void:
+	if skill.core_skill_role == SkillData.CoreSkillRole.PART_ABILITY:
+		_use_part_ability(skill)
+
 	var mult: float = _output_mult(skill, target, true)
 
 	if skill.skill_damage > 0.0:
@@ -128,6 +137,94 @@ func use_skill(skill: SkillData, target: Node) -> void:
 		EventBus.part_durability_changed.emit(part)
 		if part.durability == 0:
 			print("  > [파츠 파괴] %s" % part.parts_name)
+
+
+func get_part_ability_disable_reason(skill: SkillData) -> String:
+	if skill == null or skill.core_skill_role != SkillData.CoreSkillRole.PART_ABILITY:
+		return ""
+	match skill.part_ability_kind:
+		SkillData.PartAbilityKind.EMERGENCY_SWAP:
+			if _find_emergency_swap_part() == null:
+				return "교체 가능한 인벤토리 파츠 없음"
+		SkillData.PartAbilityKind.BROKEN_THROW, SkillData.PartAbilityKind.SCRAP_PATCH:
+			if not _has_broken_part_to_consume():
+				return "소모할 파손 파츠 없음"
+		_:
+			return "미구현 파츠 어빌리티"
+	return ""
+
+
+func _use_part_ability(skill: SkillData) -> void:
+	match skill.part_ability_kind:
+		SkillData.PartAbilityKind.EMERGENCY_SWAP:
+			_use_emergency_swap()
+		SkillData.PartAbilityKind.BROKEN_THROW, SkillData.PartAbilityKind.SCRAP_PATCH:
+			_consume_broken_part()
+
+
+func _use_emergency_swap() -> void:
+	var incoming: PartsData = _find_emergency_swap_part()
+	if incoming == null:
+		return
+	var slot: CoreData.CoreSlot = _slot_for_part_type(incoming.parts_type)
+	var existing: PartsData = GameState.equipped_parts.get(slot)
+	if existing != null:
+		if existing.durability > 0:
+			existing.durability = 0
+			EventBus.part_durability_changed.emit(existing)
+		GameState.inventory.append(existing)
+	GameState.inventory.erase(incoming)
+	GameState.equip_part(incoming, slot)
+	EventBus.inventory_changed.emit(GameState.inventory)
+	setup()
+	print("  > [긴급 교체] %s 장착" % incoming.parts_name)
+
+
+func _find_emergency_swap_part() -> PartsData:
+	for part: PartsData in GameState.inventory:
+		if part != null and not part.is_broken():
+			return part
+	return null
+
+
+func _has_broken_part_to_consume() -> bool:
+	for part: PartsData in GameState.inventory:
+		if part != null and part.is_broken():
+			return true
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		var equipped: PartsData = GameState.equipped_parts[slot]
+		if equipped != null and equipped.is_broken():
+			return true
+	return false
+
+
+func _consume_broken_part() -> PartsData:
+	for part: PartsData in GameState.inventory:
+		if part != null and part.is_broken():
+			GameState.inventory.erase(part)
+			EventBus.inventory_changed.emit(GameState.inventory)
+			print("  > [파손 파츠 소모] %s" % part.parts_name)
+			return part
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		var equipped: PartsData = GameState.equipped_parts[slot]
+		if equipped != null and equipped.is_broken():
+			GameState.unequip_part(slot)
+			print("  > [파손 파츠 소모] %s" % equipped.parts_name)
+			return equipped
+	return null
+
+
+func _slot_for_part_type(part_type: PartsData.PartsType) -> CoreData.CoreSlot:
+	match part_type:
+		PartsData.PartsType.ARM_L:
+			return CoreData.CoreSlot.ARM_L
+		PartsData.PartsType.ARM_R:
+			return CoreData.CoreSlot.ARM_R
+		PartsData.PartsType.BACK:
+			return CoreData.CoreSlot.BACK
+		PartsData.PartsType.LEG:
+			return CoreData.CoreSlot.LEG
+	return CoreData.CoreSlot.ARM_L
 
 
 func _output_mult(skill: SkillData, target: Node = null, consume_temp: bool = false) -> float:

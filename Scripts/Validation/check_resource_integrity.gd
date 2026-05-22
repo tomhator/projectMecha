@@ -5,7 +5,7 @@ var _seen_skill_ids: Dictionary = {}
 var _seen_parts_ids: Dictionary = {}
 var _seen_enemy_ids: Dictionary = {}
 var _ability_node_ids: Dictionary = {}
-var _ability_requirements: Dictionary = {}
+var _ability_tier_counts: Dictionary = {}
 
 
 func _initialize() -> void:
@@ -134,12 +134,14 @@ func _check_ability_tree() -> void:
 		if _ability_node_ids.has(node.node_id):
 			_fail("Ability node_id duplicated (%s): %s and %s" % [node.node_id, _ability_node_ids[node.node_id], path])
 		_ability_node_ids[node.node_id] = path
-		if node.point_cost <= 0:
-			_fail("Ability node has non-positive point cost: %s" % path)
-		if not node.required_node_id.strip_edges().is_empty():
-			_ability_requirements[path] = node.required_node_id
+		if node.tier < 1 or node.tier > 5:
+			_fail("Ability node tier out of range: %s" % path)
+		if node.research_cost <= 0 or node.level_cost_step < 0:
+			_fail("Ability node has invalid research cost: %s" % path)
+		if node.visual_slot.strip_edges().is_empty() or node.visual_variant.strip_edges().is_empty():
+			_fail("Ability node missing visual metadata: %s" % path)
+		_ability_tier_counts[node.tier] = int(_ability_tier_counts.get(node.tier, 0)) + 1
 
-	for path: String in _ability_requirements:
-		var required_id: String = _ability_requirements[path]
-		if not _ability_node_ids.has(required_id):
-			_fail("Ability node references missing required_node_id '%s': %s" % [required_id, path])
+	for tier: int in range(1, 6):
+		if int(_ability_tier_counts.get(tier, 0)) != 3:
+			_fail("Ability tier %d must contain 3 nodes" % tier)

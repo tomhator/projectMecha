@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = 302
+skill_name = "파손 투척"
+skill_type = 0
+skill_description = "파손 파츠 하나를 소모해 적에게 던진다."
+core_skill_role = 2
+part_ability_kind = 2
+skill_damage = 18.0
+skill_action_cost = 2
+skill_target = 1
+metadata/_custom_type_script = "uid://dft8b026rx6cu"

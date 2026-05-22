@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_t4_defense_compartment_lock"
+display_name = "격실 차단"
+description = "파손, 과부하, 연속 피격 위험을 코어까지 번지지 않게 막는다."
+tier = 4
+track = 1
+research_cost = 160
+level_cost_step = 42
+level_five_bonus_text = "5레벨: 위험 차단 보너스 예정"
+visual_slot = "rear_pack"
+visual_variant = "defense_bulkhead"
+stat_hp_bonus = 6.0
+stat_shield_bonus = 4.0
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

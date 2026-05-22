@@ -8,6 +8,7 @@ skill_id = 2
 skill_name = "입자 광선"
 skill_type = 0
 skill_description = "고에너지 입자를 집속해 발사한다. 전 행동력을 소진한다."
+core_skill_role = 1
 skill_damage = 13.0
 skill_action_cost = 4
 skill_target = 1

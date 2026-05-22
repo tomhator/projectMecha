@@ -5,6 +5,8 @@ class_name SkillData
 enum SkillType { ATTACK, DEFENSE, HEAL, PASSIVE }
 enum SkillTarget { SELF, ENEMY }
 enum TargetSlot { NONE = -1, ARM_L = 0, ARM_R = 1, BACK = 2, LEG = 3 }
+enum CoreSkillRole { NONE, BASIC_ATTACK, PART_ABILITY }
+enum PartAbilityKind { NONE, EMERGENCY_SWAP, BROKEN_THROW, SCRAP_PATCH }
 
 enum SkillBuff { ATTACK_UP, DEFENSE_UP, HEAL_UP, SPEED_UP, SHIELD_REGEN, DAMAGE_BOOST, DAMAGE_REDUCTION, EVASION_UP }
 enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DOWN }
@@ -14,6 +16,8 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DO
 @export var skill_name: String = ""
 @export var skill_type: SkillType = SkillType.ATTACK
 @export var skill_description: String = ""
+@export var core_skill_role: CoreSkillRole = CoreSkillRole.NONE
+@export var part_ability_kind: PartAbilityKind = PartAbilityKind.NONE
 
 # 스킬 능력치 정보
 @export var skill_damage: float = 0.0

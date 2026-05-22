@@ -4,10 +4,15 @@
 
 [resource]
 script = ExtResource("1_atn")
-node_id = "node_defense_1"
-display_name = "장갑 보강"
-description = "코어 장갑판을 두껍게 교체한다.\n최대 HP +40"
-point_cost = 1
-required_node_id = ""
-stat_hp_bonus = 40.0
+node_id = "node_t1_defense_reinforced_frame"
+display_name = "보강 프레임"
+description = "코어의 생존 기반과 초기 장갑 여유를 늘린다."
+tier = 1
+track = 1
+research_cost = 40
+level_cost_step = 18
+level_five_bonus_text = "5레벨: 전투 시작 방호 보너스 예정"
+visual_slot = "top_cover"
+visual_variant = "defense_frame"
+stat_hp_bonus = 8.0
 metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

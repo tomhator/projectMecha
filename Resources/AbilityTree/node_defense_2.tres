@@ -4,10 +4,15 @@
 
 [resource]
 script = ExtResource("1_atn")
-node_id = "node_defense_2"
-display_name = "실드 발생기"
-description = "보조 실드 모듈을 설치한다.\n최대 쉴드 +30"
-point_cost = 1
-required_node_id = "node_defense_1"
-stat_shield_bonus = 30.0
+node_id = "node_t2_defense_buffer_mount"
+display_name = "완충 장착부"
+description = "파츠 손상 충격을 받아낼 방호 장착부를 강화한다."
+tier = 2
+track = 1
+research_cost = 70
+level_cost_step = 24
+level_five_bonus_text = "5레벨: 파츠 손상 완충 보너스 예정"
+visual_slot = "front_hood"
+visual_variant = "defense_mount"
+stat_shield_bonus = 5.0
 metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

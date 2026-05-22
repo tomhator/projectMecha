@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="AbilityTreeNode" format=3]
+
+[ext_resource type="Script" uid="uid://c4hnpqr8mn7x5" path="res://Resources/AbilityTreeNode.gd" id="1_atn"]
+
+[resource]
+script = ExtResource("1_atn")
+node_id = "node_t5_utility_field_refit"
+display_name = "현장 개조 교리"
+description = "파츠 상태 변화 자체를 선택지로 바꾸는 유틸 빌드 캡스톤."
+tier = 5
+track = 2
+research_cost = 230
+level_cost_step = 54
+level_five_bonus_text = "5레벨: 현장 개조 교리 완성"
+visual_slot = "core_spine"
+visual_variant = "utility_doctrine"
+stat_action_count_bonus = 1
+stat_payload_bonus = 4.0
+metadata/_custom_type_script = "uid://c4hnpqr8mn7x5"

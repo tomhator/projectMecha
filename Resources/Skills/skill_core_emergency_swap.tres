@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = 301
+skill_name = "긴급 교체"
+skill_type = 1
+skill_description = "전투 중 인벤토리 파츠를 즉시 끼운다. 기존 장착 파츠는 파손된다."
+core_skill_role = 2
+part_ability_kind = 1
+skill_action_cost = 1
+skill_target = 0
+metadata/_custom_type_script = "uid://dft8b026rx6cu"
