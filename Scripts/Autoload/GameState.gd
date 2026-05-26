@@ -4,6 +4,13 @@ const CORE_BASE_PATH := "res://Resources/Cores/core_base.tres"
 const DEFAULT_BASIC_ATTACK_PATH := "res://Resources/Skills/skill_core_single_shot.tres"
 const DEFAULT_PART_ABILITY_PATH := "res://Resources/Skills/skill_core_emergency_swap.tres"
 const META_PROGRESS_PATH := "user://core_research.cfg"
+const BASE_INVENTORY_CAPACITY: int = 16
+const COMBAT_SKILL_PART_SLOT_ORDER: Array[CoreData.CoreSlot] = [
+	CoreData.CoreSlot.ARM_L,
+	CoreData.CoreSlot.ARM_R,
+	CoreData.CoreSlot.BACK,
+	CoreData.CoreSlot.LEG,
+]
 
 # --- 런 메타 정보 ---
 var is_run_active: bool = false
@@ -258,6 +265,65 @@ func get_max_action_count() -> int:
 func is_overloaded() -> bool:
 	return current_payload > get_max_payload()
 
+
+func get_inventory_capacity() -> int:
+	return BASE_INVENTORY_CAPACITY
+
+
+func get_inventory_free_slots() -> int:
+	return maxi(get_inventory_capacity() - inventory.size(), 0)
+
+
+func is_inventory_full() -> bool:
+	return get_inventory_free_slots() <= 0
+
+
+func can_add_to_inventory(part: PartsData = null) -> bool:
+	return part != null and not is_inventory_full()
+
+
+func remove_from_inventory(part: PartsData) -> bool:
+	if part == null or not inventory.has(part):
+		return false
+	inventory.erase(part)
+	EventBus.inventory_changed.emit(inventory)
+	return true
+
+
+func get_combat_skill_order() -> Array[SkillData]:
+	var ordered: Array[SkillData] = []
+	if active_basic_attack != null:
+		ordered.append(active_basic_attack)
+	if active_part_ability != null:
+		ordered.append(active_part_ability)
+	for slot: CoreData.CoreSlot in COMBAT_SKILL_PART_SLOT_ORDER:
+		var part: PartsData = equipped_parts.get(slot)
+		if part == null:
+			continue
+		for skill: SkillData in part.parts_skills:
+			if skill != null:
+				ordered.append(skill)
+	return ordered
+
+
+func get_slot_for_combat_skill(skill: SkillData) -> int:
+	if skill == null:
+		return -1
+	if skill == active_basic_attack or skill == active_part_ability:
+		return -1
+	for slot: CoreData.CoreSlot in COMBAT_SKILL_PART_SLOT_ORDER:
+		var part: PartsData = equipped_parts.get(slot)
+		if part != null and part.parts_skills.has(skill):
+			return int(slot)
+	return -1
+
+
+func get_part_for_combat_skill(skill: SkillData) -> PartsData:
+	var slot: int = get_slot_for_combat_skill(skill)
+	if slot < 0:
+		return null
+	return equipped_parts.get(slot)
+
 # 재화 추가/차감
 func add_credits(amount: int) -> void:
 	credits += amount
@@ -288,7 +354,13 @@ func heal_shield(amount: float) -> void:
 	current_shield = minf(current_shield + amount, current_core.core_shield)
 	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
 
-# 인벤토리 관리
-func add_to_inventory(part: PartsData) -> void:
+	# 인벤토리 관리
+func add_to_inventory(part: PartsData) -> bool:
+	if part == null:
+		return false
+	if is_inventory_full():
+		EventBus.inventory_add_failed.emit(part)
+		return false
 	inventory.append(part)
 	EventBus.inventory_changed.emit(inventory)
+	return true

@@ -29,6 +29,7 @@ signal part_durability_changed(part: PartsData)
 signal boss_arms_respawning
 
 signal inventory_changed(inventory: Array)
+signal inventory_add_failed(part: PartsData)
 
 ## 조립 화면: 인벤토리 카드 드래그 중일 때만 설정 (`PartSocketUI` 전역 하이라이트용)
 var assembly_drag_inventory_part: PartsData = null

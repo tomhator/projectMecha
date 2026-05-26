@@ -21,6 +21,8 @@ func _initialize() -> void:
 	await _check_broken_part_skill_and_affix()
 	await _check_undefined_behavior_affix_turn_start()
 	await _check_basic_attack_remains_when_parts_break()
+	_check_inventory_capacity()
+	_check_combat_skill_order()
 	await _check_core_part_abilities()
 	await _check_back_snipe()
 	await _check_breaker_arm_snipe()
@@ -271,6 +273,49 @@ func _check_basic_attack_remains_when_parts_break() -> void:
 	_dispose_node(enemy)
 	await process_frame
 	print("P0 OK: basic attack remains when part skills break")
+
+
+func _check_inventory_capacity() -> void:
+	_reset_run()
+	var game_state := _game_state()
+	if game_state == null:
+		return
+	var capacity: int = int(game_state.call("get_inventory_capacity"))
+	for i: int in range(capacity):
+		var part := _load_part("res://Resources/Parts/arm_l/arm_l_gr21.tres")
+		if part == null:
+			return
+		_assert_true(bool(game_state.call("add_to_inventory", part)), "Inventory rejected part before capacity at index %d" % i)
+	var extra := _load_part("res://Resources/Parts/arm_l/arm_l_ml7.tres")
+	if extra == null:
+		return
+	_assert_true(not bool(game_state.call("add_to_inventory", extra)), "Inventory accepted a part beyond capacity")
+	_assert_true(game_state.get("inventory").size() == capacity, "Inventory size exceeded capacity")
+	print("P0 OK: inventory capacity rejects overflow")
+
+
+func _check_combat_skill_order() -> void:
+	_reset_run()
+	var arm_l := _load_part("res://Resources/Parts/arm_l/arm_l_gr21.tres")
+	var arm_r := _load_part("res://Resources/Parts/arm_r/arm_r_gr21.tres")
+	var back := _load_part("res://Resources/Parts/back/back_fr1.tres")
+	var leg := _load_part("res://Resources/Parts/leg/leg_strider1.tres")
+	if arm_l == null or arm_r == null or back == null or leg == null:
+		return
+	_set_equipped_part(SLOT_ARM_L, arm_l)
+	_set_equipped_part(SLOT_ARM_R, arm_r)
+	_set_equipped_part(SLOT_BACK, back)
+	_set_equipped_part(SLOT_LEG, leg)
+
+	var ordered: Array = _game_state().call("get_combat_skill_order")
+	_assert_true(ordered.size() >= 6, "Combat skill order missing core or part skills")
+	_assert_true(ordered[0] == _game_state().get("active_basic_attack"), "Basic attack is not first in combat skill order")
+	_assert_true(ordered[1] == _game_state().get("active_part_ability"), "Part ability is not second in combat skill order")
+	_assert_true(ordered[2] == arm_l.get("parts_skills")[0], "ARM_L skill is not third in combat skill order")
+	_assert_true(ordered[3] == arm_r.get("parts_skills")[0], "ARM_R skill is not fourth in combat skill order")
+	_assert_true(ordered[4] == back.get("parts_skills")[0], "BACK skill is not fifth in combat skill order")
+	_assert_true(ordered[5] == leg.get("parts_skills")[0], "LEG skill is not sixth in combat skill order")
+	print("P0 OK: combat skill order is stable")
 
 
 func _check_core_part_abilities() -> void:

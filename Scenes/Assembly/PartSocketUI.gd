@@ -4,12 +4,14 @@ extends Panel
 # ── 시그널 ──────────────────────────────
 signal part_unequipped(slot: CoreData.CoreSlot)
 signal part_dropped(part: PartsData, slot: CoreData.CoreSlot)
+signal socket_selected(slot: CoreData.CoreSlot)
 
 # ── 익스포트 ─────────────────────────────
 @export var slot_type: CoreData.CoreSlot = CoreData.CoreSlot.ARM_L
 
 # ── 내부 변수 ────────────────────────────
 var equipped_part: PartsData = null
+var _is_selected: bool = false
 
 # 아이콘 참조 (내부에서 직접 생성)
 var _icon_rect: TextureRect
@@ -30,6 +32,7 @@ var _style_empty: StyleBoxFlat
 var _style_filled: StyleBoxFlat
 var _style_hover: StyleBoxFlat
 var _style_reject: StyleBoxFlat
+var _style_selected: StyleBoxFlat
 
 # ── 초기화 ──────────────────────────────
 func _ready() -> void:
@@ -50,7 +53,7 @@ func on_drag_inventory_part(part: PartsData) -> void:
 	if part == null:
 		end_drag_inventory_highlight()
 		return
-	if _part_type_matches(part.parts_type):
+	if not part.is_broken() and _part_type_matches(part.parts_type):
 		_apply_style(_style_hover)
 	else:
 		_refresh_display()
@@ -102,12 +105,17 @@ func clear_equipped() -> void:
 	equipped_part = null
 	_refresh_display()
 
+
+func set_selected(selected: bool) -> void:
+	_is_selected = selected
+	_refresh_display()
+
 # ── 드래그앤드롭 수신 ────────────────────
 func _can_drop_data(_pos: Vector2, data: Variant) -> bool:
 	if not data is Dictionary or not data.has("part"):
 		return false
 	var part: PartsData = data["part"]
-	var compatible: bool = _part_type_matches(part.parts_type)
+	var compatible: bool = not part.is_broken() and _part_type_matches(part.parts_type)
 	if compatible:
 		_apply_style(_style_hover)
 	else:
@@ -118,13 +126,12 @@ func _drop_data(_pos: Vector2, data: Variant) -> void:
 	var part: PartsData = data["part"]
 	part_dropped.emit(part, slot_type)
 
-# ── 클릭으로 장착 해제 ───────────────────
+# ── 클릭 선택 ──────────────────────────────
 func _on_gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
-			if equipped_part != null:
-				part_unequipped.emit(slot_type)
+			socket_selected.emit(slot_type)
 
 # ── 드래그 이탈 시: 인벤 드래그 중이면 전역 하이라이트 규칙으로 복귀 (AssemblyScene이 DRAG_END에서 정리)
 func _notification(what: int) -> void:
@@ -170,6 +177,8 @@ func _refresh_display() -> void:
 			marker_color = Color.TRANSPARENT
 		_refresh_condition_marker(marker_color)
 		_apply_style(_style_filled)
+	if _is_selected:
+		_apply_style(_style_selected)
 
 
 func _refresh_condition_marker(color: Color) -> void:
@@ -230,6 +239,11 @@ func _build_styles() -> void:
 	_style_reject.bg_color = COLOR_REJECT
 	_style_reject.border_color = COLOR_BORDER_REJECT
 	_style_reject.set_border_width_all(3)
+
+	_style_selected = _style_empty.duplicate()
+	_style_selected.bg_color = Color(0.30, 0.28, 0.16, 1.0)
+	_style_selected.border_color = Color(1.0, 0.82, 0.35, 1.0)
+	_style_selected.set_border_width_all(3)
 
 func _apply_style(style: StyleBoxFlat) -> void:
 	add_theme_stylebox_override("panel", style)

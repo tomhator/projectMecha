@@ -59,18 +59,31 @@ func _short_card_title(part: PartsData) -> String:
 func _show_combat_rewards(grade: PartsData.PartsGrade, credit_amount: int) -> void:
 	var defeated_count: int = DungeonManager.get_last_combat_defeated_enemy_count()
 	var drops: Array[PartsData] = RewardManager.generate_combat_drops(grade, defeated_count)
+	var acquired_count: int = 0
+	var lost_count: int = 0
 	title_label.text = "전투 보상 — 격파 %d기  |  드롭 %d개  |  크레딧 +%d" % [
 		defeated_count,
 		drops.size(),
 		credit_amount
 	]
 	for part: PartsData in drops:
-		GameState.add_to_inventory(part)
+		var acquired: bool = GameState.add_to_inventory(part)
+		if acquired:
+			acquired_count += 1
+		else:
+			lost_count += 1
 		var btn: Button = Button.new()
-		btn.text = _short_card_title(part)
+		btn.text = "%s\n%s" % [_short_card_title(part), "획득" if acquired else "유실"]
 		btn.custom_minimum_size = CARD_SIZE
 		btn.disabled = true
 		reward_container.add_child(btn)
+	if lost_count > 0:
+		title_label.text = "전투 보상 — 격파 %d기  |  획득 %d개  |  유실 %d개  |  크레딧 +%d" % [
+			defeated_count,
+			acquired_count,
+			lost_count,
+			credit_amount
+		]
 	if drops.is_empty():
 		var label := Label.new()
 		label.text = "드롭 파츠 없음"
@@ -96,7 +109,9 @@ func _on_popup_close() -> void:
 func _on_take_reward() -> void:
 	if _pending_part == null:
 		return
-	GameState.add_to_inventory(_pending_part)
+	var acquired: bool = GameState.add_to_inventory(_pending_part)
+	if not acquired:
+		title_label.text = "인벤토리가 가득 차서 보상을 획득하지 못했습니다."
 	_pending_part = null
 	_popup.hide()
 	_set_buttons_disabled(true)

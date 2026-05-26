@@ -17,18 +17,12 @@ var _skill_to_part: Dictionary = {}  # SkillData → PartsData (코어 스킬은
 var _serious_punch_pending: bool = false
 
 func setup() -> void:
-	available_skills.clear()
 	_skill_to_part.clear()
-	if GameState.active_basic_attack != null:
-		available_skills.append(GameState.active_basic_attack)
-	if GameState.active_part_ability != null:
-		available_skills.append(GameState.active_part_ability)
-	for slot: CoreData.CoreSlot in GameState.equipped_parts:
-		var part: PartsData = GameState.equipped_parts[slot]
+	available_skills = GameState.get_combat_skill_order()
+	for skill: SkillData in available_skills:
+		var part: PartsData = GameState.get_part_for_combat_skill(skill)
 		if part != null:
-			for skill: SkillData in part.parts_skills:
-				available_skills.append(skill)
-				_skill_to_part[skill] = part
+			_skill_to_part[skill] = part
 
 func get_available_skills() -> Array[SkillData]:
 	return available_skills.filter(func(s: SkillData) -> bool:
@@ -218,10 +212,11 @@ func _use_emergency_swap() -> void:
 		if existing.durability > 0:
 			existing.durability = 0
 			EventBus.part_durability_changed.emit(existing)
-		GameState.inventory.append(existing)
-	GameState.inventory.erase(incoming)
+	if not GameState.remove_from_inventory(incoming):
+		return
+	if existing != null:
+		GameState.add_to_inventory(existing)
 	GameState.equip_part(incoming, slot)
-	EventBus.inventory_changed.emit(GameState.inventory)
 	setup()
 	print("  > [긴급 교체] %s 장착" % incoming.parts_name)
 
@@ -247,8 +242,7 @@ func _has_broken_part_to_consume() -> bool:
 func _consume_broken_part() -> PartsData:
 	for part: PartsData in GameState.inventory:
 		if part != null and part.is_broken():
-			GameState.inventory.erase(part)
-			EventBus.inventory_changed.emit(GameState.inventory)
+			GameState.remove_from_inventory(part)
 			print("  > [파손 파츠 소모] %s" % part.parts_name)
 			return part
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
