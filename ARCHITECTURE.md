@@ -22,6 +22,7 @@
 
 - `Asset/`: 모델, 텍스처, 오디오 등 리소스 파일.
 - `Docs/`: 기획서 및 기술 문서.
+    - `AI-COLLABORATION.md`: IDE/AI 도구 독립 협업 규칙 및 검증 하네스 사용법.
     - `UI/`: UI 마스터 스펙 (`HUD.md` 등).
     - `WorkNote/`: 작업 일지 (`YYYY-MM-DD.md`).
     - `TODO/`: 활성 backlog (`TODO-NEXT.md`). 완료·이월 목록은 `TODO/old/`.
@@ -90,7 +91,7 @@
 현재 프로젝트에서 사용 중인 핵심 데이터 구조는 다음과 같습니다:
 - **CoreData:** 메카의 기본 HP, 하중 제한, 행동 횟수 등을 정의.
 - **PartsData:** 슬롯 타입·템플릿 등급·`drop_weight`/`affix_pool`·롤 결과(`stat_multiplier`, `rolled_affixes`)·`max_durability`/`durability`·`is_worn()`/`is_broken()`/`grade()` 및 스킬 참조.
-- **SkillData:** 피해량, 쿨다운, 대상 지정(자기/적), 부가 효과(버프/디버프)를 정의.
+- **SkillData:** 피해량, AP 비용, 대상 지정(자기/적), 부가 효과(버프/디버프), 특수 동작을 정의.
 - **EnemyData:** 적의 HP, 쉴드, 공격 배율, 티어, 스킬 목록을 정의.
 
 ---

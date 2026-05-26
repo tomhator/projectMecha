@@ -14,7 +14,7 @@ status: active
 
 ## 다음 착수 추천
 
-- [ ] **스킬 쿨다운 시스템 스펙 리뷰 → 구현** — `SkillData`의 쿨다운 필드와 `TurnManager` 턴 진행을 연결하고, `MechaEntity.get_available_skills()`와 전투 UI 비활성 표시까지 한 번에 정리한다. 전투/엔티티/UI 3개 도메인에 걸치므로 구현 전 변경 파일·영향 범위 계획을 먼저 확정한다.
+- [ ] **멀티타겟 스킬 스펙 리뷰 → 구현** — `SkillData.multi_target` 필드와 `TurnManager.on_skill_selected`의 타겟 전달 방식을 연결하고, 전투 UI 타겟팅 표시까지 함께 정리한다. 전투/UI 2개 도메인에 걸치므로 구현 전 변경 파일·영향 범위 계획을 먼저 확정한다.
 
 ---
 
@@ -103,7 +103,6 @@ status: active
 
 ## P2 — CEO Review 도출 (2026-05-21)
 
-- [ ] **스킬 쿨다운 시스템** — TurnManager 턴마다 쿨다운 감소, get_available_skills 쿨다운 필터. SkillData.buff_turns 필드·EventBus 신호 이미 준비됨. 공수: S.
 - [ ] **멀티타겟 스킬 (AoE)** — SkillData.multi_target 필드 존재. TurnManager.on_skill_selected에서 적 전체를 target으로 전달하는 로직 필요. 공수: M.
 - [ ] **_affix_bonus_sum 리팩터링** — affix 10개 이상 도달 시 if-else 체인 → Dictionary/Callable 기반 매핑. `MechaEntity.gd:_affix_bonus_sum()`. 공수: S.
 

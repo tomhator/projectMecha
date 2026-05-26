@@ -14,7 +14,6 @@ signal payload_changed(entity: Node, new_payload: float, max_payload: float)
 
 signal action_count_changed(entity: Node, new_action_count: int)
 signal skill_used(entity: Node, skill: SkillData)
-signal skill_cooldown_changed(entity: Node, skill: SkillData, new_cooldown: int)
 signal skill_buff_applied(entity: Node, skill: SkillData, buff_type: SkillData.SkillBuff)
 signal skill_debuff_applied(entity: Node, skill: SkillData, debuff_type: SkillData.SkillDebuff)
 signal skill_target_changed(entity: Node, skill: SkillData, target: SkillData.SkillTarget)
