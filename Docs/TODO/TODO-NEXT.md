@@ -14,7 +14,7 @@ status: active
 
 ## 다음 착수 추천
 
-- [ ] **매립지 엘리트 역할 병종 복구** — 압축기(Anchor+Striker), 회수 견인기(Breaker+Support) v1 구현.
+- [ ] **affix 보정 체감 검증** — `backdoor`, `undefined_behavior` 등 조건부 affix가 실제 전투에서 의도대로 체감되는지 확인.
 
 ---
 
@@ -77,7 +77,7 @@ status: active
 - [ ] **파츠·스킬·적 실제 아이콘/스프라이트 연결** — placeholder 비주얼을 `PartsData.parts_icon`, `SkillData.skill_icon`, `EnemyData.enemy_sprite` 자산으로 교체
 - [x] **역할 기반 적 리소스 재구축** — 매립지 Striker/Breaker/Support/Caller 일반 병종 + 호출 전용 잡졸 v1 구현 (2026-05-22)
 - [x] **Caller 소환 정책 확정** — 전투당 1회 호출, 호출 적 승리 조건 포함, 파츠 드롭 카운트 제외 (2026-05-22)
-- [ ] **매립지 엘리트 역할 병종 복구** — 압축기(Anchor+Striker), 회수 견인기(Breaker+Support) v1 구현
+- [x] **매립지 엘리트 역할 병종 복구** — 압축기(Anchor+Striker), 회수 견인기(Breaker+Support) v1 구현 (2026-05-26)
 - [ ] 수집가: 팔 파괴 시 드롭 여부 ([[EnemySystem]] §미결)
 - [ ] 수집가: 팔 5종 시각 에셋 방향
 - [ ] 수집가: 보스 BGM / 연출

@@ -16,7 +16,10 @@ const ENEMY_POOL_NORMAL: Array[String] = [
     "res://Resources/Enemies/enemy_patch_drone.tres",
     "res://Resources/Enemies/enemy_signal_dummy.tres",
 ]
-const ENEMY_POOL_ELITE: Array[String] = []
+const ENEMY_POOL_ELITE: Array[String] = [
+    "res://Resources/Enemies/enemy_compactor.tres",
+    "res://Resources/Enemies/enemy_recovery_tow.tres",
+]
 const ENEMY_POOL_BOSS: Array[String] = [
     "res://Resources/Enemies/enemy_collector.tres",
 ]

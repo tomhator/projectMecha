@@ -4,6 +4,7 @@ extends SceneTree
 const SLOT_ARM_L: int = 0
 const SLOT_ARM_R: int = 1
 const SLOT_BACK: int = 2
+const SLOT_LEG: int = 3
 const TARGET_SLOT_NONE: int = -1
 const SKILL_TYPE_PASSIVE: int = 3
 
@@ -24,6 +25,7 @@ func _initialize() -> void:
 	await _check_breaker_arm_snipe()
 	await _check_support_ally_targets()
 	await _check_caller_summon_flow()
+	await _check_junkyard_elites()
 	await _check_collector_protection_and_exposure()
 	await _check_multi_target_player_skill()
 	if _failed:
@@ -437,6 +439,106 @@ func _check_caller_summon_flow() -> void:
 		_dispose_node(enemy)
 	await process_frame
 	print("P0 OK: Caller one-shot summon and drop exclusion")
+
+
+func _check_junkyard_elites() -> void:
+	_reset_run()
+	var dungeon_manager := root.get_node_or_null("DungeonManager")
+	_assert_true(dungeon_manager != null, "Missing DungeonManager autoload")
+	if dungeon_manager != null:
+		var previous_room = dungeon_manager.call("get_current_room")
+		var elite_room := RoomData.new()
+		elite_room.room_type = RoomData.RoomType.BATTLE_ELITE
+		dungeon_manager.set("_current_choice", elite_room)
+		var elite_pool_pick: Array = dungeon_manager.call("get_enemies_for_current_room")
+		_assert_true(elite_pool_pick.size() == 1, "Junkyard elite room should pick exactly one enemy")
+		if not elite_pool_pick.is_empty():
+			_assert_true((elite_pool_pick[0] as EnemyData).enemy_tier == EnemyData.EnemyTier.ELITE, "Junkyard elite room picked a non-elite enemy")
+		dungeon_manager.set("_current_choice", previous_room)
+	var mecha := _new_mecha()
+	var compactor := _enemy_from_data("res://Resources/Enemies/enemy_compactor.tres")
+	var recovery_tow := _enemy_from_data("res://Resources/Enemies/enemy_recovery_tow.tres")
+	if compactor == null or recovery_tow == null:
+		_dispose_node(mecha)
+		_dispose_node(compactor)
+		_dispose_node(recovery_tow)
+		return
+	root.add_child(mecha)
+	root.add_child(compactor)
+	root.add_child(recovery_tow)
+	mecha.call("setup")
+	compactor.call("setup")
+	recovery_tow.call("setup")
+	_assert_true(int(compactor.get("enemy_tier")) == 1, "Compactor is not ELITE tier")
+	_assert_true(int(recovery_tow.get("enemy_tier")) == 1, "Recovery tow is not ELITE tier")
+	_assert_true(float(compactor.get("enemy_max_shield")) >= 30.0, "Compactor shield is too low for Anchor role")
+
+	var compactor_slam := _load_resource("res://Resources/Skills/skill_compactor_slam.tres")
+	var compactor_reinforce := _load_resource("res://Resources/Skills/skill_compactor_reinforce.tres")
+	if compactor_slam == null or compactor_reinforce == null:
+		_dispose_node(mecha)
+		_dispose_node(compactor)
+		_dispose_node(recovery_tow)
+		return
+	_game_state().set("current_shield", 0.0)
+	var hp_before: float = float(_game_state().get("current_hp"))
+	compactor.get("next_actions").clear()
+	compactor.get("next_actions").append(compactor_slam)
+	compactor.call("execute_actions", mecha, [compactor, recovery_tow])
+	_assert_true(float(_game_state().get("current_hp")) < hp_before, "Compactor heavy attack did not damage player HP")
+	compactor.set("current_shield", 0.0)
+	compactor.get("next_actions").clear()
+	compactor.get("next_actions").append(compactor_reinforce)
+	compactor.call("execute_actions", mecha, [compactor, recovery_tow])
+	_assert_true(float(compactor.get("current_shield")) > 0.0, "Compactor reinforce did not restore shield")
+
+	var leg := _load_part("res://Resources/Parts/leg/leg_strider1.tres")
+	var back := _load_part("res://Resources/Parts/back/back_fr1.tres")
+	var leg_drag := _load_resource("res://Resources/Skills/skill_tow_leg_drag.tres")
+	var back_yank := _load_resource("res://Resources/Skills/skill_tow_back_yank.tres")
+	var recover_shield := _load_resource("res://Resources/Skills/skill_scrap_recover_shield.tres")
+	if leg == null or back == null or leg_drag == null or back_yank == null or recover_shield == null:
+		_dispose_node(mecha)
+		_dispose_node(compactor)
+		_dispose_node(recovery_tow)
+		return
+	leg.set("durability", 3)
+	back.set("durability", 3)
+	_set_equipped_part(SLOT_LEG, leg)
+	_set_equipped_part(SLOT_BACK, back)
+	mecha.call("setup")
+	recovery_tow.get("next_actions").clear()
+	recovery_tow.get("next_actions").append(leg_drag)
+	recovery_tow.call("_publish_snipe_preview")
+	_assert_true(int(recovery_tow.get("_preview_target_slot")) == SLOT_LEG, "Recovery tow LEG preview did not target LEG")
+	var leg_durability_before: int = int(leg.get("durability"))
+	recovery_tow.call("execute_actions", mecha, [compactor, recovery_tow])
+	_assert_true(int(leg.get("durability")) == leg_durability_before - 1, "Recovery tow LEG drag did not reduce durability")
+
+	recovery_tow.get("next_actions").clear()
+	recovery_tow.get("next_actions").append(back_yank)
+	recovery_tow.call("_publish_snipe_preview")
+	_assert_true(int(recovery_tow.get("_preview_target_slot")) == SLOT_BACK, "Recovery tow BACK preview did not target BACK")
+	var back_durability_before: int = int(back.get("durability"))
+	recovery_tow.call("execute_actions", mecha, [compactor, recovery_tow])
+	_assert_true(int(back.get("durability")) == back_durability_before - 1, "Recovery tow BACK yank did not reduce durability")
+
+	var shield_ally := _new_enemy()
+	root.add_child(shield_ally)
+	shield_ally.set("enemy_name", "엘리트 지원 검증 적")
+	shield_ally.set("enemy_max_hp", 20.0)
+	shield_ally.set("enemy_max_shield", 20.0)
+	shield_ally.set("current_hp", 20.0)
+	shield_ally.set("current_shield", 0.0)
+	recovery_tow.get("next_actions").clear()
+	recovery_tow.get("next_actions").append(recover_shield)
+	recovery_tow.call("execute_actions", mecha, [compactor, recovery_tow, shield_ally])
+	_assert_true(float(shield_ally.get("current_shield")) > 0.0, "Recovery tow support shield did not protect an ally")
+
+	for node in [mecha, compactor, recovery_tow, shield_ally]:
+		_dispose_node(node)
+	await process_frame
+	print("P0 OK: Junkyard elite compactor and recovery tow")
 
 
 func _check_collector_protection_and_exposure() -> void:
