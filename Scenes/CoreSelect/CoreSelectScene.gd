@@ -31,18 +31,18 @@ const RESEARCH_GRID_SEPARATION: int = 10
 const SORTIE_PREVIEW_WIDTH: float = 316.0
 const SORTIE_CONTROLS_WIDTH: float = 936.0
 const CORE_PREVIEW_TIER_SLOTS: Dictionary = {
-	1: "top_cover",
-	2: "front_hood",
-	3: "side_armor",
+	1: "sensor_mast",
+	2: "cockpit_shell",
+	3: "shoulder_frame",
 	4: "rear_pack",
-	5: "core_spine",
+	5: "front_plating",
 }
 const CORE_PREVIEW_SLOT_LABELS: Dictionary = {
-	"top_cover": "상판 덮개",
-	"front_hood": "전면 후드",
-	"side_armor": "측면 장갑",
-	"rear_pack": "후방 팩",
-	"core_spine": "코어 스파인",
+	"sensor_mast": "상부 센서 마스트",
+	"cockpit_shell": "조종석 장갑",
+	"shoulder_frame": "견부 프레임",
+	"rear_pack": "후방 장비팩",
+	"front_plating": "전면 장갑판",
 }
 
 @onready var cards_row: HBoxContainer = $MarginRoot/CenterArea/CardsRow
@@ -215,7 +215,7 @@ func _make_core_preview() -> Panel:
 	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var body: VBoxContainer = panel.get_child(0) as VBoxContainer
 	body.add_child(_make_card_title("현재 코어 외형"))
-	body.add_child(_make_wrapped_label("이번 출격에 장착한 티어 외장을 기준으로 표시한다.", 11))
+	body.add_child(_make_wrapped_label("중앙 조종석과 그 주변 외장 슬롯을 이번 출격 노드 기준으로 표시한다.", 11))
 
 	var frame := VBoxContainer.new()
 	frame.name = "CorePreviewFrame"
@@ -242,8 +242,8 @@ func _make_core_preview_slot(tier: int) -> Panel:
 	var slot_name: String = str(CORE_PREVIEW_SLOT_LABELS.get(slot_key, slot_key))
 	var variant_text: String = "비어 있음"
 	if node != null:
-		slot_name = str(CORE_PREVIEW_SLOT_LABELS.get(node.visual_slot, node.visual_slot))
-		variant_text = "%s [%s] / %s" % [node.display_name, TRACK_LABELS[node.track], node.visual_variant]
+		slot_name = _core_slot_label(node.visual_slot)
+		variant_text = "%s [%s] / %s" % [node.display_name, TRACK_LABELS[node.track], _core_variant_label(node)]
 	body.add_child(_make_card_title("T%d %s" % [tier, slot_name]))
 	body.add_child(_make_wrapped_label(variant_text, 10))
 	return panel
@@ -255,7 +255,7 @@ func _make_research_card(node: AbilityTreeNode) -> Panel:
 	var body: VBoxContainer = panel.get_child(0) as VBoxContainer
 	body.add_child(_make_card_title("%s [%s]" % [node.display_name, TRACK_LABELS[node.track]]))
 	body.add_child(_make_wrapped_label(node.description, 11))
-	body.add_child(_make_wrapped_label("외장: %s / %s" % [node.visual_slot, node.visual_variant], 10))
+	body.add_child(_make_wrapped_label("외장: %s / %s" % [_core_slot_label(node.visual_slot), _core_variant_label(node)], 10))
 	body.add_child(_make_wrapped_label(node.level_five_bonus_text, 10))
 
 	var level: int = GameState.get_tree_node_level(node.node_id)
@@ -361,7 +361,7 @@ func _make_loadout_preview() -> Panel:
 		if node == null:
 			visuals.append("T%d 비움" % tier)
 		else:
-			visuals.append("T%d %s -> %s" % [tier, node.display_name, node.visual_slot])
+			visuals.append("T%d %s -> %s" % [tier, node.display_name, _core_slot_label(node.visual_slot)])
 	body.add_child(_make_wrapped_label("코어 외장: %s" % " | ".join(visuals), 11))
 	body.add_child(_make_wrapped_label(_stat_preview_text(), 11))
 	return panel
@@ -386,6 +386,16 @@ func _stat_preview_text() -> String:
 	return "트리 보정: 공격 +%d%% | HP +%.0f | 쉴드 +%.0f | 행동력 +%d | 하중 +%.0f" % [
 		roundi(attack_bonus * 100.0), hp_bonus, shield_bonus, action_bonus, payload_bonus
 	]
+
+
+func _core_slot_label(visual_slot: String) -> String:
+	return str(CORE_PREVIEW_SLOT_LABELS.get(visual_slot, visual_slot))
+
+
+func _core_variant_label(node: AbilityTreeNode) -> String:
+	if node == null:
+		return ""
+	return "%s형 모듈" % TRACK_LABELS[node.track]
 
 
 func _make_card_panel(minimum_size: Vector2, bg_color: Color) -> Panel:

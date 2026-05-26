@@ -1,7 +1,7 @@
 ---
 tags: [project/project-mecha, document/todo]
 date: 2026-05-21
-updated: 2026-05-22
+updated: 2026-05-26
 status: active
 ---
 
@@ -9,6 +9,12 @@ status: active
 
 > `TODO/old/`의 날짜별 TODO, `DEV-GUIDE/old/DEV-GUIDE-2026-05-21` 검증 체크리스트, `SESSION_CONTEXT/old/` 미완 항목을 **하나로 통합**한 활성 작업 목록.  
 > 완료 시 여기서 체크하고, 필요하면 아카이브 TODO·기획 문서에도 반영.
+
+---
+
+## 다음 착수 추천
+
+- [ ] **스킬 쿨다운 시스템 스펙 리뷰 → 구현** — `SkillData`의 쿨다운 필드와 `TurnManager` 턴 진행을 연결하고, `MechaEntity.get_available_skills()`와 전투 UI 비활성 표시까지 한 번에 정리한다. 전투/엔티티/UI 3개 도메인에 걸치므로 구현 전 변경 파일·영향 범위 계획을 먼저 확정한다.
 
 ---
 
@@ -66,7 +72,7 @@ status: active
 
 - [x] **어빌리티 트리 재기획** — 5티어 연구/출격 로드아웃, 기본 공격, 파츠 활용 어빌리티 구조로 재설계. 기본 공격이 파손 시 전투 안전판을 맡는다. (2026-05-22) [[Docs/AbilityTreeSystem]]
 - [x] **코어 설계 화면 레이아웃 정리** — 연구 노드 셀 정사각형 중심 정렬, 출격 준비 좌우 분할, 선택 외장 기반 코어 프리뷰 구현. (2026-05-22) [[Docs/superpowers/specs/2026-05-22-core-select-layout-preview-design]]
-- [ ] **어빌리티 트리 5레벨 보너스 밸런싱** — 15개 노드의 효과 축을 실제 파츠 운영 패시브로 확정하고 수치 검증. [[Docs/AbilityTreeSystem]]
+- [x] **어빌리티 트리 5레벨 보너스 밸런싱** — 15개 노드의 5레벨 역할 문구와 누적 수치 기준 확정. 행동력 보너스는 5레벨 도달 시 +1로 보정. (2026-05-26) [[Docs/AbilityTreeSystem]]
 - [ ] **파츠 조립 화면 인벤토리 재설계** — 인벤토리 구조·UX 전반 재검토 필요
 - [ ] **파츠·스킬·적 실제 아이콘/스프라이트 연결** — placeholder 비주얼을 `PartsData.parts_icon`, `SkillData.skill_icon`, `EnemyData.enemy_sprite` 자산으로 교체
 - [x] **역할 기반 적 리소스 재구축** — 매립지 Striker/Breaker/Support/Caller 일반 병종 + 호출 전용 잡졸 v1 구현 (2026-05-22)

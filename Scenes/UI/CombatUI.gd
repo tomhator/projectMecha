@@ -231,11 +231,11 @@ func _refresh_mech_layer(slot: CoreData.CoreSlot) -> void:
 
 func _build_core_visual_layers() -> void:
 	var specs: Dictionary = {
-		"top_cover": [Vector2(48, 24), Vector2(38, 10)],
-		"front_hood": [Vector2(72, 48), Vector2(24, 24)],
-		"side_armor": [Vector2(34, 48), Vector2(12, 42)],
-		"rear_pack": [Vector2(28, 30), Vector2(10, 34)],
-		"core_spine": [Vector2(56, 36), Vector2(8, 62)],
+		"sensor_mast": [Vector2(58, 12), Vector2(18, 18)],
+		"cockpit_shell": [Vector2(54, 42), Vector2(42, 28)],
+		"shoulder_frame": [Vector2(30, 34), Vector2(74, 18)],
+		"rear_pack": [Vector2(18, 28), Vector2(18, 42)],
+		"front_plating": [Vector2(64, 70), Vector2(28, 26)],
 	}
 	for visual_slot: String in specs:
 		var spec: Array = specs[visual_slot]

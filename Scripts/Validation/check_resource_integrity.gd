@@ -6,6 +6,13 @@ var _seen_parts_ids: Dictionary = {}
 var _seen_enemy_ids: Dictionary = {}
 var _ability_node_ids: Dictionary = {}
 var _ability_tier_counts: Dictionary = {}
+var _allowed_ability_visual_slots: Dictionary = {
+	"sensor_mast": true,
+	"cockpit_shell": true,
+	"shoulder_frame": true,
+	"rear_pack": true,
+	"front_plating": true,
+}
 
 
 func _initialize() -> void:
@@ -140,6 +147,12 @@ func _check_ability_tree() -> void:
 			_fail("Ability node has invalid research cost: %s" % path)
 		if node.visual_slot.strip_edges().is_empty() or node.visual_variant.strip_edges().is_empty():
 			_fail("Ability node missing visual metadata: %s" % path)
+		if not _allowed_ability_visual_slots.has(node.visual_slot):
+			_fail("Ability node has unknown visual slot '%s': %s" % [node.visual_slot, path])
+		if node.level_five_bonus_text.strip_edges().is_empty():
+			_fail("Ability node missing level five bonus text: %s" % path)
+		if node.level_five_bonus_text.contains("예정"):
+			_fail("Ability node still has placeholder level five bonus text: %s" % path)
 		_ability_tier_counts[node.tier] = int(_ability_tier_counts.get(node.tier, 0)) + 1
 
 	for tier: int in range(1, 6):

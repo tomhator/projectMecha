@@ -38,7 +38,9 @@ func shield_bonus_at_level(level: int) -> float:
 
 
 func action_bonus_at_level(level: int) -> int:
-	return stat_action_count_bonus * clampi(level, 1, 5)
+	if level < 5:
+		return 0
+	return stat_action_count_bonus
 
 
 func payload_bonus_at_level(level: int) -> float:
