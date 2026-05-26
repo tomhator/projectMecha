@@ -14,7 +14,7 @@ status: active
 
 ## 다음 착수 추천
 
-- [ ] **`undefined_behavior` 적용 경로 보강 후 affix 체감 검증** — `backdoor`는 headless 검증에 포함되어 있으나, `undefined_behavior_modifier` 턴 시작 갱신 경로를 먼저 확인·보강한 뒤 조건부 affix가 실제 전투에서 의도대로 체감되는지 플레이테스트.
+- [ ] **스킬 타입별 파티클 / 색상 깜빡임** — 공격·방어·회복 스킬 사용 시 전투 UI 피드백을 구분해 타격감과 판독성을 높인다.
 
 ---
 
@@ -53,7 +53,7 @@ status: active
 - [x] 탈취 가능 ARM 없을 때 소타격(10)만 (2026-05-22 코드 경로 확인)
 
 ### UI·Affix (세션 컨텍스트 이월)
-- [ ] `undefined_behavior` 적용 경로 보강 + affix 보정 체감 검증 (backdoor / undefined_behavior 등)
+- [x] `undefined_behavior` 적용 경로 보강 + affix 보정 검증 (backdoor / undefined_behavior 등) (2026-05-26 P0 headless 검증)
 - [x] `has_any_debuff` API 도입 → backdoor affix +25% 활성화 완료 (2026-05-21)
 
 ---
@@ -104,7 +104,7 @@ status: active
 ## P2 — CEO Review 도출 (2026-05-21)
 
 - [x] **멀티타겟 스킬 (AoE)** — `multi_target = true` 적 대상 스킬은 타겟 가능한 적 최대 4명에게 총 피해를 균등 분배. (2026-05-26)
-- [ ] **_affix_bonus_sum 리팩터링** — affix 10개 이상 도달 시 if-else 체인 → Dictionary/Callable 기반 매핑. `MechaEntity.gd:_affix_bonus_sum()`. 공수: S.
+- [x] **_affix_bonus_sum 리팩터링** — 정적 보너스 Dictionary와 조건/런타임 보너스 헬퍼로 분리. `MechaEntity.gd:_affix_bonus_sum()`. (2026-05-26)
 
 ---
 

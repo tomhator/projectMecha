@@ -2,6 +2,16 @@ extends Node
 
 class_name MechaEntity
 
+const UNDEFINED_BEHAVIOR_META: String = "undefined_behavior_modifier"
+const UNDEFINED_BEHAVIOR_MIN: float = -0.20
+const UNDEFINED_BEHAVIOR_MAX: float = 0.60
+const COUNTER_INSTINCT_META: String = "counter_instinct_active"
+const STATIC_OUTPUT_AFFIX_BONUSES: Dictionary = {
+	"mindless": -0.10,
+	"greedy": 0.10,
+	"overload": 0.25,
+}
+
 var available_skills: Array[SkillData] = []
 var _skill_to_part: Dictionary = {}  # SkillData → PartsData (코어 스킬은 null)
 var _serious_punch_pending: bool = false
@@ -31,6 +41,10 @@ func get_available_skills() -> Array[SkillData]:
 			return false
 		return true
 	)
+
+
+func on_player_turn_started() -> void:
+	_refresh_turn_start_affixes()
 
 
 func get_display_skills() -> Array[SkillData]:
@@ -301,6 +315,22 @@ func _is_low_hp_state() -> bool:
 	return (GameState.current_hp / GameState.current_core.core_hp) <= 0.3
 
 
+func _refresh_turn_start_affixes() -> void:
+	for slot: CoreData.CoreSlot in GameState.equipped_parts:
+		var part: PartsData = GameState.equipped_parts[slot]
+		_refresh_undefined_behavior(part)
+
+
+func _refresh_undefined_behavior(part: PartsData) -> void:
+	if part == null:
+		return
+	if _has_affix(part, "undefined_behavior") and not part.is_broken():
+		part.set_meta(UNDEFINED_BEHAVIOR_META, randf_range(UNDEFINED_BEHAVIOR_MIN, UNDEFINED_BEHAVIOR_MAX))
+		return
+	if part.has_meta(UNDEFINED_BEHAVIOR_META):
+		part.remove_meta(UNDEFINED_BEHAVIOR_META)
+
+
 func _affix_bonus_sum(part: PartsData, target: Node, consume_temp: bool) -> float:
 	var targets: Array[Node] = []
 	if target != null:
@@ -311,38 +341,65 @@ func _affix_bonus_sum(part: PartsData, target: Node, consume_temp: bool) -> floa
 func _affix_bonus_sum_for_targets(part: PartsData, targets: Array, consume_temp: bool) -> float:
 	# 파괴된 파츠는 Affix 효과 없음
 	# TODO: zombie_process affix 구현 시 → and not _has_affix(part, "zombie_process")
-	if part != null and part.is_broken():
+	if part == null or part.is_broken():
 		return 0.0
 	var sum: float = 0.0
-	if _has_affix(part, "mindless"):
-		sum -= 0.10
-	if _has_affix(part, "greedy"):
-		sum += 0.10
-	if _has_affix(part, "overload"):
-		sum += 0.25
+	sum += _static_affix_bonus_sum(part)
+	sum += _conditional_affix_bonus_sum(part, targets)
+	sum += _runtime_affix_bonus_sum(part, consume_temp)
+	return sum
+
+
+func _static_affix_bonus_sum(part: PartsData) -> float:
+	var sum: float = 0.0
+	for affix_id: String in STATIC_OUTPUT_AFFIX_BONUSES:
+		if _has_affix(part, affix_id):
+			sum += float(STATIC_OUTPUT_AFFIX_BONUSES[affix_id])
+	return sum
+
+
+func _conditional_affix_bonus_sum(part: PartsData, targets: Array) -> float:
+	var sum: float = 0.0
 	if _has_affix(part, "kernel_panic") and _is_low_hp_state():
 		sum += 0.30
 	if _has_affix(part, "backdoor") and _any_target_has_debuff(targets):
 		sum += 0.25
+	return sum
 
-	if part.has_meta("undefined_behavior_modifier"):
-		var turn_mod: Variant = part.get_meta("undefined_behavior_modifier")
-		if typeof(turn_mod) in [TYPE_FLOAT, TYPE_INT]:
-			sum += float(turn_mod)
 
+func _runtime_affix_bonus_sum(part: PartsData, consume_temp: bool) -> float:
+	var sum: float = 0.0
+	sum += _undefined_behavior_bonus(part)
+	sum += _counter_instinct_bonus(part, consume_temp)
+	sum += _serious_punch_bonus(consume_temp)
+	return sum
+
+
+func _undefined_behavior_bonus(part: PartsData) -> float:
+	if not part.has_meta(UNDEFINED_BEHAVIOR_META):
+		return 0.0
+	var turn_mod: Variant = part.get_meta(UNDEFINED_BEHAVIOR_META)
+	if typeof(turn_mod) == TYPE_FLOAT or typeof(turn_mod) == TYPE_INT:
+		return float(turn_mod)
+	return 0.0
+
+
+func _counter_instinct_bonus(part: PartsData, consume_temp: bool) -> float:
 	if _has_affix(part, "counter_instinct"):
-		var active: bool = bool(part.get_meta("counter_instinct_active", false))
+		var active: bool = bool(part.get_meta(COUNTER_INSTINCT_META, false))
 		if active:
-			sum += 0.20
 			if consume_temp:
-				part.set_meta("counter_instinct_active", false)
+				part.set_meta(COUNTER_INSTINCT_META, false)
+			return 0.20
+	return 0.0
 
+
+func _serious_punch_bonus(consume_temp: bool) -> float:
 	if _serious_punch_pending:
-		sum += 1.0
 		if consume_temp:
 			_serious_punch_pending = false
-
-	return sum
+		return 1.0
+	return 0.0
 
 
 func _any_target_has_debuff(targets: Array) -> bool:
@@ -374,7 +431,7 @@ func _activate_counter_instinct_on_hit() -> void:
 	for slot: CoreData.CoreSlot in GameState.equipped_parts:
 		var part: PartsData = GameState.equipped_parts[slot]
 		if _has_affix(part, "counter_instinct"):
-			part.set_meta("counter_instinct_active", true)
+			part.set_meta(COUNTER_INSTINCT_META, true)
 
 
 func _mult_note(mult: float) -> String:

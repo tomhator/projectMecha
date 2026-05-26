@@ -55,6 +55,7 @@ func start_player_turn() -> void:
 	current_phase = TurnPhase.PLAYER_TURN
 	actions_left = GameState.current_action_count
 	current_turn += 1
+	player_mecha.on_player_turn_started()
 	EventBus.combat_turn_changed.emit(current_turn)
 	phase_changed.emit(current_phase)
 	var usable: Array[SkillData] = _get_usable_skills()

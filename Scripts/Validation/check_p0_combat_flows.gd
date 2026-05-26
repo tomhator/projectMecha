@@ -19,6 +19,7 @@ var _failed: bool = false
 func _initialize() -> void:
 	randomize()
 	await _check_broken_part_skill_and_affix()
+	await _check_undefined_behavior_affix_turn_start()
 	await _check_basic_attack_remains_when_parts_break()
 	await _check_core_part_abilities()
 	await _check_back_snipe()
@@ -185,6 +186,55 @@ func _check_broken_part_skill_and_affix() -> void:
 	_dispose_node(enemy)
 	await process_frame
 	print("P0 OK: broken part skill disabled and affix ignored")
+
+
+func _check_undefined_behavior_affix_turn_start() -> void:
+	_reset_run()
+	var manager := _new_turn_manager()
+	var mecha := _new_mecha()
+	var enemy := _new_combat_dummy("undefined_behavior 검증 적")
+	var part := _load_part("res://Resources/Parts/arm_l/arm_l_gr21.tres")
+	if part == null:
+		_dispose_node(manager)
+		_dispose_node(mecha)
+		_dispose_node(enemy)
+		return
+	var skill := (part.get("parts_skills")[0] as SkillData).duplicate(true) as SkillData
+	skill.skill_damage = 20.0
+	skill.skill_action_cost = 1
+	skill.skill_target = SkillData.SkillTarget.ENEMY
+	skill.hit_count = 1
+	var part_skills: Array[SkillData] = [skill]
+	var affixes: Array[String] = ["undefined_behavior"]
+	part.set("parts_skills", part_skills)
+	part.set("rolled_affixes", affixes)
+	part.set("stat_multiplier", 1.0)
+	part.set("max_durability", 3)
+	part.set("durability", 3)
+	_set_equipped_part(SLOT_ARM_L, part)
+	root.add_child(manager)
+	root.add_child(mecha)
+	root.add_child(enemy)
+	manager.call("start_combat_untyped", mecha, [enemy])
+	await process_frame
+	_assert_true(part.has_meta("undefined_behavior_modifier"), "undefined_behavior modifier was not generated on player turn start")
+	var turn_mod: float = float(part.get_meta("undefined_behavior_modifier"))
+	_assert_true(turn_mod >= -0.20 and turn_mod <= 0.60, "undefined_behavior modifier outside expected range")
+	var expected_damage: float = skill.skill_damage * float(_game_state().get("attack_multiplier")) * maxf(1.0 + turn_mod, 0.1)
+	var preview: float = float(mecha.call("get_preview_outgoing_damage", skill, enemy))
+	_assert_true(is_equal_approx(preview, expected_damage), "undefined_behavior modifier did not affect preview damage")
+	var hp_before: float = float(enemy.get("current_hp"))
+	mecha.call("use_skill", skill, enemy)
+	_assert_true(is_equal_approx(hp_before - float(enemy.get("current_hp")), expected_damage), "undefined_behavior modifier did not affect actual damage")
+	part.set("durability", 0)
+	mecha.call("on_player_turn_started")
+	_assert_true(not part.has_meta("undefined_behavior_modifier"), "Broken undefined_behavior part kept turn modifier")
+	var broken_affix_bonus: float = float(mecha.call("_affix_bonus_sum", part, enemy, false))
+	_assert_true(is_equal_approx(broken_affix_bonus, 0.0), "Broken undefined_behavior part still applied affix bonus")
+	for node in [manager, mecha, enemy]:
+		_dispose_node(node)
+	await process_frame
+	print("P0 OK: undefined_behavior turn-start modifier, output, and broken cleanup")
 
 
 func _check_basic_attack_remains_when_parts_break() -> void:
