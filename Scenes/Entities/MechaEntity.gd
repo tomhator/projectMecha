@@ -128,15 +128,47 @@ func use_skill(skill: SkillData, target: Node) -> void:
 		target._apply_debuff(skill.debuff_type)
 		EventBus.skill_debuff_applied.emit(target, skill, skill.debuff_type)
 
-	EventBus.skill_used.emit(self, skill)
-	_arm_serious_punch_if_needed(skill)
+	_finalize_skill_use(skill)
 
-	var part: PartsData = _skill_to_part.get(skill)
-	if part != null and part.durability > 0:
-		part.durability -= 1
-		EventBus.part_durability_changed.emit(part)
-		if part.durability == 0:
-			print("  > [파츠 파괴] %s" % part.parts_name)
+
+func use_multi_target_skill(skill: SkillData, targets: Array) -> void:
+	if targets.is_empty():
+		return
+	if skill.core_skill_role == SkillData.CoreSkillRole.PART_ABILITY:
+		_use_part_ability(skill)
+
+	var mult: float = _output_mult_for_targets(skill, targets, true)
+	if skill.skill_damage > 0.0:
+		var total_damage: float = skill.skill_damage * GameState.attack_multiplier * mult
+		var damage_per_target: float = total_damage / float(targets.size())
+		for target: EnemyEntity in targets:
+			if target == null or not target.has_method("take_damage"):
+				continue
+			target.take_damage(damage_per_target, skill.armor_penetration)
+		print("  > 멀티타겟 공격: %s (총 %.0f / 대상당 %.0f 데미지%s)" % [
+			skill.skill_name,
+			total_damage,
+			damage_per_target,
+			_mult_note(mult)
+		])
+
+	if skill.skill_defense > 0.0:
+		var actual_shield: float = skill.skill_defense * mult
+		GameState.heal_shield(actual_shield)
+		print("  > 방어: %s (쉴드 +%.0f%s)" % [skill.skill_name, actual_shield, _mult_note(mult)])
+
+	if skill.skill_heal > 0.0:
+		var actual_heal: float = skill.skill_heal * mult
+		GameState.heal_hp(actual_heal)
+		print("  > 회복: %s (HP +%.0f%s)" % [skill.skill_name, actual_heal, _mult_note(mult)])
+
+	if skill.has_debuff:
+		for target: EnemyEntity in targets:
+			if target != null and target.has_method("_apply_debuff"):
+				target._apply_debuff(skill.debuff_type)
+				EventBus.skill_debuff_applied.emit(target, skill, skill.debuff_type)
+
+	_finalize_skill_use(skill)
 
 
 func get_part_ability_disable_reason(skill: SkillData) -> String:
@@ -241,6 +273,20 @@ func _output_mult(skill: SkillData, target: Node = null, consume_temp: bool = fa
 	return mult
 
 
+func _output_mult_for_targets(skill: SkillData, targets: Array, consume_temp: bool = false) -> float:
+	var part: PartsData = _get_skill_part(skill)
+	if part == null:
+		return 1.0
+	var mult: float = 1.0
+	var bonus_sum: float = _affix_bonus_sum_for_targets(part, targets, consume_temp)
+	mult *= maxf(1.0 + bonus_sum, 0.1)
+	if part.is_worn():
+		mult *= 0.7
+	if part.parts_type == PartsData.PartsType.LEG and GameState.is_overloaded():
+		mult *= 0.8
+	return mult
+
+
 func _get_skill_part(skill: SkillData) -> PartsData:
 	return _skill_to_part.get(skill)
 
@@ -256,6 +302,13 @@ func _is_low_hp_state() -> bool:
 
 
 func _affix_bonus_sum(part: PartsData, target: Node, consume_temp: bool) -> float:
+	var targets: Array[Node] = []
+	if target != null:
+		targets.append(target)
+	return _affix_bonus_sum_for_targets(part, targets, consume_temp)
+
+
+func _affix_bonus_sum_for_targets(part: PartsData, targets: Array, consume_temp: bool) -> float:
 	# 파괴된 파츠는 Affix 효과 없음
 	# TODO: zombie_process affix 구현 시 → and not _has_affix(part, "zombie_process")
 	if part != null and part.is_broken():
@@ -269,7 +322,7 @@ func _affix_bonus_sum(part: PartsData, target: Node, consume_temp: bool) -> floa
 		sum += 0.25
 	if _has_affix(part, "kernel_panic") and _is_low_hp_state():
 		sum += 0.30
-	if _has_affix(part, "backdoor") and target != null and target.has_method("has_any_debuff") and target.has_any_debuff():
+	if _has_affix(part, "backdoor") and _any_target_has_debuff(targets):
 		sum += 0.25
 
 	if part.has_meta("undefined_behavior_modifier"):
@@ -292,10 +345,29 @@ func _affix_bonus_sum(part: PartsData, target: Node, consume_temp: bool) -> floa
 	return sum
 
 
+func _any_target_has_debuff(targets: Array) -> bool:
+	for target in targets:
+		if target != null and target.has_method("has_any_debuff") and target.has_any_debuff():
+			return true
+	return false
+
+
 func _arm_serious_punch_if_needed(skill: SkillData) -> void:
 	var part: PartsData = _get_skill_part(skill)
 	if _has_affix(part, "serious_punch"):
 		_serious_punch_pending = true
+
+
+func _finalize_skill_use(skill: SkillData) -> void:
+	EventBus.skill_used.emit(self, skill)
+	_arm_serious_punch_if_needed(skill)
+
+	var part: PartsData = _skill_to_part.get(skill)
+	if part != null and part.durability > 0:
+		part.durability -= 1
+		EventBus.part_durability_changed.emit(part)
+		if part.durability == 0:
+			print("  > [파츠 파괴] %s" % part.parts_name)
 
 
 func _activate_counter_instinct_on_hit() -> void:

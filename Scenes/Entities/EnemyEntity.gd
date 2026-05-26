@@ -79,6 +79,11 @@ func preview_incoming_damage_split(damage: float, penetration: float = 0.0) -> V
 func is_defeated() -> bool:
 	return current_hp <= 0.0
 
+
+func is_targetable() -> bool:
+	return not is_defeated()
+
+
 func execute_actions(target: Node, allies: Array = []) -> void:
 	for action: SkillData in next_actions:
 		_execute_single_action(action, target, allies)

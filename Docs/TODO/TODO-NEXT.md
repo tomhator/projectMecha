@@ -14,7 +14,7 @@ status: active
 
 ## 다음 착수 추천
 
-- [ ] **멀티타겟 스킬 스펙 리뷰 → 구현** — `SkillData.multi_target` 필드와 `TurnManager.on_skill_selected`의 타겟 전달 방식을 연결하고, 전투 UI 타겟팅 표시까지 함께 정리한다. 전투/UI 2개 도메인에 걸치므로 구현 전 변경 파일·영향 범위 계획을 먼저 확정한다.
+- [ ] **매립지 엘리트 역할 병종 복구** — 압축기(Anchor+Striker), 회수 견인기(Breaker+Support) v1 구현.
 
 ---
 
@@ -103,7 +103,7 @@ status: active
 
 ## P2 — CEO Review 도출 (2026-05-21)
 
-- [ ] **멀티타겟 스킬 (AoE)** — SkillData.multi_target 필드 존재. TurnManager.on_skill_selected에서 적 전체를 target으로 전달하는 로직 필요. 공수: M.
+- [x] **멀티타겟 스킬 (AoE)** — `multi_target = true` 적 대상 스킬은 타겟 가능한 적 최대 4명에게 총 피해를 균등 분배. (2026-05-26)
 - [ ] **_affix_bonus_sum 리팩터링** — affix 10개 이상 도달 시 if-else 체인 → Dictionary/Callable 기반 매핑. `MechaEntity.gd:_affix_bonus_sum()`. 공수: S.
 
 ---

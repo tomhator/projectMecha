@@ -78,6 +78,33 @@ func on_skill_selected(skill: SkillData, target: Node) -> void:
 		print("[TurnManager] 사용 불가 스킬 무시: %s" % ("null" if skill == null else skill.skill_name))
 		player_action_required.emit(_get_display_skills(), enemies, actions_left)
 		return
+	if skill.is_multi_target_enemy_skill():
+		var targets: Array[EnemyEntity] = _get_targetable_enemies(SkillData.MULTI_TARGET_MAX_TARGETS)
+		if targets.is_empty():
+			print("[TurnManager] 타겟 가능한 적 없음 — 스킬 사용 취소: %s" % skill.skill_name)
+			player_action_required.emit(_get_display_skills(), enemies, actions_left)
+			return
+		print("[플레이어] '%s' 사용 → 멀티타겟: %s" % [
+			skill.skill_name,
+			", ".join(targets.map(func(enemy: EnemyEntity) -> String: return enemy.enemy_name))
+		])
+		player_mecha.use_multi_target_skill(skill, targets)
+		actions_left -= skill.skill_action_cost
+		_prune_defeated_boss_arms()
+		_count_new_defeats()
+		if _check_combat_end():
+			return
+		var multi_usable: Array[SkillData] = _get_usable_skills()
+		if actions_left <= 0 or multi_usable.is_empty():
+			start_enemy_turn()
+		else:
+			player_action_required.emit(_get_display_skills(), enemies, actions_left)
+		return
+	if skill.skill_target == SkillData.SkillTarget.ENEMY:
+		if target == null or not (target is EnemyEntity) or not (target as EnemyEntity).is_targetable():
+			print("[TurnManager] 유효하지 않은 타겟 — 스킬 사용 취소: %s" % skill.skill_name)
+			player_action_required.emit(_get_display_skills(), enemies, actions_left)
+			return
 	var target_name: String = "없음" if target == null else str(target.name)
 	print("[플레이어] '%s' 사용 → 타겟: %s" % [skill.skill_name, target_name])
 	player_mecha.use_skill(skill, target)
@@ -122,6 +149,18 @@ func _get_usable_skills() -> Array[SkillData]:
 
 func _get_display_skills() -> Array[SkillData]:
 	return player_mecha.get_display_skills()
+
+
+func _get_targetable_enemies(max_targets: int) -> Array[EnemyEntity]:
+	var out: Array[EnemyEntity] = []
+	for enemy: EnemyEntity in enemies:
+		if not is_instance_valid(enemy) or not enemy.is_targetable():
+			continue
+		out.append(enemy)
+		if out.size() >= max_targets:
+			break
+	return out
+
 
 func add_enemy(enemy: EnemyEntity) -> void:
 	if enemy in enemies:

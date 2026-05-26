@@ -398,7 +398,7 @@ func _slot_short(slot: CoreData.CoreSlot) -> String:
 
 func on_player_action_required(
 	available_skills: Array[SkillData],
-	enemies: Array[EnemyEntity],
+	enemies: Array,
 	actions_remaining: int
 ) -> void:
 	_pending_skill = null
@@ -407,18 +407,27 @@ func on_player_action_required(
 	_set_player_self_target_pending(false)
 	_set_enemy_targeting_enabled(false)
 	_apply_enemy_targeting_border(false)
-	_current_enemies = enemies
+	var typed_enemies: Array[EnemyEntity] = _typed_enemy_list(enemies)
+	_current_enemies = typed_enemies
 	_actions_remaining = actions_remaining
 	_prune_stale_snipe_sources()
 	_rebuild_action_orbs()
 	_rebuild_skill_buttons(available_skills)
-	_rebuild_enemy_bars(enemies)
+	_rebuild_enemy_bars(typed_enemies)
 	_update_enemy_preview()
 	_refresh_player_preview_label()
 	_set_selection_status("스킬을 선택하세요.")
 	_set_end_turn_button_enabled(actions_remaining > 0)
 	_recompute_snipe_highlight()
 	_apply_battle_column_split.call_deferred()
+
+
+func _typed_enemy_list(enemies: Array) -> Array[EnemyEntity]:
+	var out: Array[EnemyEntity] = []
+	for enemy in enemies:
+		if enemy is EnemyEntity:
+			out.append(enemy as EnemyEntity)
+	return out
 
 
 func _set_end_turn_button_enabled(enabled: bool) -> void:
@@ -538,6 +547,29 @@ func _add_skill_ap_badge(btn: Button, action_cost: int) -> void:
 
 func _on_skill_button_pressed(skill: SkillData) -> void:
 	var living: Array[EnemyEntity] = _living_enemies()
+	if skill.is_multi_target_enemy_skill():
+		if living.is_empty():
+			_pending_skill = null
+			_hover_damage_preview_enemy = null
+			_hover_self_for_preview = false
+			_set_player_self_target_pending(false)
+			_set_enemy_targeting_enabled(false)
+			_apply_enemy_targeting_border(false)
+			_set_selection_status("타겟 가능한 적이 없습니다.")
+			_set_skill_buttons_disabled(false)
+			_refresh_player_preview_label()
+			return
+		_pending_skill = null
+		_hover_damage_preview_enemy = null
+		_hover_self_for_preview = false
+		_set_player_self_target_pending(false)
+		_set_enemy_targeting_enabled(false)
+		_apply_enemy_targeting_border(false)
+		_set_selection_status("「%s」 — 전체 공격" % skill.skill_name)
+		_set_skill_buttons_disabled(true, skill)
+		_refresh_player_preview_label()
+		skill_selected.emit(skill, null)
+		return
 	if skill.skill_target == SkillData.SkillTarget.ENEMY and not living.is_empty():
 		_pending_skill = skill
 		_hover_self_for_preview = false
@@ -581,13 +613,15 @@ func _living_enemies() -> Array[EnemyEntity]:
 	_prune_invalid_current_enemies()
 	var out: Array[EnemyEntity] = []
 	for e: EnemyEntity in _current_enemies:
-		if not e.is_defeated():
+		if e.is_targetable():
 			out.append(e)
 	return out
 
 
 func _on_enemy_target_clicked(enemy: EnemyEntity) -> void:
 	if _pending_skill == null:
+		return
+	if enemy == null or not enemy.is_targetable():
 		return
 	var sk: SkillData = _pending_skill
 	_pending_skill = null
@@ -608,7 +642,7 @@ func _set_enemy_targeting_enabled(on: bool) -> void:
 		var btn: Button = _enemy_target_buttons[id] as Button
 		if btn == null:
 			continue
-		btn.disabled = not on or enemy.is_defeated()
+		btn.disabled = not on or not enemy.is_targetable()
 
 
 ## 스킬 버튼은 타겟 확정 전까지 항상 활성 상태로 두고, 펜딩 스킬만 시각적으로 강조한다.
@@ -678,7 +712,7 @@ func _apply_enemy_targeting_border(active: bool) -> void:
 			b.remove_theme_stylebox_override("normal")
 			b.remove_theme_stylebox_override("hover")
 			continue
-		if enemy.is_defeated():
+		if not enemy.is_targetable():
 			continue
 		b.flat = false
 		var sb_n := StyleBoxFlat.new()
@@ -716,7 +750,7 @@ func _pick_default_target(skill: SkillData) -> Node:
 	match skill.skill_target:
 		SkillData.SkillTarget.ENEMY:
 			for enemy: EnemyEntity in _current_enemies:
-				if not enemy.is_defeated():
+				if enemy.is_targetable():
 					return enemy
 		SkillData.SkillTarget.SELF:
 			return get_tree().get_first_node_in_group("player")

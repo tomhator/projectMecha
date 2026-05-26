@@ -194,12 +194,19 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 ### 3.2 적 대상 스킬 발동 흐름
 
-기존과 동일 (이번 작업에서 변경 없음):
+단일 타겟 스킬:
 
 1. 스킬 버튼 클릭 → `_pending_skill` 저장.
-2. 살아있는 적들의 카드 `Button`이 `disabled = false` + 푸른 테두리 스타일.
+2. `enemy.is_targetable()`인 적들의 카드 `Button`이 `disabled = false` + 푸른 테두리 스타일.
 3. 적 카드 호버 시 카드 modulate 1.12~1.25 + **호버 예상 라벨에 예상 피해 표시**.
 4. 적 카드 클릭 → `skill_selected.emit(skill, enemy)`.
+
+멀티타겟 스킬(`multi_target = true`, `skill_target = ENEMY`):
+
+1. 스킬 버튼 클릭 즉시 `skill_selected.emit(skill, null)`.
+2. `TurnManager`가 현재 타겟 가능한 적을 전투 배열 순서대로 최대 4명 수집.
+3. `MechaEntity`가 총 피해를 계산한 뒤 대상 수로 균등 분배.
+4. 타겟 가능한 적이 없으면 스킬은 발동하지 않고 UI 상태만 갱신.
 
 ### 3.3 적 호버 시 예상 수치 (`_damage_preview_text_for_hover`)
 
@@ -274,7 +281,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 [2단계] 대상 클릭       →  skill_selected.emit  →  캐처/타겟 비활성
 ```
 
-**자유 교체 규칙**: 2단계 대상 클릭 전까지 모든 스킬 버튼이 항상 활성 상태를 유지한다.  
+**자유 교체 규칙**: 단일/자기 대상 스킬의 2단계 대상 클릭 전까지 모든 스킬 버튼이 항상 활성 상태를 유지한다.
 다른 스킬 버튼을 클릭하면 `_pending_skill`이 교체되며 이전 강조가 제거된다.
 
 | 비활성 사유 | `disabled` 적용 여부 |
@@ -327,7 +334,7 @@ get_preview_effective_shield_heal(skill) # minf(skill.skill_defense, core_max_sh
 
 - **메카 일러스트에 손상 tint 없음**: 일러스트는 항상 깨끗하게 표시, 손상 상태는 좌하단 파츠 상태 HUD가 전담.
 - **파츠 상태 HUD는 십자형**: 조립씬 배치감과 동일하게 등/오른팔·코어·왼팔/다리 십자 구성.
-- **모든 스킬이 명시적 타겟팅**: 즉시 발동은 폐기 (광역/패시브가 생기면 별도 분기).
+- **단일/자기 대상 스킬은 명시적 타겟팅**: 멀티타겟 적 스킬은 예외적으로 클릭 즉시 자동 발동한다.
 - **스킬 버튼은 타겟 확정 전까지 항상 활성**: 대기 스킬 강조는 시각만, `disabled`는 AP부족·파괴 시만.
 - **스킬 슬롯은 아이콘 중심**: 고정 크기 아이콘과 AP 배지만 화면에 표시하고, 이름·설명·수치는 hover 툴팁에서 읽는다.
 - **턴 종료 버튼 제공**: 선택지가 없거나 불리한 교환을 피하고 싶을 때 플레이어가 수동으로 적 턴으로 넘길 수 있다.

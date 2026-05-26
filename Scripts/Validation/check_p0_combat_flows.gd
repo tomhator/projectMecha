@@ -1,5 +1,6 @@
 extends SceneTree
 
+
 const SLOT_ARM_L: int = 0
 const SLOT_ARM_R: int = 1
 const SLOT_BACK: int = 2
@@ -24,6 +25,7 @@ func _initialize() -> void:
 	await _check_support_ally_targets()
 	await _check_caller_summon_flow()
 	await _check_collector_protection_and_exposure()
+	await _check_multi_target_player_skill()
 	if _failed:
 		print("P0 combat flows: FAIL")
 		quit(1)
@@ -75,6 +77,34 @@ func _new_mecha() -> Node:
 
 func _new_enemy() -> Node:
 	return load(ENEMY_SCRIPT_PATH).new()
+
+
+func _new_combat_dummy(name: String, hp: float = 100.0) -> Node:
+	var enemy := _new_enemy()
+	enemy.set("enemy_name", name)
+	enemy.set("enemy_max_hp", hp)
+	enemy.set("current_hp", hp)
+	enemy.set("enemy_action_count", 0)
+	return enemy
+
+
+func _new_untargetable_dummy(name: String, hp: float = 100.0) -> Node:
+	var script := GDScript.new()
+	script.source_code = (
+		"extends \"res://Scenes/Entities/EnemyEntity.gd\"\n\n"
+		+ "func is_targetable() -> bool:\n"
+		+ "\treturn false\n"
+	)
+	var err: Error = script.reload()
+	if err != OK:
+		_fail("Untargetable enemy script compile failed")
+		return null
+	var enemy: Node = script.new() as Node
+	enemy.set("enemy_name", name)
+	enemy.set("enemy_max_hp", hp)
+	enemy.set("current_hp", hp)
+	enemy.set("enemy_action_count", 0)
+	return enemy
 
 
 func _new_turn_manager() -> Node:
@@ -497,3 +527,146 @@ func _check_collector_protection_and_exposure() -> void:
 		_dispose_node(node)
 	await process_frame
 	print("P0 OK: Collector protection, arm break damage, exposure, theft, and recollection")
+
+
+func _check_multi_target_player_skill() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	root.add_child(mecha)
+	var missile := (_load_resource("res://Resources/Skills/skill_missile_homing.tres") as SkillData).duplicate(true) as SkillData
+	if missile == null:
+		_dispose_node(mecha)
+		return
+	missile.skill_damage = 30.0
+	missile.skill_action_cost = 1
+	missile.skill_target = SkillData.SkillTarget.ENEMY
+	missile.multi_target = true
+	missile.hit_count = 1
+
+	var solo := _new_combat_dummy("멀티 단일 검증")
+	root.add_child(solo)
+	mecha.call("use_multi_target_skill", missile, [solo])
+	_assert_true(is_equal_approx(float(solo.get("current_hp")), 70.0), "Multi-target single enemy did not receive full damage")
+	_dispose_node(solo)
+	await process_frame
+
+	var trio: Array[Node] = [
+		_new_combat_dummy("멀티 3-1"),
+		_new_combat_dummy("멀티 3-2"),
+		_new_combat_dummy("멀티 3-3"),
+	]
+	for enemy: Node in trio:
+		root.add_child(enemy)
+	mecha.call("use_multi_target_skill", missile, trio)
+	for enemy: Node in trio:
+		_assert_true(is_equal_approx(float(enemy.get("current_hp")), 90.0), "Multi-target three enemy split was not damage/3")
+		_dispose_node(enemy)
+	await process_frame
+
+	var backdoor_part := _load_part("res://Resources/Parts/arm_l/arm_l_ml7.tres")
+	if backdoor_part != null:
+		var backdoor_skill := (backdoor_part.get("parts_skills")[0] as SkillData).duplicate(true) as SkillData
+		backdoor_skill.skill_damage = 40.0
+		backdoor_skill.multi_target = true
+		var backdoor_affixes: Array[String] = ["backdoor"]
+		backdoor_part.set("rolled_affixes", backdoor_affixes)
+		backdoor_part.set("durability", 3)
+		var backdoor_skills: Array[SkillData] = [backdoor_skill]
+		backdoor_part.set("parts_skills", backdoor_skills)
+		_set_equipped_part(SLOT_ARM_L, backdoor_part)
+		mecha.call("setup")
+		var skill_map: Dictionary = {}
+		skill_map[backdoor_skill] = backdoor_part
+		mecha.set("_skill_to_part", skill_map)
+		var debuffed := _new_combat_dummy("디버프 미사일 1")
+		var normal := _new_combat_dummy("디버프 미사일 2")
+		root.add_child(debuffed)
+		root.add_child(normal)
+		debuffed.call("_apply_debuff", SkillData.SkillDebuff.ATTACK_DOWN)
+		mecha.call("use_multi_target_skill", backdoor_skill, [debuffed, normal])
+		_assert_true(is_equal_approx(float(debuffed.get("current_hp")), 75.0), "Backdoor multi-target bonus did not apply to debuffed target")
+		_assert_true(is_equal_approx(float(normal.get("current_hp")), 75.0), "Backdoor multi-target bonus did not apply to shared total damage")
+		_dispose_node(debuffed)
+		_dispose_node(normal)
+		await process_frame
+
+	_reset_run()
+	var old_basic: SkillData = _game_state().get("active_basic_attack")
+	var old_part_ability: SkillData = _game_state().get("active_part_ability")
+	_game_state().set("active_basic_attack", missile)
+	_game_state().set("active_part_ability", null)
+	var manager := _new_turn_manager()
+	var max_mecha := _new_mecha()
+	var five_targets: Array[Node] = [
+		_new_combat_dummy("최대 4-1"),
+		_new_combat_dummy("최대 4-2"),
+		_new_combat_dummy("최대 4-3"),
+		_new_combat_dummy("최대 4-4"),
+		_new_combat_dummy("최대 4-5"),
+	]
+	root.add_child(manager)
+	root.add_child(max_mecha)
+	for enemy: Node in five_targets:
+		root.add_child(enemy)
+	manager.call("start_combat_untyped", max_mecha, five_targets)
+	manager.call("on_skill_selected", missile, null)
+	for i: int in five_targets.size():
+		var expected_hp: float = 92.5 if i < SkillData.MULTI_TARGET_MAX_TARGETS else 100.0
+		_assert_true(is_equal_approx(float(five_targets[i].get("current_hp")), expected_hp), "Multi-target max 4 selection mismatch")
+	_dispose_node(manager)
+	_dispose_node(max_mecha)
+	for enemy: Node in five_targets:
+		_dispose_node(enemy)
+	await process_frame
+
+	_game_state().set("active_basic_attack", missile)
+	_game_state().set("active_part_ability", null)
+	var targetable_manager := _new_turn_manager()
+	var targetable_mecha := _new_mecha()
+	var valid_a := _new_combat_dummy("타겟 가능 A")
+	var hidden := _new_untargetable_dummy("타겟 불가")
+	var valid_b := _new_combat_dummy("타겟 가능 B")
+	root.add_child(targetable_manager)
+	root.add_child(targetable_mecha)
+	for enemy: Node in [valid_a, hidden, valid_b]:
+		root.add_child(enemy)
+	targetable_manager.call("start_combat_untyped", targetable_mecha, [valid_a, hidden, valid_b])
+	targetable_manager.call("on_skill_selected", missile, null)
+	_assert_true(is_equal_approx(float(valid_a.get("current_hp")), 85.0), "Targetable enemy A did not receive split damage")
+	_assert_true(is_equal_approx(float(hidden.get("current_hp")), 100.0), "Untargetable enemy received multi-target damage")
+	_assert_true(is_equal_approx(float(valid_b.get("current_hp")), 85.0), "Targetable enemy B did not receive split damage")
+	_dispose_node(targetable_manager)
+	_dispose_node(targetable_mecha)
+	for enemy: Node in [valid_a, hidden, valid_b]:
+		_dispose_node(enemy)
+	await process_frame
+
+	var combat_ui: Node = load("res://Scenes/UI/CombatUi.tscn").instantiate()
+	var ui_target := _new_combat_dummy("UI 멀티 타겟")
+	root.add_child(combat_ui)
+	root.add_child(ui_target)
+	await process_frame
+	var emitted: Array = []
+	var connect_err: Error = combat_ui.connect("skill_selected", func(selected, target) -> void:
+		emitted.append([selected, target])
+	)
+	_assert_true(connect_err == OK, "Multi-target UI signal connect failed")
+	var ui_skills: Array[SkillData] = [missile]
+	combat_ui.call("on_player_action_required", ui_skills, [ui_target], 1)
+	combat_ui.call("_on_skill_button_pressed", missile)
+	_assert_true(emitted.size() == 1, "Multi-target UI did not emit immediately")
+	_assert_true(emitted[0][0] == missile and emitted[0][1] == null, "Multi-target UI emitted unexpected target")
+	emitted.clear()
+	var ui_hidden := _new_untargetable_dummy("UI 타겟 불가")
+	root.add_child(ui_hidden)
+	combat_ui.call("on_player_action_required", ui_skills, [ui_hidden], 1)
+	combat_ui.call("_on_skill_button_pressed", missile)
+	_assert_true(emitted.is_empty(), "Multi-target UI emitted with no targetable enemies")
+	_dispose_node(combat_ui)
+	_dispose_node(ui_target)
+	_dispose_node(ui_hidden)
+	_dispose_node(mecha)
+	_game_state().set("active_basic_attack", old_basic)
+	_game_state().set("active_part_ability", old_part_ability)
+	await process_frame
+	print("P0 OK: player multi-target damage split, targetability, and UI immediate emit")

@@ -8,6 +8,8 @@ enum TargetSlot { NONE = -1, ARM_L = 0, ARM_R = 1, BACK = 2, LEG = 3 }
 enum CoreSkillRole { NONE, BASIC_ATTACK, PART_ABILITY }
 enum PartAbilityKind { NONE, EMERGENCY_SWAP, BROKEN_THROW, SCRAP_PATCH }
 
+const MULTI_TARGET_MAX_TARGETS: int = 4
+
 enum SkillBuff { ATTACK_UP, DEFENSE_UP, HEAL_UP, SPEED_UP, SHIELD_REGEN, DAMAGE_BOOST, DAMAGE_REDUCTION, EVASION_UP }
 enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DOWN }
 
@@ -60,6 +62,10 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DO
 @export var summon_limit_per_combat: int = 0
 
 
+func is_multi_target_enemy_skill() -> bool:
+	return multi_target and skill_target == SkillTarget.ENEMY
+
+
 func combat_tooltip_text(disable_reason: String = "") -> String:
 	var lines: Array[String] = [
 		skill_name,
@@ -70,6 +76,8 @@ func combat_tooltip_text(disable_reason: String = "") -> String:
 	var values: Array[String] = []
 	if skill_damage > 0.0:
 		values.append("피해 %.0f" % skill_damage)
+	if is_multi_target_enemy_skill():
+		values.append("최대 %d명 균등 분배" % MULTI_TARGET_MAX_TARGETS)
 	if hit_count > 1:
 		values.append("%d회 타격" % hit_count)
 	if skill_defense > 0.0:
