@@ -14,7 +14,7 @@ status: active
 
 ## 다음 착수 추천
 
-- [ ] **affix 보정 체감 검증** — `backdoor`, `undefined_behavior` 등 조건부 affix가 실제 전투에서 의도대로 체감되는지 확인.
+- [ ] **`undefined_behavior` 적용 경로 보강 후 affix 체감 검증** — `backdoor`는 headless 검증에 포함되어 있으나, `undefined_behavior_modifier` 턴 시작 갱신 경로를 먼저 확인·보강한 뒤 조건부 affix가 실제 전투에서 의도대로 체감되는지 플레이테스트.
 
 ---
 
@@ -53,7 +53,7 @@ status: active
 - [x] 탈취 가능 ARM 없을 때 소타격(10)만 (2026-05-22 코드 경로 확인)
 
 ### UI·Affix (세션 컨텍스트 이월)
-- [ ] affix 보정 체감 검증 (backdoor / undefined_behavior 등)
+- [ ] `undefined_behavior` 적용 경로 보강 + affix 보정 체감 검증 (backdoor / undefined_behavior 등)
 - [x] `has_any_debuff` API 도입 → backdoor affix +25% 활성화 완료 (2026-05-21)
 
 ---
@@ -78,7 +78,7 @@ status: active
 - [x] **역할 기반 적 리소스 재구축** — 매립지 Striker/Breaker/Support/Caller 일반 병종 + 호출 전용 잡졸 v1 구현 (2026-05-22)
 - [x] **Caller 소환 정책 확정** — 전투당 1회 호출, 호출 적 승리 조건 포함, 파츠 드롭 카운트 제외 (2026-05-22)
 - [x] **매립지 엘리트 역할 병종 복구** — 압축기(Anchor+Striker), 회수 견인기(Breaker+Support) v1 구현 (2026-05-26)
-- [ ] 수집가: 팔 파괴 시 드롭 여부 ([[EnemySystem]] §미결)
+- [x] 수집가: 팔 파괴 시 드롭 여부 — 팔은 `CollectorArmEntity`로 전투 보상 카운트에서 제외. 코어/일반 적만 드롭 기준에 포함. (2026-05-26 확인: `TurnManager._count_new_defeats()`)
 - [ ] 수집가: 팔 5종 시각 에셋 방향
 - [ ] 수집가: 보스 BGM / 연출
 
