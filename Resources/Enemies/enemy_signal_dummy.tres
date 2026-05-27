@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill_type"]
+[ext_resource type="Script" path="res://Resources/EnemyData.gd" id="2_enemy"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_noise_burst.tres" id="3_noise"]
+[ext_resource type="Resource" path="res://Resources/Skills/skill_scrap_call.tres" id="4_call"]
+
+[resource]
+script = ExtResource("2_enemy")
+enemy_id = 14
+enemy_name = "신호 더미"
+enemy_tier = 0
+enemy_description = "고철 잡졸을 한 번 불러 전투 수를 늘리는 매립지 Caller."
+enemy_max_hp = 12.0
+enemy_max_shield = 0.0
+attack_multiplier = 1.0
+enemy_action_count = 2
+skills = Array[ExtResource("1_skill_type")]([ExtResource("3_noise"), ExtResource("4_call")])

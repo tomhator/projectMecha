@@ -10,4 +10,5 @@ skill_type = 2
 skill_description = "장착된 모든 파츠 손상도 즉시 +2 회복."
 skill_action_cost = 1
 skill_target = 0
+repairs_all_parts = true
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

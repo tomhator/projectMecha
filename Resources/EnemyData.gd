@@ -10,6 +10,7 @@ enum EnemyTier { NORMAL, ELITE, BOSS }
 @export var enemy_tier: EnemyTier = EnemyTier.NORMAL
 @export var enemy_description: String = ""
 @export var enemy_sprite: Texture2D = null
+@export var counts_for_combat_rewards: bool = true
 
 # 적 능력치
 @export var enemy_max_hp: float = 0.0

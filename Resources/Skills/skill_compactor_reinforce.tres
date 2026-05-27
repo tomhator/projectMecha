@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" uid="uid://dft8b026rx6cu" path="res://Resources/SkillData.gd" id="1_skill"]
+
+[resource]
+script = ExtResource("1_skill")
+skill_id = 1102
+skill_name = "장갑 재압축"
+skill_type = 1
+skill_description = "찌그러진 외장을 다시 눌러 임시 쉴드를 만든다."
+skill_defense = 16.0
+skill_action_cost = 2
+skill_target = 0
+target_slot = -1

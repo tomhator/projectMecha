@@ -147,6 +147,9 @@ run_check "GDScript parser" run_gdparse
 run_check "Godot headless project load" run_godot_headless
 run_check "Resource integrity" run_godot_script res://Scripts/Validation/check_resource_integrity.gd
 run_check "Scene smoke" run_godot_script res://Scripts/Validation/check_scene_smoke.gd
+run_check "Base state contracts" run_godot_script res://Scripts/Validation/check_base_state.gd
+run_check "CoreSelect layout" run_godot_script res://Scripts/Validation/check_core_select_layout.gd
+run_check "Current work contracts" run_godot_script res://Scripts/Validation/check_current_work_contracts.gd
 run_check "P0 combat flows" run_godot_script res://Scripts/Validation/check_p0_combat_flows.gd
 
 if [ "$failed" -eq 0 ]; then

@@ -15,7 +15,7 @@ Godot 씬 파일(`.tscn`)과 스크립트 파일(`.gd`)을 관리하는 폴더.
 1. **기존 파일 구조 파악** — 이미 존재하는 `.gd`, `.tscn` 파일을 먼저 확인한다.
 2. **Docs 폴더 확인** — 구현 전 반드시 관련 기획 문서를 읽는다.
    - 전투 관련 → `Docs/CombatSpecification.md`
-   - 부품 관련 → `Docs/PieceSystem.md`
+   - 부품 관련 → `Docs/PartsSystem.md`
    - 적 관련 → `Docs/EnemySystem.md`
 3. **기존 씬과의 연결 방식 확인** — 노드 경로, 시그널 구조 파악 후 작업.
 

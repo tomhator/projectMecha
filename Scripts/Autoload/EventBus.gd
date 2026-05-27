@@ -6,6 +6,7 @@ signal combat_turn_changed(turn: int)
 signal parts_equipped(parts: PartsData, slot: CoreData.CoreSlot)
 signal parts_unequipped(parts: PartsData, slot: CoreData.CoreSlot)
 signal credits_changed(new_amount: int)
+signal scrap_changed(new_amount: int)
 signal floor_changed(new_floor: int)
 
 signal hp_changed(entity: Node, new_hp: float, max_hp: float)
@@ -14,7 +15,6 @@ signal payload_changed(entity: Node, new_payload: float, max_payload: float)
 
 signal action_count_changed(entity: Node, new_action_count: int)
 signal skill_used(entity: Node, skill: SkillData)
-signal skill_cooldown_changed(entity: Node, skill: SkillData, new_cooldown: int)
 signal skill_buff_applied(entity: Node, skill: SkillData, buff_type: SkillData.SkillBuff)
 signal skill_debuff_applied(entity: Node, skill: SkillData, debuff_type: SkillData.SkillDebuff)
 signal skill_target_changed(entity: Node, skill: SkillData, target: SkillData.SkillTarget)
@@ -23,12 +23,15 @@ signal skill_defense_changed(entity: Node, skill: SkillData, new_defense: float)
 signal enemy_snipe_preview_changed(enemy: EnemyEntity, target_slot: int, active: bool)
 signal part_stolen(part: PartsData, slot: int)
 signal boss_arm_spawned(arm: EnemyEntity)
+signal enemy_spawn_requested(enemy: EnemyEntity)
 signal enemy_added(enemy: EnemyEntity)
 
 signal part_durability_changed(part: PartsData)
 signal boss_arms_respawning
 
 signal inventory_changed(inventory: Array)
+signal inventory_add_failed(part: PartsData)
+signal storage_changed(parts: Array)
 
 ## 조립 화면: 인벤토리 카드 드래그 중일 때만 설정 (`PartSocketUI` 전역 하이라이트용)
 var assembly_drag_inventory_part: PartsData = null

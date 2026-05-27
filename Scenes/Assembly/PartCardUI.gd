@@ -1,11 +1,14 @@
 class_name PartCardUI
 extends Panel
 
+signal part_selected(part: PartsData)
+
 # ── 내부 변수 ────────────────────────────
 var part_data: PartsData = null
 
 var _icon_rect: TextureRect
 var _condition_marker: Panel
+var _is_selected: bool = false
 
 # ── 스타일 상수 ──────────────────────────
 const COLOR_BG: Color           = Color(0.18, 0.22, 0.28, 1.0)
@@ -22,6 +25,7 @@ const COLOR_BROKEN: Color  = Color(0.9, 0.2, 0.2)
 # ── 스타일박스 ───────────────────────────
 var _style_normal: StyleBoxFlat
 var _style_hover: StyleBoxFlat
+var _style_selected: StyleBoxFlat
 
 # ── 초기화 ──────────────────────────────
 func _ready() -> void:
@@ -37,6 +41,7 @@ func _ready() -> void:
 
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
+	gui_input.connect(_on_gui_input)
 
 # ── UI 자체 생성 ─────────────────────────
 func _build_ui() -> void:
@@ -73,9 +78,14 @@ func setup(p: PartsData) -> void:
 	if _icon_rect != null:
 		_refresh_display()
 
+
+func set_selected(selected: bool) -> void:
+	_is_selected = selected
+	_refresh_display()
+
 # ── 드래그 발신 ──────────────────────────
 func _get_drag_data(_pos: Vector2) -> Variant:
-	if part_data == null:
+	if part_data == null or part_data.is_broken():
 		return null
 
 	var preview := Panel.new()
@@ -106,10 +116,20 @@ func _get_drag_data(_pos: Vector2) -> Variant:
 
 # ── 호버 피드백 ──────────────────────────
 func _on_mouse_entered() -> void:
-	_apply_style(_style_hover)
+	if _is_selected:
+		_apply_style(_style_selected)
+	else:
+		_apply_style(_style_hover)
 
 func _on_mouse_exited() -> void:
-	_apply_style(_style_normal)
+	_refresh_display()
+
+
+func _on_gui_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			part_selected.emit(part_data)
 
 
 # ── 헬퍼 ─────────────────────────────────
@@ -131,7 +151,10 @@ func _refresh_display() -> void:
 	# 테두리 등급 색
 	_style_normal.border_color = _grade_color()
 	_style_hover.border_color = _grade_color().lightened(0.12)
-	_apply_style(_style_normal)
+	if _is_selected:
+		_apply_style(_style_selected)
+	else:
+		_apply_style(_style_normal)
 
 
 func _refresh_condition_marker(color: Color) -> void:
@@ -164,6 +187,11 @@ func _build_styles() -> void:
 
 	_style_hover = _style_normal.duplicate()
 	_style_hover.bg_color = COLOR_BG_HOVER
+
+	_style_selected = _style_normal.duplicate()
+	_style_selected.bg_color = COLOR_BG_HOVER.lightened(0.08)
+	_style_selected.border_color = Color(1.0, 0.82, 0.35, 1.0)
+	_style_selected.set_border_width_all(3)
 
 
 func _apply_style(style: StyleBoxFlat) -> void:

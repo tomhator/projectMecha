@@ -14,4 +14,5 @@ is_toggle = true
 is_free_action = true
 has_buff = true
 buff_type = 5
+buff_value = 0.35
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

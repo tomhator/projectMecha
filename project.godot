@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="project_mecha"
-run/main_scene="uid://bn66x0r7a8eu"
+run/main_scene="res://Scenes/Base/HubScene.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 

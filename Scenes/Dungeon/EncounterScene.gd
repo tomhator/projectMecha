@@ -75,15 +75,21 @@ func _apply_result(result: String) -> void:
 	match result:
 		"A":
 			var part: PartsData = RewardManager.generate_choices(PartsData.PartsGrade.COMMON)[0]
-			GameState.add_to_inventory(part)
+			var acquired: bool = GameState.add_to_inventory(part)
 			GameState.take_damage(max_hp * 0.1)
-			result_label.text = "부품 [%s]을 획득했지만, 코어가 손상됐다. (HP -10%%)" % part.parts_name
+			if acquired:
+				result_label.text = "부품 [%s]을 획득했지만, 코어가 손상됐다. (HP -10%%)" % part.parts_name
+			else:
+				result_label.text = "인벤토리가 가득 차 부품 [%s]은 유실됐다. 코어가 손상됐다. (HP -10%%)" % part.parts_name
 		"B":
 			var part2: PartsData = RewardManager.generate_choices(PartsData.PartsGrade.COMMON)[0]
 			part2.durability = maxi(part2.durability - 1, 0)
 			part2._normalize_durability()
-			GameState.add_to_inventory(part2)
-			result_label.text = "손상된 부품 [%s]을 회수했다. 스킬 위력 -30%%" % part2.parts_name
+			var acquired2: bool = GameState.add_to_inventory(part2)
+			if acquired2:
+				result_label.text = "손상된 부품 [%s]을 회수했다. 스킬 위력 -30%%" % part2.parts_name
+			else:
+				result_label.text = "인벤토리가 가득 차 손상된 부품 [%s]은 유실됐다." % part2.parts_name
 		"C":
 			GameState.take_damage(max_hp * 0.15)
 			result_label.text = "아무것도 얻지 못하고 코어가 손상됐다. (HP -15%)"

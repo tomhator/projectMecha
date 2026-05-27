@@ -12,5 +12,6 @@ skill_action_cost = 1
 skill_target = 0
 has_buff = true
 buff_type = 7
+buff_value = 0.2
 buff_turns = 3
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

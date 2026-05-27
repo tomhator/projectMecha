@@ -21,6 +21,7 @@ enum PartsGrade { COMMON, RARE, EPIC }
 # 드롭·롤 (템플릿 .tres + 런타임)
 @export var drop_weight: float = 1.0
 @export var affix_pool: Array[String] = []
+@export var template_path: String = ""
 @export var stat_multiplier: float = 1.0
 @export var rolled_affixes: Array[String] = []
 

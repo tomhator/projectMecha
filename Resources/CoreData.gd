@@ -2,7 +2,7 @@ extends Resource
 
 class_name CoreData
 
-enum CoreSlot { ARM_L, ARM_R, BACK, LEG }
+enum CoreSlot { ARM_L = 0, ARM_R = 1, BACK = 2, LEG = 3, EXTRA_ARM = 4 }
 
 # 코어 기본 정보
 @export var core_id: int = 0

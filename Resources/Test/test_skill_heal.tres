@@ -7,5 +7,4 @@ script = ExtResource("1_klfaq")
 skill_name = "HEAL!"
 skill_type = 2
 skill_damage = 15.0
-skill_cooldown = 1
 metadata/_custom_type_script = "uid://dft8b026rx6cu"
