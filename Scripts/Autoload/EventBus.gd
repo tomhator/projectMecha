@@ -6,6 +6,7 @@ signal combat_turn_changed(turn: int)
 signal parts_equipped(parts: PartsData, slot: CoreData.CoreSlot)
 signal parts_unequipped(parts: PartsData, slot: CoreData.CoreSlot)
 signal credits_changed(new_amount: int)
+signal scrap_changed(new_amount: int)
 signal floor_changed(new_floor: int)
 
 signal hp_changed(entity: Node, new_hp: float, max_hp: float)
@@ -30,6 +31,7 @@ signal boss_arms_respawning
 
 signal inventory_changed(inventory: Array)
 signal inventory_add_failed(part: PartsData)
+signal storage_changed(parts: Array)
 
 ## 조립 화면: 인벤토리 카드 드래그 중일 때만 설정 (`PartSocketUI` 전역 하이라이트용)
 var assembly_drag_inventory_part: PartsData = null

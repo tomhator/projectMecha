@@ -13,6 +13,7 @@ func generate(template: PartsData, drop_grade: PartsData.PartsGrade) -> PartsDat
 		push_error("PartsFactory.generate: duplicate failed")
 		return template
 
+	p.template_path = template.resource_path
 	p.stat_multiplier = randf_range(0.70, 1.50)
 
 	var count: int = _roll_affix_count_for(drop_grade)

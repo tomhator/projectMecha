@@ -10,6 +10,7 @@ const PART_ABILITY_PATHS: Array[String] = [
 	"res://Resources/Skills/skill_core_broken_throw.tres",
 	"res://Resources/Skills/skill_core_scrap_patch.tres",
 ]
+const HUB_SCENE: String = "res://Scenes/Base/HubScene.tscn"
 const TRACK_LABELS: Dictionary = {
 	AbilityTreeNode.Track.ATTACK: "공격",
 	AbilityTreeNode.Track.DEFENSE: "방어",
@@ -65,7 +66,10 @@ func _ready() -> void:
 	_load_skills(PART_ABILITY_PATHS, _part_abilities)
 	_ensure_loadout_defaults()
 	_build_shell()
-	_show_sortie_view()
+	if GameState.core_select_initial_tab == "research":
+		_show_research_view()
+	else:
+		_show_sortie_view()
 
 
 func _load_ability_nodes() -> void:
@@ -114,6 +118,11 @@ func _build_shell() -> void:
 	nav.add_theme_constant_override("separation", 8)
 	center_area.add_child(nav)
 	center_area.move_child(nav, 1)
+
+	var hub_button := Button.new()
+	hub_button.text = "은신처"
+	hub_button.pressed.connect(_on_hub_pressed)
+	nav.add_child(hub_button)
 
 	var research_button := Button.new()
 	research_button.text = "코어 연구"
@@ -455,7 +464,10 @@ func _clear_view() -> void:
 
 func _refresh_meta_label() -> void:
 	if _meta_label != null:
-		_meta_label.text = "거점 크레딧: %d | 출격 노드는 연구한 티어에서 1개씩만 장착" % GameState.meta_credits
+		_meta_label.text = "거점 크레딧: %d | 고철: %d | 출격 노드는 연구한 티어에서 1개씩만 장착" % [
+			GameState.meta_credits,
+			GameState.meta_scrap
+		]
 
 
 func _nodes_for_tier(tier: int) -> Array[AbilityTreeNode]:
@@ -504,6 +516,10 @@ func _on_sortie_node_pressed(node: AbilityTreeNode) -> void:
 func _on_clear_tier_pressed(tier: int) -> void:
 	GameState.clear_run_tree_node(tier)
 	_show_sortie_view()
+
+
+func _on_hub_pressed() -> void:
+	get_tree().change_scene_to_file(HUB_SCENE)
 
 
 func _on_sortie_pressed() -> void:

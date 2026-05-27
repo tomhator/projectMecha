@@ -88,7 +88,7 @@ func get_last_combat_defeated_enemy_count() -> int:
     return _last_combat_defeated_enemy_count
 
 func on_run_failed() -> void:
-    GameState.end_run()
+    GameState.end_run(false)
     get_tree().change_scene_to_file(RUN_END_SCENE)
 
 # ----------------------------------

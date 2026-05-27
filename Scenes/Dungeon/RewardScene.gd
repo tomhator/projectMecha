@@ -14,14 +14,16 @@ func _ready() -> void:
 	var room: RoomData = DungeonManager.get_current_room()
 	var grade: PartsData.PartsGrade = _determine_grade(room)
 	var credit_amount: int = _determine_credits(room)
+	var scrap_amount: int = _determine_scrap(room)
 
-	title_label.text = "부품 획득 — %s 등급  |  크레딧 +%d" % [
-		PartsData.PartsGrade.keys()[grade], credit_amount
+	title_label.text = "부품 획득 — %s 등급  |  크레딧 +%d  |  고철 +%d" % [
+		PartsData.PartsGrade.keys()[grade], credit_amount, scrap_amount
 	]
 	GameState.add_credits(credit_amount)
+	GameState.add_scrap(scrap_amount)
 
 	if _is_combat_room(room):
-		_show_combat_rewards(grade, credit_amount)
+		_show_combat_rewards(grade, credit_amount, scrap_amount)
 		return
 
 	var choices: Array[PartsData] = RewardManager.generate_choices(grade)
@@ -56,15 +58,16 @@ func _short_card_title(part: PartsData) -> String:
 	]
 
 
-func _show_combat_rewards(grade: PartsData.PartsGrade, credit_amount: int) -> void:
+func _show_combat_rewards(grade: PartsData.PartsGrade, credit_amount: int, scrap_amount: int) -> void:
 	var defeated_count: int = DungeonManager.get_last_combat_defeated_enemy_count()
 	var drops: Array[PartsData] = RewardManager.generate_combat_drops(grade, defeated_count)
 	var acquired_count: int = 0
 	var lost_count: int = 0
-	title_label.text = "전투 보상 — 격파 %d기  |  드롭 %d개  |  크레딧 +%d" % [
+	title_label.text = "전투 보상 — 격파 %d기  |  드롭 %d개  |  크레딧 +%d  |  고철 +%d" % [
 		defeated_count,
 		drops.size(),
-		credit_amount
+		credit_amount,
+		scrap_amount
 	]
 	for part: PartsData in drops:
 		var acquired: bool = GameState.add_to_inventory(part)
@@ -78,11 +81,12 @@ func _show_combat_rewards(grade: PartsData.PartsGrade, credit_amount: int) -> vo
 		btn.disabled = true
 		reward_container.add_child(btn)
 	if lost_count > 0:
-		title_label.text = "전투 보상 — 격파 %d기  |  획득 %d개  |  유실 %d개  |  크레딧 +%d" % [
+		title_label.text = "전투 보상 — 격파 %d기  |  획득 %d개  |  유실 %d개  |  크레딧 +%d  |  고철 +%d" % [
 			defeated_count,
 			acquired_count,
 			lost_count,
-			credit_amount
+			credit_amount,
+			scrap_amount
 		]
 	if drops.is_empty():
 		var label := Label.new()
@@ -154,4 +158,14 @@ func _determine_credits(room: RoomData) -> int:
 		RoomData.RoomType.BATTLE_NORMAL: return randi_range(20, 40)
 		RoomData.RoomType.BATTLE_ELITE: return randi_range(50, 80)
 		RoomData.RoomType.BOSS: return randi_range(80, 100)
+		_: return 0
+
+
+func _determine_scrap(room: RoomData) -> int:
+	if room == null:
+		return 0
+	match room.room_type:
+		RoomData.RoomType.BATTLE_NORMAL: return randi_range(3, 6)
+		RoomData.RoomType.BATTLE_ELITE: return randi_range(8, 14)
+		RoomData.RoomType.BOSS: return randi_range(20, 30)
 		_: return 0

@@ -21,6 +21,7 @@
 ## 2. 디렉토리 구조 (Directory Structure)
 
 - `Asset/`: 모델, 텍스처, 오디오 등 리소스 파일.
+    - `UI/hub_outer_hideout.png`: 외곽 은신처 HubScene 배경용 AI 생성 bitmap.
 - `Docs/`: 기획서 및 기술 문서.
     - `AI-COLLABORATION.md`: IDE/AI 도구 독립 협업 규칙 및 검증 하네스 사용법.
     - `BaseSystem.md`: 외곽 은신처 거점 시스템, 건물형 구역, 영구 파츠 창고/런 인벤토리 분리, 크레딧+고철 경제, 성공/실패 정산 규칙.
@@ -46,6 +47,9 @@
         - `AssemblyScene.tscn` / `AssemblyScene.gd`: 조립 씬 루트. 좌6:우4 레이아웃, 인벤 4×4 그리드, 선택 상세 패널, 전투 스킬 배치 프리뷰, 소켓/카드 동적 생성 및 하중 표시.
         - `PartSocketUI.gd`: 파츠 드롭 수신 소켓 컴포넌트. 호환/비호환 시각 피드백 포함.
         - `PartCardUI.gd`: 인벤토리 파츠 카드 컴포넌트. 드래그 발신 및 등급별 색상 표시.
+    - `Base/`: 런 사이 외곽 은신처 거점 씬.
+        - `HubScene.tscn` / `HubScene.gd`: 프로젝트 메인 씬. 거점 재화/최근 런 요약, 건물형 버튼 5개(격납고·코어 연구대·작전 단말·출격 게이트·시스템 콘솔), 기록/옵션 스텁.
+        - `HangarScene.tscn` / `HangarScene.gd`: 영구 파츠 창고, 출격 장착 슬롯 4개, 런 인벤토리 16칸, 수리/분해/되돌리기 서비스.
     - `Combat/`: 전투 씬 및 턴 매니저.
     - `CoreSelect/`: 어빌리티 트리 씬 (런 시작 전 트리 노드 선택 UI).
     - `Dungeon/`: 던전 맵, 보상, 런 종료 씬.
@@ -59,7 +63,7 @@
         - `CombatUi.tscn` / `CombatUI.gd`: 전투 UI(좌 플레이어/우 적·행동력·스킬·다중 적 타겟팅·수집가 formation).
 - `Scripts/`: 전역 유틸리티, 검증 스크립트 및 싱글톤(AutoLoad).
     - `Autoload/`: `EventBus`, `GameState`, `DungeonManager`, `PartsFactory`, `RewardManager` 등 전역 시스템.
-    - `Validation/`: Godot 4 문법 패턴, 프로젝트 문서, `gdparse`, Godot headless 로드, 리소스 무결성, 주요 씬 스모크 검사 스크립트.
+    - `Validation/`: Godot 4 문법 패턴, 프로젝트 문서, `gdparse`, Godot headless 로드, 리소스 무결성, 주요 씬 스모크, 거점 상태 계약 검사 스크립트.
 
 ---
 
@@ -85,13 +89,13 @@
 
 ### 3.3 전역 시스템 (Global Systems)
 - **EventBus:** 게임 내 전역 이벤트를 중개합니다 (전투 시작/종료, 부품 장착, 스탯 변경 등).
-- **GameState:** 현재 런의 상태(층수, 크레딧, 메카의 현재 HP 및 장착 부품)를 유지하고 관리합니다.
+- **GameState:** 현재 런의 상태(층수, 크레딧, 고철, 메카 HP 및 장착 부품)와 거점 영구 상태(메타 크레딧/고철, 영구 창고, 출격 장착/인벤토리, 최근 런 정산)를 유지하고 관리합니다.
 - **PartsFactory:** `PartsData` 템플릿을 복제해 `stat_multiplier`·affix 개수(드롭 등급별)·`affix_pool` 롤 및 `durability` 초기화를 수행합니다.
 
 ### 3.4 데이터 모델 (Data Models)
 현재 프로젝트에서 사용 중인 핵심 데이터 구조는 다음과 같습니다:
 - **CoreData:** 메카의 기본 HP, 하중 제한, 행동 횟수 등을 정의.
-- **PartsData:** 슬롯 타입·템플릿 등급·`drop_weight`/`affix_pool`·롤 결과(`stat_multiplier`, `rolled_affixes`)·`max_durability`/`durability`·`is_worn()`/`is_broken()`/`grade()` 및 스킬 참조.
+- **PartsData:** 슬롯 타입·템플릿 등급·`drop_weight`/`affix_pool`·저장 복원용 `template_path`·롤 결과(`stat_multiplier`, `rolled_affixes`)·`max_durability`/`durability`·`is_worn()`/`is_broken()`/`grade()` 및 스킬 참조.
 - **SkillData:** 피해량, AP 비용, 대상 지정(자기/적), 부가 효과(버프/디버프), 특수 동작을 정의.
 - **EnemyData:** 적의 HP, 쉴드, 공격 배율, 티어, 스킬 목록을 정의.
 
