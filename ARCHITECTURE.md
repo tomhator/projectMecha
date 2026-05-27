@@ -23,6 +23,7 @@
 - `Asset/`: 모델, 텍스처, 오디오 등 리소스 파일.
 - `Docs/`: 기획서 및 기술 문서.
     - `AI-COLLABORATION.md`: IDE/AI 도구 독립 협업 규칙 및 검증 하네스 사용법.
+    - `BaseSystem.md`: 외곽 은신처 거점 시스템, 건물형 구역, 영구 파츠 창고/런 인벤토리 분리, 크레딧+고철 경제, 성공/실패 정산 규칙.
     - `UI/`: UI 마스터 스펙 (`HUD.md` 등).
     - `WorkNote/`: 작업 일지 (`YYYY-MM-DD.md`).
     - `TODO/`: 활성 backlog (`TODO-NEXT.md`). 완료·이월 목록은 `TODO/old/`.
@@ -42,7 +43,7 @@
     - `Test/`: 개발용 테스트 리소스.
 - `Scenes/`: 게임의 각 화면 및 시스템 씬.
     - `Assembly/`: 메카 조립 씬.
-        - `AssemblyScene.tscn` / `AssemblyScene.gd`: 조립 씬 루트. 좌6:우4 레이아웃, 인벤 5×6 그리드, `RunStatusStrip`, 소켓/카드 동적 생성 및 하중 표시.
+        - `AssemblyScene.tscn` / `AssemblyScene.gd`: 조립 씬 루트. 좌6:우4 레이아웃, 인벤 4×4 그리드, 선택 상세 패널, 전투 스킬 배치 프리뷰, 소켓/카드 동적 생성 및 하중 표시.
         - `PartSocketUI.gd`: 파츠 드롭 수신 소켓 컴포넌트. 호환/비호환 시각 피드백 포함.
         - `PartCardUI.gd`: 인벤토리 파츠 카드 컴포넌트. 드래그 발신 및 등급별 색상 표시.
     - `Combat/`: 전투 씬 및 턴 매니저.
