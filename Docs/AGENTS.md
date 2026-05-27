@@ -136,4 +136,9 @@ date: 2026-04-28
 
 | 문서 | 상태 | 최종 수정 |
 |------|------|----------|
-| GameDesignDocument.md | in-progress | 2026-04-28 |
+| GameDesignDocument.md | in-progress | 2026-05-27 |
+| CombatSpecification.md | in-progress | 2026-05-27 |
+| PartsSystem.md | in-progress | 2026-05-27 |
+| AffixSystem.md | in-progress | 2026-05-27 |
+| PartsCatalog.md | in-progress | 2026-05-27 |
+| BaseSystem.md | in-progress | 2026-05-27 |

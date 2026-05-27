@@ -15,6 +15,7 @@ status: active
 ## 다음 착수 추천
 
 - [ ] **거점 UI 플레이테스트** — Hub/Hangar 실제 화면에서 버튼 위치, 카드 텍스트 overflow, 출격 준비 흐름을 수동 확인하고 시각 조정한다.
+- [ ] **전투 UI 수동 QA** — 현장 수리 파츠 선택, `EXTRA_ARM` 표시/잠금, 추가 팔 파츠 탈착 로그를 실제 Godot 화면에서 확인한다.
 
 ---
 
@@ -55,6 +56,10 @@ status: active
 ### UI·Affix (세션 컨텍스트 이월)
 - [x] `undefined_behavior` 적용 경로 보강 + affix 보정 검증 (backdoor / undefined_behavior 등) (2026-05-26 P0 headless 검증)
 - [x] `has_any_debuff` API 도입 → backdoor affix +25% 활성화 완료 (2026-05-21)
+- [x] 스킬/Affix 누락 효과 전면 구현 — productive, overload, gambler, lifedrain, momentum, mindless, serious_punch, zombie_process, kernel_panic, evolution_lord 계약 추가 (2026-05-27 P0 headless 검증)
+- [x] 버프/디버프 상태 시스템 v1 — BURN, ATTACK_DOWN, AP_DOWN, 방어막, 나노 수복, 출력 증폭, 시즈모드, 회피/차단/반격 계약 추가 (2026-05-27 P0 headless 검증)
+- [x] 현장 수리 파츠 선택 타겟팅 UI 구현 및 headless 계약 추가 (2026-05-27)
+- [x] `evolution_lord` 조건부 `EXTRA_ARM` 슬롯, 저장/복원, 제공 파츠 파괴 시 탈착 계약 추가 (2026-05-27)
 
 ---
 
@@ -64,6 +69,7 @@ status: active
 - [x] **거점 영구 상태 구현** — 영구 파츠 창고, 고철, 성공/실패 정산(실패 시 장착 파츠 영구 손실, 런 인벤토리 회수, 재화 50% 회수), ConfigFile 저장/복원 (2026-05-27)
 - [x] **격납고 서비스 v1** — 파츠 수리(고철 소모), 파츠 분해(고철 획득), 출격 전 장착/런 인벤토리 구성 (2026-05-27)
 - [ ] **거점 수동 QA** — 실제 Godot 실행 화면에서 Hub 배경 버튼 좌표, Hangar 3열 레이아웃, CoreSelect 복귀/초기 탭, RunEnd 정산 문구 확인
+- [ ] **추가 팔 슬롯 UX 보강** — Hub/Hangar/Assembly/Combat에서 `EXTRA_ARM` 잠금·해제·탈착 상태가 충분히 명확한지 실제 화면 기준으로 다듬기
 - [x] `armor_penetration` 플레이어/적 `take_damage` 반영 (2026-05-21)
 - [x] 플로팅 데미지 이펙트 (2026-05-21)
 - [x] 카메라 셰이크 (플레이어 피격 시, SHAKE_THRESHOLD=15) (2026-05-21)
@@ -94,6 +100,7 @@ status: active
 - [x] `.claude/hooks/` 검사 스크립트 3종 + `settings.json` (자동 검증 v1, 2026-05-22)
 - [x] 자동 검증 v2 — 리소스 무결성 + 주요 씬 스모크 검사 (2026-05-22)
 - [x] 현재 작업 회귀 계약 검증 — 거점 로드아웃, 보상 범위, 파츠 롤링, 어빌리티 트리 런 적용 테스트 추가 (2026-05-27)
+- [x] `Docs/CombatSpecification.md` 복구 — 현재 전투 구조, 스킬/Affix 구현 기준, `EXTRA_ARM` 슬롯 규칙을 단일 기준 문서로 정리 (2026-05-27)
 - [ ] 도메인 `CLAUDE.md` 4종 (Combat, Entities, Autoload, Skills)
 - [ ] `.claude/commands/` 4종 (new-skill, new-enemy, combat-debug, parts-update)
 

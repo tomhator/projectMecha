@@ -1,7 +1,7 @@
 ---
 tags: [project/project-mecha, document/parts-system, status/in-progress]
 status: in-progress
-version: 0.7
+version: 0.8
 created: 2026-05-11
 updated: 2026-05-27
 ---
@@ -18,7 +18,7 @@ updated: 2026-05-27
 
 ## 1. 슬롯 체계
 
-메카는 코어(Core)를 중심으로 4개의 파츠 슬롯을 가진다.
+메카는 코어(Core)를 중심으로 기본 4개의 파츠 슬롯을 가진다. `evolution_lord` affix가 붙은 정상 ARM/BACK 파츠가 장착되어 있으면 `EXTRA_ARM` 슬롯이 추가로 열린다.
 
 | 슬롯 | 코드값 | 위치 | 권장 스킬 성향 | 고유 특징 |
 |------|--------|------|-------------|---------|
@@ -26,13 +26,15 @@ updated: 2026-05-27
 | **ARM_R** | `PartsType.ARM_R` (1) | 섀시 우측 (메크 기준) | 공격, 방어 | 주력 무장 슬롯 |
 | **BACK** | `PartsType.BACK` (2) | 섀시 등 | 방어, 회피, 공격 | 지원 슬롯 |
 | **LEG** | `PartsType.LEG` (3) | 섀시 하단 | 방어, 버프·디버프, 회복 | 조건 반응형 슬롯 |
+| **EXTRA_ARM** | `CoreSlot.EXTRA_ARM` (4) | 조건부 보조 팔 | 공격, 방어 | ARM_L/ARM_R 장착 가능 |
 
 > [!note]
 > "권장 성향"은 파츠 풀 설계 방향이지 장착 제한이 아니다.
+> `EXTRA_ARM`은 `evolution_lord` 제공 파츠가 정상 상태일 때만 유효하며, 해당 제공 파츠가 파괴·탈착·강탈되면 즉시 비워진다.
 
 ### 1.1 슬롯별 행동력 기여
 
-**ARM_L · ARM_R · BACK** 파츠를 장착하면 매 턴 시작 시 최대 행동력(AP)이 증가한다. LEG는 AP를 기여하지 않는다.
+**ARM_L · ARM_R · EXTRA_ARM · BACK** 파츠를 장착하면 매 턴 시작 시 최대 행동력(AP)이 증가한다. LEG는 AP를 기여하지 않는다.
 
 | 파츠 종류 | 매 턴 AP 기여 |
 |---------|------------|
@@ -51,6 +53,7 @@ updated: 2026-05-27
 | ARM_L(경량) + ARM_R(일반) + BACK(일반) | +4 |
 | ARM_L(경량) + ARM_R(경량) + BACK(일반) | +5 |
 | ARM_L 미장착 + ARM_R(일반) + BACK(일반) | +2 |
+| ARM_L(일반) + ARM_R(일반) + EXTRA_ARM(일반) + BACK(일반) | +4 |
 
 > [!note]
 > `productive` affix의 AP -1은 해당 파츠 **스킬 비용**에 적용되는 것으로, 이 기여 수치와 무관하다.
@@ -174,7 +177,7 @@ Affix 상세 설계는 [[AffixSystem]] 참고. 여기서는 개수 결정 규칙
 장착 부품 무게 합계 ≤ 최대 하중
 ```
 
-ARM·BACK 파츠는 하중에 부담을 준다. 코어와 LEG가 최대 하중을 결정한다.
+ARM·EXTRA_ARM·BACK 파츠는 하중에 부담을 준다. 코어와 LEG가 최대 하중을 결정한다.
 
 ### 코어 기본 하중
 
@@ -212,7 +215,7 @@ LEG 파츠는 장착 시 최대 하중을 늘려준다. 수치는 [[PartsCatalog
 
 > [!note]
 > `final_output = round(base × stat_multiplier × max(1.0 + bonus_sum, 0.1) × 0.8)`  
-> `is_overloaded() = (ARM_L.weight + ARM_R.weight + BACK.weight) > max_load`  
+> `is_overloaded() = (ARM_L.weight + ARM_R.weight + EXTRA_ARM.weight + BACK.weight) > max_load`  
 > 하중 합산에 `greedy`/`productive`로 보정된 실제 `parts_weight` 값을 사용할 것.  
 > LEG와 코어는 하중 결정 요소이므로 무게 합산에서 제외.
 
@@ -347,16 +350,21 @@ PartsFactory.generate(template: PartsData, drop_grade: PartsGrade) -> PartsData:
 > - [x] PartCardUI 표시 명세 ([[UI/HUD]] §2)
 > - [x] 경량 컨셉 파츠 AP기여 확정 ([[PartsCatalog]])
 >
-> **구현 필요**
-> - [ ] `PartsData.gd` — `ap_contribution: int` 필드 추가
-> - [ ] `PartsFactory._roll_affix_count_for` — §3.2 확률 테이블 반영
-> - [ ] `PartsFactory.generate` — on_equip affix 후처리 (meticulous·greedy·productive)
-> - [ ] `PartCardUI.gd` — 이름 접두사·손상도 블록·affix 목록 표시 구현
-> - [ ] `.tres` 파일 전면 재설계 (구 24개 → 신 34개, PartsCatalog 기준)
-> - [ ] 스킬 사용 후 `durability -= 1` (CombatManager)
-> - [ ] 파츠 파괴 처리 — 스킬 잠금 + Affix 비활성화 (CombatManager)
-> - [ ] 적 스킬 파괴 계열 3종 구현
-> - [ ] GameState — AP 계산 로직 (코어 기본 AP + 장착 파츠 ap_contribution 합산)
+> **구현 완료**
+> - [x] `PartsData.gd` — `ap_contribution: int` 필드 추가
+> - [x] `PartsFactory._roll_affix_count_for` — §3.2 확률 테이블 반영
+> - [x] `PartsFactory.generate` — on_equip affix 후처리 (meticulous·greedy·productive)
+> - [x] `PartCardUI.gd` — 이름 접두사·손상도 블록·affix 목록 표시 구현
+> - [x] `.tres` 파일 전면 재설계 (구 24개 → 신 34개, PartsCatalog 기준)
+> - [x] 스킬 사용 후 `durability -= 1`
+> - [x] 파츠 파괴 처리 — 스킬 잠금 + Affix 비활성화
+> - [x] 적 스킬 파괴 계열 v1 구현
+> - [x] GameState — AP 계산 로직 (코어 기본 AP + 장착 파츠 ap_contribution 합산)
+> - [x] `EXTRA_ARM` 조건부 슬롯과 `evolution_lord` 탈착/파괴 연동
+>
+> **후속 필요**
+> - [ ] 실제 아이콘/스프라이트 연결
+> - [ ] 조립 실루엣 고도화 및 수동 플레이테스트
 
 ---
 
@@ -370,3 +378,5 @@ PartsFactory.generate(template: PartsData, drop_grade: PartsGrade) -> PartsData:
 | 0.4 | 2026-05-12 | 등급 체계 전면 개편 (affix 개수 기반), 이름 접두사 도입, 파츠 32종으로 확대, PartsCatalog·AffixSystem 분리 |
 | 0.5 | 2026-05-14 | is_damaged 제거·durability 단일화, PartsFactory·RewardManager 연동, §6 이벤트/UI 문구 보강 |
 | 0.6 | 2026-05-14 | §3.1 stat_multiplier 적용 대상 명세, §3.2 방 종류별 drop_grade 테이블, §5 하중 초과 패널티 재정의, §7 TODO 현황 업데이트 |
+| 0.7 | 2026-05-27 | 거점 수리/분해, 런 인벤토리, 영구 창고 기준 반영 |
+| 0.8 | 2026-05-27 | `EXTRA_ARM` 조건부 슬롯, AP/하중 반영, 구현 현황 업데이트 |

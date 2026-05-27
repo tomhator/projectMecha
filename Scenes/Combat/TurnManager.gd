@@ -45,17 +45,14 @@ func start_combat(mecha: MechaEntity, enemy_list: Array[EnemyEntity]) -> void:
 	start_player_turn()
 
 func start_player_turn() -> void:
-	for enemy: EnemyEntity in enemies:
-		if not enemy.is_defeated():
-			enemy.tick_debuffs()
 	_prune_defeated_boss_arms()
 	_count_new_defeats()
 	if _check_combat_end():
 		return
 	current_phase = TurnPhase.PLAYER_TURN
-	actions_left = GameState.current_action_count
 	current_turn += 1
 	player_mecha.on_player_turn_started()
+	actions_left = maxi(GameState.current_action_count + player_mecha.get_turn_action_delta(), 0)
 	EventBus.combat_turn_changed.emit(current_turn)
 	phase_changed.emit(current_phase)
 	var usable: Array[SkillData] = _get_usable_skills()
@@ -72,10 +69,11 @@ func start_player_turn() -> void:
 		return
 	player_action_required.emit(_get_display_skills(), enemies, actions_left)
 
-func on_skill_selected(skill: SkillData, target: Node) -> void:
+func on_skill_selected(skill: SkillData, target: Variant) -> void:
 	if current_phase != TurnPhase.PLAYER_TURN:
 		return
-	if skill == null or not player_mecha.can_use_skill(skill) or skill.skill_action_cost > actions_left:
+	var action_cost: int = player_mecha.get_skill_action_cost(skill)
+	if skill == null or not player_mecha.can_use_skill(skill) or action_cost > actions_left:
 		print("[TurnManager] 사용 불가 스킬 무시: %s" % ("null" if skill == null else skill.skill_name))
 		player_action_required.emit(_get_display_skills(), enemies, actions_left)
 		return
@@ -89,8 +87,9 @@ func on_skill_selected(skill: SkillData, target: Node) -> void:
 			skill.skill_name,
 			", ".join(targets.map(func(enemy: EnemyEntity) -> String: return enemy.enemy_name))
 		])
+		player_mecha.set_current_enemy_targets(_get_targetable_enemies(99))
 		player_mecha.use_multi_target_skill(skill, targets)
-		actions_left -= skill.skill_action_cost
+		actions_left = maxi(actions_left - action_cost + player_mecha.consume_granted_actions(), 0)
 		_prune_defeated_boss_arms()
 		_count_new_defeats()
 		if _check_combat_end():
@@ -106,10 +105,15 @@ func on_skill_selected(skill: SkillData, target: Node) -> void:
 			print("[TurnManager] 유효하지 않은 타겟 — 스킬 사용 취소: %s" % skill.skill_name)
 			player_action_required.emit(_get_display_skills(), enemies, actions_left)
 			return
-	var target_name: String = "없음" if target == null else str(target.name)
+	var target_name: String = "없음"
+	if target is Node:
+		target_name = str((target as Node).name)
+	elif target is PartsData:
+		target_name = (target as PartsData).parts_name
 	print("[플레이어] '%s' 사용 → 타겟: %s" % [skill.skill_name, target_name])
+	player_mecha.set_current_enemy_targets(_get_targetable_enemies(99))
 	player_mecha.use_skill(skill, target)
-	actions_left -= skill.skill_action_cost
+	actions_left = maxi(actions_left - action_cost + player_mecha.consume_granted_actions(), 0)
 	_prune_defeated_boss_arms()
 	_count_new_defeats()
 	if _check_combat_end():
@@ -130,6 +134,8 @@ func on_end_turn_requested() -> void:
 	start_enemy_turn()
 
 func start_enemy_turn() -> void:
+	if player_mecha != null:
+		player_mecha.on_player_turn_ended()
 	_notify_collectors_player_turn_ended()
 	current_phase = TurnPhase.ENEMY_TURN
 	phase_changed.emit(current_phase)
@@ -145,7 +151,7 @@ func start_enemy_turn() -> void:
 
 func _get_usable_skills() -> Array[SkillData]:
 	return player_mecha.get_available_skills().filter(
-		func(s: SkillData) -> bool: return s.skill_action_cost <= actions_left
+		func(s: SkillData) -> bool: return player_mecha.get_skill_action_cost(s) <= actions_left
 	)
 
 func _get_display_skills() -> Array[SkillData]:

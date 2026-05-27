@@ -10,4 +10,5 @@ skill_type = 2
 skill_description = "선택 파츠 손상도 즉시 max 완전 복구."
 skill_action_cost = 1
 skill_target = 0
+repairs_selected_part = true
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

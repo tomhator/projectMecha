@@ -102,6 +102,10 @@ func _build_sockets() -> void:
 	var arml_socket := _make_socket(CoreData.CoreSlot.ARM_L)
 	_sockets[CoreData.CoreSlot.ARM_L] = arml_socket
 	row2.add_child(arml_socket)
+	if GameState.has_extra_arm_slot():
+		var extra_socket := _make_socket(CoreData.CoreSlot.EXTRA_ARM)
+		_sockets[CoreData.CoreSlot.EXTRA_ARM] = extra_socket
+		row2.add_child(extra_socket)
 	chassis_panel.add_child(row2)
 
 	var row3 := _make_chassis_row()
@@ -315,7 +319,7 @@ func _refresh_skill_preview() -> void:
 
 	var visible_count: int = 0
 	for skill: SkillData in GameState.get_combat_skill_order():
-		if skill == null or skill.skill_type == SkillData.SkillType.PASSIVE:
+		if skill == null:
 			continue
 		var btn := _make_skill_preview_button(skill)
 		_skill_preview_container.add_child(btn)
@@ -551,10 +555,14 @@ func _update_skill_detail(skill: SkillData) -> void:
 func _update_part_detail(part: PartsData) -> void:
 	_selection_title.text = part.display_name()
 	var target_slot: CoreData.CoreSlot = _slot_for_part_type(part.parts_type)
+	if _selected_slot == int(CoreData.CoreSlot.EXTRA_ARM) and _part_matches_slot(part, CoreData.CoreSlot.EXTRA_ARM):
+		target_slot = CoreData.CoreSlot.EXTRA_ARM
 	var lines: Array[String] = [
 		part.assembly_tooltip_text(),
 		"장착 위치: %s" % _slot_display_name(target_slot),
 	]
+	if (part.parts_type == PartsData.PartsType.ARM_L or part.parts_type == PartsData.PartsType.ARM_R) and GameState.has_extra_arm_slot():
+		lines.append("추가 팔 슬롯에도 장착 가능")
 	if part.is_broken():
 		lines.append("파손 상태: 장착 불가")
 	else:
@@ -586,8 +594,10 @@ func _refresh_action_buttons() -> void:
 	var equip_text: String = "장착"
 	if _selected_inventory_part != null and not _selected_inventory_part.is_broken():
 		var target_slot: CoreData.CoreSlot = _slot_for_part_type(_selected_inventory_part.parts_type)
+		if _selected_slot == int(CoreData.CoreSlot.EXTRA_ARM) and _part_matches_slot(_selected_inventory_part, CoreData.CoreSlot.EXTRA_ARM):
+			target_slot = CoreData.CoreSlot.EXTRA_ARM
 		var existing: PartsData = GameState.equipped_parts.get(target_slot)
-		can_equip = true
+		can_equip = target_slot != CoreData.CoreSlot.EXTRA_ARM or GameState.has_extra_arm_slot()
 		equip_text = "교체" if existing != null else "장착"
 	_equip_button.text = equip_text
 	_equip_button.disabled = not can_equip
@@ -609,6 +619,8 @@ func _on_equip_selected_pressed() -> void:
 		_set_hint("파손된 파츠는 장착할 수 없습니다.", Color(1.0, 0.45, 0.35))
 		return
 	var target_slot: CoreData.CoreSlot = _slot_for_part_type(_selected_inventory_part.parts_type)
+	if _selected_slot == int(CoreData.CoreSlot.EXTRA_ARM) and _part_matches_slot(_selected_inventory_part, CoreData.CoreSlot.EXTRA_ARM):
+		target_slot = CoreData.CoreSlot.EXTRA_ARM
 	_on_socket_drop(_selected_inventory_part, target_slot)
 
 
@@ -641,10 +653,10 @@ func _on_socket_drop(part: PartsData, slot: CoreData.CoreSlot) -> void:
 		GameState.add_to_inventory(existing)
 
 	GameState.equip_part(part, slot)
-	_sockets[slot].set_equipped(part)
 	_selected_inventory_part = null
 	_selected_slot = int(slot)
 	_selected_skill = null
+	_build_sockets()
 	_rebuild_inventory()
 	_update_payload()
 	_refresh_selection_visuals()
@@ -666,10 +678,10 @@ func _on_socket_unequip(slot: CoreData.CoreSlot) -> void:
 		EventBus.part_durability_changed.emit(part)
 	GameState.add_to_inventory(part)
 
-	_sockets[slot].clear_equipped()
 	_selected_inventory_part = part
 	_selected_slot = SLOT_NONE
 	_selected_skill = null
+	_build_sockets()
 	_rebuild_inventory()
 	_update_payload()
 	_refresh_selection_visuals()
@@ -755,6 +767,8 @@ func _slot_for_part_type(parts_type: PartsData.PartsType) -> CoreData.CoreSlot:
 func _part_matches_slot(part: PartsData, slot: CoreData.CoreSlot) -> bool:
 	if part == null:
 		return false
+	if slot == CoreData.CoreSlot.EXTRA_ARM:
+		return part.parts_type == PartsData.PartsType.ARM_L or part.parts_type == PartsData.PartsType.ARM_R
 	return _slot_for_part_type(part.parts_type) == slot
 
 
@@ -762,6 +776,7 @@ func _slot_from_index(slot_index: int) -> CoreData.CoreSlot:
 	match slot_index:
 		CoreData.CoreSlot.ARM_L: return CoreData.CoreSlot.ARM_L
 		CoreData.CoreSlot.ARM_R: return CoreData.CoreSlot.ARM_R
+		CoreData.CoreSlot.EXTRA_ARM: return CoreData.CoreSlot.EXTRA_ARM
 		CoreData.CoreSlot.BACK: return CoreData.CoreSlot.BACK
 		CoreData.CoreSlot.LEG: return CoreData.CoreSlot.LEG
 	return CoreData.CoreSlot.ARM_L
@@ -771,6 +786,7 @@ func _slot_display_name(slot: int) -> String:
 	match slot:
 		CoreData.CoreSlot.ARM_L: return "왼팔"
 		CoreData.CoreSlot.ARM_R: return "오른팔"
+		CoreData.CoreSlot.EXTRA_ARM: return "추가 팔"
 		CoreData.CoreSlot.BACK: return "등"
 		CoreData.CoreSlot.LEG: return "다리"
 	return "알 수 없음"
@@ -780,6 +796,7 @@ func _slot_short(slot: int) -> String:
 	match slot:
 		CoreData.CoreSlot.ARM_L: return "왼"
 		CoreData.CoreSlot.ARM_R: return "오"
+		CoreData.CoreSlot.EXTRA_ARM: return "추"
 		CoreData.CoreSlot.BACK: return "등"
 		CoreData.CoreSlot.LEG: return "다"
 	return "?"

@@ -4,7 +4,7 @@ class_name SkillData
 
 enum SkillType { ATTACK, DEFENSE, HEAL, PASSIVE }
 enum SkillTarget { SELF, ENEMY, ALLY }
-enum TargetSlot { NONE = -1, ARM_L = 0, ARM_R = 1, BACK = 2, LEG = 3 }
+enum TargetSlot { NONE = -1, ARM_L = 0, ARM_R = 1, BACK = 2, LEG = 3, EXTRA_ARM = 4 }
 enum CoreSkillRole { NONE, BASIC_ATTACK, PART_ABILITY }
 enum PartAbilityKind { NONE, EMERGENCY_SWAP, BROKEN_THROW, SCRAP_PATCH }
 
@@ -33,8 +33,10 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DO
 # 스킬 부가 효과: 버프/디버프
 @export var has_buff: bool = false
 @export var buff_type: SkillBuff = SkillBuff.ATTACK_UP
+@export var buff_value: float = 0.0
 @export var has_debuff: bool = false
 @export var debuff_type: SkillDebuff = SkillDebuff.ATTACK_DOWN
+@export var debuff_value: float = 0.0
 
 # 스킬 타겟 정보
 @export var skill_target: SkillTarget = SkillTarget.SELF
@@ -58,6 +60,13 @@ enum SkillDebuff { ATTACK_DOWN, DEFENSE_DOWN, HEAL_DOWN, SPEED_DOWN, BURN, AP_DO
 @export var is_toggle: bool = false
 @export var is_free_action: bool = false
 @export var permanent_max_hp: float = 0.0
+@export var heal_from_damage_ratio: float = 0.0
+@export var repairs_all_parts: bool = false
+@export var repairs_selected_part: bool = false
+@export var extends_buffs: bool = false
+@export var grants_action: int = 0
+@export var grants_next_free_skill: bool = false
+@export var single_use_per_combat: bool = false
 @export var summon_enemy: EnemyData = null
 @export var summon_limit_per_combat: int = 0
 
@@ -81,11 +90,27 @@ func combat_tooltip_text(disable_reason: String = "") -> String:
 	if hit_count > 1:
 		values.append("%d회 타격" % hit_count)
 	if skill_defense > 0.0:
-		values.append("쉴드 %.0f" % skill_defense)
+		values.append(("피해감소 %.0f" if has_buff else "쉴드 %.0f") % skill_defense)
+	if shield_amount > 0.0:
+		values.append("쉴드 %.0f" % shield_amount)
 	if skill_heal > 0.0:
-		values.append("회복 %.0f" % skill_heal)
+		values.append(("회복 %.0f/턴" if has_buff else "회복 %.0f") % skill_heal)
+	if heal_from_damage_ratio > 0.0:
+		values.append("피해흡수 %.0f%%" % (heal_from_damage_ratio * 100.0))
 	if armor_penetration > 0.0:
 		values.append("관통 %.0f%%" % (armor_penetration * 100.0))
+	if repairs_all_parts:
+		values.append("전 파츠 수리")
+	if repairs_selected_part:
+		values.append("선택 파츠 완전 수리")
+	if grants_action > 0:
+		values.append("현재 턴 AP +%d" % grants_action)
+	if grants_next_free_skill:
+		values.append("다음 스킬 무료")
+	if extends_buffs:
+		values.append("버프 +%d턴" % buff_turns)
+	if has_buff and buff_value > 0.0:
+		values.append("버프 %.0f%%" % (buff_value * 100.0))
 	if not values.is_empty():
 		lines.append(" | ".join(values))
 	if not disable_reason.is_empty():
@@ -120,7 +145,7 @@ func _skill_type_display_name() -> String:
 		SkillType.ATTACK: return "공격"
 		SkillType.DEFENSE: return "방어"
 		SkillType.HEAL: return "회복"
-		SkillType.PASSIVE: return "패시브"
+		SkillType.PASSIVE: return "유틸"
 	return "스킬"
 
 

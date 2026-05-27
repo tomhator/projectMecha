@@ -147,6 +147,7 @@ func _part_type_matches(parts_type: PartsData.PartsType) -> bool:
 	match slot_type:
 		CoreData.CoreSlot.ARM_L: return parts_type == PartsData.PartsType.ARM_L
 		CoreData.CoreSlot.ARM_R: return parts_type == PartsData.PartsType.ARM_R
+		CoreData.CoreSlot.EXTRA_ARM: return parts_type == PartsData.PartsType.ARM_L or parts_type == PartsData.PartsType.ARM_R
 		CoreData.CoreSlot.BACK:  return parts_type == PartsData.PartsType.BACK
 		CoreData.CoreSlot.LEG:   return parts_type == PartsData.PartsType.LEG
 	return false
@@ -155,6 +156,7 @@ func _slot_tooltip_text() -> String:
 	match slot_type:
 		CoreData.CoreSlot.ARM_L: return "왼팔 슬롯"
 		CoreData.CoreSlot.ARM_R: return "오른팔 슬롯"
+		CoreData.CoreSlot.EXTRA_ARM: return "추가 팔 슬롯"
 		CoreData.CoreSlot.BACK: return "등 슬롯"
 		CoreData.CoreSlot.LEG: return "다리 슬롯"
 	return "파츠 슬롯"
@@ -210,6 +212,11 @@ func _placeholder_icon_texture() -> Texture2D:
 			image.fill_rect(Rect2i(27, 13, 22, 16), body)
 			image.fill_rect(Rect2i(22, 24, 14, 28), body)
 			image.fill_rect(Rect2i(11, 43, 22, 10), body)
+		CoreData.CoreSlot.EXTRA_ARM:
+			image.fill_rect(Rect2i(12, 14, 18, 14), body)
+			image.fill_rect(Rect2i(34, 14, 18, 14), body)
+			image.fill_rect(Rect2i(20, 28, 24, 22), body)
+			image.fill_rect(Rect2i(23, 45, 18, 8), body)
 		CoreData.CoreSlot.BACK:
 			image.fill_rect(Rect2i(13, 14, 38, 16), body)
 			image.fill_rect(Rect2i(18, 26, 28, 26), body)

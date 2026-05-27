@@ -6,6 +6,7 @@ const INVENTORY_CAPACITY: int = 16
 const SLOT_ORDER: Array[CoreData.CoreSlot] = [
 	CoreData.CoreSlot.ARM_L,
 	CoreData.CoreSlot.ARM_R,
+	CoreData.CoreSlot.EXTRA_ARM,
 	CoreData.CoreSlot.BACK,
 	CoreData.CoreSlot.LEG,
 ]
@@ -226,7 +227,8 @@ func _refresh_equipped() -> void:
 		var button := Button.new()
 		button.custom_minimum_size = CELL_SIZE
 		button.focus_mode = Control.FOCUS_NONE
-		button.text = "%s\n%s" % [_slot_display_name(slot), part.display_name() if part != null else "비어 있음"]
+		var empty_text: String = "잠김" if slot == CoreData.CoreSlot.EXTRA_ARM and not GameState.has_sortie_extra_arm_slot() else "비어 있음"
+		button.text = "%s\n%s" % [_slot_display_name(slot), part.display_name() if part != null else empty_text]
 		button.disabled = part == null
 		if part != null:
 			button.tooltip_text = part.assembly_tooltip_text()
@@ -500,6 +502,7 @@ func _slot_display_name(slot: int) -> String:
 	match slot:
 		CoreData.CoreSlot.ARM_L: return "왼팔"
 		CoreData.CoreSlot.ARM_R: return "오른팔"
+		CoreData.CoreSlot.EXTRA_ARM: return "추가 팔"
 		CoreData.CoreSlot.BACK: return "등"
 		CoreData.CoreSlot.LEG: return "다리"
 	return "알 수 없음"

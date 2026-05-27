@@ -3,7 +3,7 @@ tags: [project/project-mecha, document/parts-catalog, status/in-progress]
 status: in-progress
 version: 0.3
 created: 2026-05-12
-updated: 2026-05-26
+updated: 2026-05-27
 ---
 
 # 파츠 카탈로그 (Parts Catalog)
@@ -17,6 +17,7 @@ updated: 2026-05-26
 > - **드롭 가중치**: 상대값. 높을수록 자주 등장 (15+ 흔함 / 8~14 보통 / 3~7 드묾 / 1~2 매우 드묾)
 > - **affix 풀**: 이 파츠에 등장 가능한 affix 목록. 풀 내 균등 확률. 상세는 [[AffixSystem]] 참고
 > - 총기류는 좌우 공용 (ARM_L·ARM_R 동일 스킬, 별도 .tres 파일)
+> - `evolution_lord`는 ARM/BACK 파츠에만 등장하며, 정상 장착 중 `EXTRA_ARM` 슬롯을 연다. LEG 파츠에는 등장하지 않는다.
 
 ---
 

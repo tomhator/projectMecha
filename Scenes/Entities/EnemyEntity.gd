@@ -37,10 +37,12 @@ func setup_from_data(data: EnemyData) -> void:
 	enemy_action_count = data.enemy_action_count
 	skills = data.skills
 
-func take_damage(damage: float, penetration: float = 0.0) -> void:
+func take_damage(damage: float, penetration: float = 0.0) -> float:
 	damage = maxf(damage, 0.0)
 	current_shield = clampf(current_shield, 0.0, enemy_max_shield)
 	current_hp = clampf(current_hp, 0.0, enemy_max_hp)
+	var before_hp: float = current_hp
+	var before_shield: float = current_shield
 	var pen := clampf(penetration, 0.0, 1.0)
 	var absorbed: float = minf(current_shield, damage * (1.0 - pen))
 	current_shield -= absorbed
@@ -64,6 +66,7 @@ func take_damage(damage: float, penetration: float = 0.0) -> void:
 		print("  > [%s] 격파!" % enemy_name)
 		_preview_target_slot = SNIPE_SLOT_NONE
 		EventBus.enemy_snipe_preview_changed.emit(self, _preview_target_slot, false)
+	return maxf(before_hp - current_hp, 0.0) + maxf(before_shield - current_shield, 0.0)
 
 
 ## `take_damage`와 동일한 흡수 규칙으로, 들어오는 피해가 쉴드·HP에 어떻게 나뉘는지 미리 계산 (UI 프리뷰용).
@@ -85,8 +88,14 @@ func is_targetable() -> bool:
 
 
 func execute_actions(target: Node, allies: Array = []) -> void:
+	_apply_debuff_start_effects()
+	var ap_remaining: int = _effective_action_count_for_execution()
 	for action: SkillData in next_actions:
+		if action.skill_action_cost > ap_remaining:
+			continue
+		ap_remaining -= action.skill_action_cost
 		_execute_single_action(action, target, allies)
+	_decrement_debuff_durations()
 	decide_next_actions()
 
 
@@ -100,9 +109,10 @@ func _execute_single_action(action: SkillData, target: Node, allies: Array = [])
 	if action.skill_damage > 0.0:
 		var hits: int = maxi(action.hit_count, 1)
 		for _i in hits:
-			target.take_damage(action.skill_damage * attack_multiplier, action.armor_penetration)
+			target.take_damage(action.skill_damage * _effective_attack_multiplier(), action.armor_penetration, self)
 		if action.target_slot != SkillData.TargetSlot.NONE:
-			_apply_snipe_to_slot(target, action.target_slot)
+			var durability_loss: int = 2 if action.skill_name.contains("과부하") else 1
+			_apply_snipe_to_slot(target, action.target_slot, durability_loss)
 	if action.skill_defense > 0.0 and effect_target is EnemyEntity:
 		(effect_target as EnemyEntity).restore_shield(action.skill_defense)
 	if action.skill_heal > 0.0 and effect_target is EnemyEntity:
@@ -113,7 +123,7 @@ func _execute_single_action(action: SkillData, target: Node, allies: Array = [])
 	EventBus.skill_used.emit(self, action)
 
 
-func _apply_snipe_to_slot(target: Node, slot_index: int) -> void:
+func _apply_snipe_to_slot(target: Node, slot_index: int, durability_loss: int = 1) -> void:
 	if not target.has_method("get_part_at_slot"):
 		return
 	var part: PartsData = target.get_part_at_slot(slot_index)
@@ -123,11 +133,13 @@ func _apply_snipe_to_slot(target: Node, slot_index: int) -> void:
 	if part.is_broken():
 		print("  > [저격] %s 이미 파괴됨 — 내구도 효과 무효" % part.parts_name)
 		return
-	part.durability = maxi(part.durability - 1, 0)
+	part.durability = maxi(part.durability - maxi(durability_loss, 1), 0)
 	EventBus.part_durability_changed.emit(part)
 	print("  > [저격] %s 내구도 감소 → %d" % [part.parts_name, part.durability])
 	if part.is_broken():
 		print("  > [파츠 파괴] %s" % part.parts_name)
+		if target.has_method("notify_part_broken"):
+			target.notify_part_broken(part)
 
 func decide_next_actions() -> void:
 	next_actions.clear()
@@ -186,6 +198,16 @@ func has_any_debuff() -> bool:
 	return not _active_debuffs.is_empty()
 
 func tick_debuffs() -> void:
+	_apply_debuff_start_effects()
+	_decrement_debuff_durations()
+
+
+func _apply_debuff_start_effects() -> void:
+	if int(_active_debuffs.get(SkillData.SkillDebuff.BURN, 0)) > 0 and not is_defeated():
+		take_damage(5.0)
+
+
+func _decrement_debuff_durations() -> void:
 	var expired: Array = []
 	for debuff: int in _active_debuffs:
 		_active_debuffs[debuff] -= 1
@@ -193,6 +215,21 @@ func tick_debuffs() -> void:
 			expired.append(debuff)
 	for d: int in expired:
 		_active_debuffs.erase(d)
+
+
+func _effective_attack_multiplier() -> float:
+	var mult: float = attack_multiplier
+	if int(_active_debuffs.get(SkillData.SkillDebuff.ATTACK_DOWN, 0)) > 0:
+		mult *= 0.8
+	return mult
+
+
+func _effective_action_count_for_execution() -> int:
+	var total: int = enemy_action_count
+	if int(_active_debuffs.get(SkillData.SkillDebuff.AP_DOWN, 0)) > 0:
+		total -= 1
+		_active_debuffs.erase(SkillData.SkillDebuff.AP_DOWN)
+	return maxi(total, 0)
 
 
 func restore_hp(amount: float) -> void:

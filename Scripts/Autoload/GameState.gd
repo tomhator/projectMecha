@@ -9,6 +9,7 @@ const FAILURE_RECOVERY_RATE: float = 0.5
 const COMBAT_SKILL_PART_SLOT_ORDER: Array[CoreData.CoreSlot] = [
 	CoreData.CoreSlot.ARM_L,
 	CoreData.CoreSlot.ARM_R,
+	CoreData.CoreSlot.EXTRA_ARM,
 	CoreData.CoreSlot.BACK,
 	CoreData.CoreSlot.LEG,
 ]
@@ -45,8 +46,9 @@ var sortie_inventory: Array[PartsData] = []
 var sortie_equipped_parts: Dictionary = {
 	CoreData.CoreSlot.ARM_L: null,
 	CoreData.CoreSlot.ARM_R: null,
+	CoreData.CoreSlot.EXTRA_ARM: null,
 	CoreData.CoreSlot.BACK: null,
-	CoreData.CoreSlot.LEG: null
+	CoreData.CoreSlot.LEG: null,
 }
 var last_run_summary: Dictionary = {}
 var total_runs: int = 0
@@ -65,8 +67,9 @@ var current_action_count: int = 0
 var equipped_parts: Dictionary = {
 	CoreData.CoreSlot.ARM_L: null,
 	CoreData.CoreSlot.ARM_R: null,
+	CoreData.CoreSlot.EXTRA_ARM: null,
 	CoreData.CoreSlot.BACK: null,
-	CoreData.CoreSlot.LEG: null
+	CoreData.CoreSlot.LEG: null,
 }
 
 # 런 인벤토리 상태
@@ -108,6 +111,7 @@ func start_run() -> void:
 	inventory = _duplicate_part_array_for_runtime(sortie_inventory)
 	credits = 0
 	run_scrap = 0
+	sync_runtime_extra_arm_slot(false)
 	_recalculate_runtime_payload_and_actions()
 	EventBus.credits_changed.emit(credits)
 	EventBus.scrap_changed.emit(run_scrap)
@@ -280,12 +284,18 @@ func advance_floor() -> void:
 
 # 부품 장착/해제
 func equip_part(part: PartsData, slot: CoreData.CoreSlot) -> void:
+	if part == null or not _part_matches_slot(part, slot):
+		return
+	if slot == CoreData.CoreSlot.EXTRA_ARM and not has_extra_arm_slot():
+		return
 	var prev: PartsData = equipped_parts[slot]
 	if slot != CoreData.CoreSlot.LEG:
 		if prev != null:
 			current_payload -= prev.parts_weight
 		current_payload += part.parts_weight
 	equipped_parts[slot] = part
+	if slot != CoreData.CoreSlot.EXTRA_ARM:
+		sync_runtime_extra_arm_slot(false)
 	current_action_count = get_max_action_count()
 	EventBus.parts_equipped.emit(part, slot)
 	EventBus.payload_changed.emit(self, current_payload, get_max_payload())
@@ -297,6 +307,8 @@ func unequip_part(slot: CoreData.CoreSlot) -> void:
 	if slot != CoreData.CoreSlot.LEG and prev != null:
 		current_payload -= prev.parts_weight
 	equipped_parts[slot] = null
+	if slot != CoreData.CoreSlot.EXTRA_ARM:
+		sync_runtime_extra_arm_slot(false)
 	current_action_count = get_max_action_count()
 	EventBus.parts_unequipped.emit(prev, slot)
 	EventBus.payload_changed.emit(self, current_payload, get_max_payload())
@@ -315,15 +327,58 @@ func get_max_action_count() -> int:
 	if current_core == null:
 		return 0
 	var total: int = current_core.core_action_count
-	for slot: CoreData.CoreSlot in [CoreData.CoreSlot.ARM_L, CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.BACK]:
+	for slot: CoreData.CoreSlot in [CoreData.CoreSlot.ARM_L, CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.EXTRA_ARM, CoreData.CoreSlot.BACK]:
 		var p: PartsData = equipped_parts.get(slot)
 		if p != null:
 			total += p.ap_contribution
 	return total
 
 
+func has_extra_arm_slot(parts: Dictionary = {}) -> bool:
+	var source: Dictionary = equipped_parts if parts.is_empty() else parts
+	return _has_extra_arm_provider(source)
+
+
+func has_sortie_extra_arm_slot() -> bool:
+	return _has_extra_arm_provider(sortie_equipped_parts)
+
+
+func sync_runtime_extra_arm_slot(emit_changes: bool = true) -> void:
+	if has_extra_arm_slot():
+		return
+	var extra_part: PartsData = equipped_parts.get(CoreData.CoreSlot.EXTRA_ARM)
+	if extra_part == null:
+		return
+	if extra_part.parts_type != PartsData.PartsType.LEG:
+		current_payload = maxf(current_payload - extra_part.parts_weight, 0.0)
+	equipped_parts[CoreData.CoreSlot.EXTRA_ARM] = null
+	if is_run_active:
+		if add_to_inventory(extra_part):
+			print("[GameState] 추가 팔 슬롯 닫힘 — %s 인벤토리 이동" % extra_part.display_name())
+		else:
+			extra_part.durability = 0
+			EventBus.part_durability_changed.emit(extra_part)
+			print("[GameState] 추가 팔 슬롯 닫힘 — 인벤토리 가득 참, %s 파손 후 유실" % extra_part.display_name())
+	else:
+		storage_parts.append(extra_part)
+		EventBus.storage_changed.emit(storage_parts)
+		print("[GameState] 추가 팔 슬롯 닫힘 — %s 창고 이동" % extra_part.display_name())
+	current_action_count = get_max_action_count()
+	if emit_changes:
+		EventBus.parts_unequipped.emit(extra_part, CoreData.CoreSlot.EXTRA_ARM)
+		EventBus.payload_changed.emit(self, current_payload, get_max_payload())
+		EventBus.action_count_changed.emit(self, current_action_count)
+
+
 func is_overloaded() -> bool:
 	return current_payload > get_max_payload()
+
+
+func recalculate_runtime_stats() -> void:
+	sync_runtime_extra_arm_slot(false)
+	_recalculate_runtime_payload_and_actions()
+	EventBus.payload_changed.emit(self, current_payload, get_max_payload())
+	EventBus.action_count_changed.emit(self, current_action_count)
 
 
 func get_inventory_capacity() -> int:
@@ -500,6 +555,8 @@ func move_sortie_inventory_to_storage(part: PartsData) -> bool:
 func equip_sortie_part(part: PartsData, slot: CoreData.CoreSlot) -> bool:
 	if part == null or part.is_broken() or not _part_matches_slot(part, slot):
 		return false
+	if slot == CoreData.CoreSlot.EXTRA_ARM and not has_sortie_extra_arm_slot():
+		return false
 	var found: bool = false
 	if storage_parts.has(part):
 		storage_parts.erase(part)
@@ -513,6 +570,8 @@ func equip_sortie_part(part: PartsData, slot: CoreData.CoreSlot) -> bool:
 	if previous != null:
 		storage_parts.append(previous)
 	sortie_equipped_parts[slot] = part
+	if slot != CoreData.CoreSlot.EXTRA_ARM:
+		sync_sortie_extra_arm_slot()
 	_save_meta_progress()
 	EventBus.storage_changed.emit(storage_parts)
 	return true
@@ -524,9 +583,23 @@ func unequip_sortie_part(slot: CoreData.CoreSlot) -> bool:
 		return false
 	sortie_equipped_parts[slot] = null
 	storage_parts.append(part)
+	if slot != CoreData.CoreSlot.EXTRA_ARM:
+		sync_sortie_extra_arm_slot()
 	_save_meta_progress()
 	EventBus.storage_changed.emit(storage_parts)
 	return true
+
+
+func sync_sortie_extra_arm_slot() -> void:
+	if has_sortie_extra_arm_slot():
+		return
+	var extra_part: PartsData = sortie_equipped_parts.get(CoreData.CoreSlot.EXTRA_ARM)
+	if extra_part == null:
+		return
+	sortie_equipped_parts[CoreData.CoreSlot.EXTRA_ARM] = null
+	storage_parts.append(extra_part)
+	EventBus.storage_changed.emit(storage_parts)
+	print("[GameState] 추가 팔 슬롯 닫힘 — %s 창고 이동" % extra_part.display_name())
 
 
 func return_sortie_loadout_to_storage() -> void:
@@ -544,14 +617,17 @@ func return_sortie_loadout_to_storage() -> void:
 
 
 # HP/Shield
-func take_damage(amount: float, penetration: float = 0.0) -> void:
+func take_damage(amount: float, penetration: float = 0.0) -> float:
 	var pen := clampf(penetration, 0.0, 1.0)
+	var before_hp: float = current_hp
+	var before_shield: float = current_shield
 	var absorbed: float = minf(current_shield, amount * (1.0 - pen))
 	current_shield -= absorbed
 	current_hp -= amount - absorbed
 	current_hp = maxf(current_hp, 0.0)
 	EventBus.hp_changed.emit(self, current_hp, current_core.core_hp)
 	EventBus.shield_changed.emit(self, current_shield, current_core.core_shield)
+	return maxf(before_hp - current_hp, 0.0) + maxf(before_shield - current_shield, 0.0)
 
 
 func heal_hp(amount: float) -> void:
@@ -741,6 +817,7 @@ func _empty_slot_dictionary() -> Dictionary:
 	return {
 		CoreData.CoreSlot.ARM_L: null,
 		CoreData.CoreSlot.ARM_R: null,
+		CoreData.CoreSlot.EXTRA_ARM: null,
 		CoreData.CoreSlot.BACK: null,
 		CoreData.CoreSlot.LEG: null
 	}
@@ -750,6 +827,7 @@ func _slot_from_save_key(key: String) -> CoreData.CoreSlot:
 	match int(key):
 		CoreData.CoreSlot.ARM_L: return CoreData.CoreSlot.ARM_L
 		CoreData.CoreSlot.ARM_R: return CoreData.CoreSlot.ARM_R
+		CoreData.CoreSlot.EXTRA_ARM: return CoreData.CoreSlot.EXTRA_ARM
 		CoreData.CoreSlot.BACK: return CoreData.CoreSlot.BACK
 		CoreData.CoreSlot.LEG: return CoreData.CoreSlot.LEG
 	return CoreData.CoreSlot.ARM_L
@@ -761,6 +839,7 @@ func _part_matches_slot(part: PartsData, slot: CoreData.CoreSlot) -> bool:
 	match slot:
 		CoreData.CoreSlot.ARM_L: return part.parts_type == PartsData.PartsType.ARM_L
 		CoreData.CoreSlot.ARM_R: return part.parts_type == PartsData.PartsType.ARM_R
+		CoreData.CoreSlot.EXTRA_ARM: return part.parts_type == PartsData.PartsType.ARM_L or part.parts_type == PartsData.PartsType.ARM_R
 		CoreData.CoreSlot.BACK: return part.parts_type == PartsData.PartsType.BACK
 		CoreData.CoreSlot.LEG: return part.parts_type == PartsData.PartsType.LEG
 	return false
@@ -768,11 +847,21 @@ func _part_matches_slot(part: PartsData, slot: CoreData.CoreSlot) -> bool:
 
 func _recalculate_runtime_payload_and_actions() -> void:
 	current_payload = 0.0
-	for slot: CoreData.CoreSlot in [CoreData.CoreSlot.ARM_L, CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.BACK]:
+	for slot: CoreData.CoreSlot in [CoreData.CoreSlot.ARM_L, CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.EXTRA_ARM, CoreData.CoreSlot.BACK]:
 		var part: PartsData = equipped_parts.get(slot)
 		if part != null:
 			current_payload += part.parts_weight
 	current_action_count = get_max_action_count()
+
+
+func _has_extra_arm_provider(parts: Dictionary) -> bool:
+	for slot: CoreData.CoreSlot in [CoreData.CoreSlot.ARM_L, CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.BACK]:
+		var part: PartsData = parts.get(slot)
+		if part == null or part.is_broken():
+			continue
+		if part.rolled_affixes.has("evolution_lord"):
+			return true
+	return false
 
 
 func _part_display_names(parts: Array[PartsData]) -> Array[String]:

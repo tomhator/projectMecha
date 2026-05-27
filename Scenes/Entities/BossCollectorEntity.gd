@@ -69,9 +69,9 @@ func prune_defeated_arms() -> void:
 	_begin_exposure_if_needed()
 
 
-func take_damage(damage: float, penetration: float = 0.0) -> void:
+func take_damage(damage: float, penetration: float = 0.0) -> float:
 	var protected_damage: float = damage * (1.0 - get_core_protection_ratio())
-	super.take_damage(protected_damage, penetration)
+	return super.take_damage(protected_damage, penetration)
 
 
 func preview_incoming_damage_split(damage: float, penetration: float = 0.0) -> Vector2:

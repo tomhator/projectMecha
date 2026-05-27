@@ -81,6 +81,20 @@ func _check_skills() -> void:
 			_fail("Skill has negative action cost: %s" % path)
 		if skill.skill_damage < 0.0 or skill.skill_defense < 0.0 or skill.skill_heal < 0.0:
 			_fail("Skill has negative value: %s" % path)
+		if skill.repairs_selected_part and skill.skill_target != SkillData.SkillTarget.SELF:
+			_fail("Selected-part repair skill must target SELF: %s" % path)
+		if skill.repairs_all_parts and skill.skill_target != SkillData.SkillTarget.SELF:
+			_fail("All-parts repair skill must target SELF: %s" % path)
+		if skill.extends_buffs and skill.buff_turns <= 0:
+			_fail("Buff extension skill missing buff_turns: %s" % path)
+		if skill.has_buff and skill.buff_turns <= 0 and not skill.is_toggle:
+			_fail("Non-toggle buff skill missing buff_turns: %s" % path)
+		if skill.has_buff and (skill.buff_type == SkillData.SkillBuff.DAMAGE_BOOST or skill.buff_type == SkillData.SkillBuff.DAMAGE_REDUCTION or skill.buff_type == SkillData.SkillBuff.EVASION_UP) and skill.buff_value <= 0.0:
+			_fail("Ratio buff skill missing buff_value: %s" % path)
+		if skill.skill_id == 233 and skill.grants_action <= 0:
+			_fail("Booster ignite missing grants_action: %s" % path)
+		if skill.skill_id == 245 and not skill.grants_next_free_skill:
+			_fail("Assault leap missing grants_next_free_skill: %s" % path)
 
 
 func _check_parts() -> void:
@@ -102,9 +116,32 @@ func _check_parts() -> void:
 			_fail("Part durability out of range: %s" % path)
 		if part.parts_skills.is_empty():
 			_fail("Part has no skills: %s" % path)
+		if part.parts_type == PartsData.PartsType.LEG and part.affix_pool.has("evolution_lord"):
+			_fail("LEG part can roll evolution_lord: %s" % path)
 		for skill: SkillData in part.parts_skills:
 			if skill == null:
 				_fail("Part references null skill: %s" % path)
+				continue
+			if not _part_skill_has_runtime_effect(skill):
+				_fail("Player part skill has no implemented runtime effect fields: %s -> %s" % [path, skill.skill_name])
+
+
+func _part_skill_has_runtime_effect(skill: SkillData) -> bool:
+	if skill.skill_damage > 0.0 or skill.skill_defense > 0.0 or skill.skill_heal > 0.0:
+		return true
+	if skill.shield_amount > 0.0 or skill.invincible_hit_count > 0 or skill.has_counter_attack:
+		return true
+	if skill.has_buff or skill.has_debuff:
+		return true
+	if skill.permanent_max_hp > 0.0 or skill.heal_from_damage_ratio > 0.0:
+		return true
+	if skill.repairs_all_parts or skill.repairs_selected_part or skill.extends_buffs:
+		return true
+	if skill.grants_action > 0 or skill.grants_next_free_skill or skill.single_use_per_combat:
+		return true
+	if skill.is_toggle or skill.is_free_action:
+		return true
+	return false
 
 
 func _check_enemies() -> void:

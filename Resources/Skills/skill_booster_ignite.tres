@@ -11,4 +11,5 @@ skill_description = "이번 턴 행동력 +1. 행동력 소모 없이 사용."
 skill_action_cost = 0
 skill_target = 0
 is_free_action = true
+grants_action = 1
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

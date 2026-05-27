@@ -20,6 +20,11 @@ func _initialize() -> void:
 	randomize()
 	await _check_broken_part_skill_and_affix()
 	await _check_undefined_behavior_affix_turn_start()
+	await _check_dynamic_ap_free_skill_and_siege()
+	await _check_repair_skills_and_buff_states()
+	await _check_debuff_effects()
+	await _check_new_affix_effects()
+	await _check_evolution_lord_extra_arm_slot()
 	await _check_basic_attack_remains_when_parts_break()
 	_check_inventory_capacity()
 	_check_combat_skill_order()
@@ -138,6 +143,13 @@ func _set_equipped_part(slot: int, part: Resource) -> void:
 	_game_state().get("equipped_parts")[slot] = part
 
 
+func _set_part_affixes(part: Resource, affixes: Array) -> void:
+	var typed: Array[String] = []
+	for affix in affixes:
+		typed.append(str(affix))
+	part.set("rolled_affixes", typed)
+
+
 func _get_equipped_part(slot: int) -> Resource:
 	return _game_state().get("equipped_parts")[slot]
 
@@ -237,6 +249,300 @@ func _check_undefined_behavior_affix_turn_start() -> void:
 		_dispose_node(node)
 	await process_frame
 	print("P0 OK: undefined_behavior turn-start modifier, output, and broken cleanup")
+
+
+func _check_dynamic_ap_free_skill_and_siege() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	var enemy := _new_combat_dummy("동적 AP 검증 적", 300.0)
+	root.add_child(mecha)
+	root.add_child(enemy)
+
+	var productive_part := _load_part("res://Resources/Parts/arm_l/arm_l_lg40.tres")
+	var momentum_part := _load_part("res://Resources/Parts/arm_r/arm_r_lg40.tres")
+	var leap_leg := _load_part("res://Resources/Parts/leg/leg_spearhead2.tres")
+	var siege_leg := _load_part("res://Resources/Parts/leg/leg_bastion1.tres")
+	if productive_part == null or momentum_part == null or leap_leg == null or siege_leg == null:
+		_dispose_node(mecha)
+		_dispose_node(enemy)
+		return
+
+	_set_part_affixes(productive_part, ["productive"])
+	_set_equipped_part(SLOT_ARM_L, productive_part)
+	mecha.call("setup")
+	var productive_skill: SkillData = productive_part.get("parts_skills")[0]
+	_assert_true(int(mecha.call("get_skill_action_cost", productive_skill)) == productive_skill.skill_action_cost - 1, "productive did not reduce AP cost")
+
+	_set_equipped_part(SLOT_ARM_L, momentum_part)
+	_set_part_affixes(momentum_part, ["momentum"])
+	mecha.call("setup")
+	var basic: SkillData = _game_state().get("active_basic_attack")
+	mecha.call("use_skill", basic, enemy)
+	var momentum_skill: SkillData = momentum_part.get("parts_skills")[0]
+	_assert_true(int(mecha.call("get_skill_action_cost", momentum_skill)) == momentum_skill.skill_action_cost - 1, "momentum did not reduce exactly second skill AP")
+
+	_set_equipped_part(SLOT_LEG, leap_leg)
+	mecha.call("setup")
+	var leap_skill: SkillData = leap_leg.get("parts_skills")[0]
+	var before_durability: int = int(momentum_part.get("durability"))
+	mecha.call("use_skill", leap_skill, mecha)
+	_assert_true(int(mecha.call("get_skill_action_cost", momentum_skill)) == 0, "Assault leap did not make next skill free")
+	mecha.call("use_skill", momentum_skill, enemy)
+	_assert_true(int(momentum_part.get("durability")) == before_durability, "Free next skill still consumed durability")
+
+	_set_equipped_part(SLOT_LEG, siege_leg)
+	mecha.call("setup")
+	var siege_skill: SkillData = siege_leg.get("parts_skills")[0]
+	mecha.call("use_skill", siege_skill, mecha)
+	_assert_true(int(mecha.call("get_turn_action_delta")) == -1, "Siege mode did not reduce next turn AP")
+	var siege_durability_before: int = int(siege_leg.get("durability"))
+	mecha.call("on_player_turn_started")
+	_assert_true(int(siege_leg.get("durability")) == siege_durability_before - 1, "Siege mode did not consume upkeep durability")
+
+	_dispose_node(mecha)
+	_dispose_node(enemy)
+	await process_frame
+	print("P0 OK: dynamic AP, free next skill, and siege upkeep")
+
+
+func _check_repair_skills_and_buff_states() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	var enemy := _new_combat_dummy("버프 검증 적", 100.0)
+	root.add_child(mecha)
+	root.add_child(enemy)
+
+	var field_pack := _load_part("res://Resources/Parts/back/back_fr1.tres")
+	var drone_pack := _load_part("res://Resources/Parts/back/back_md2.tres")
+	var shield_pack := _load_part("res://Resources/Parts/back/back_sd7.tres")
+	var absorb_leg := _load_part("res://Resources/Parts/leg/leg_dampfer5.tres")
+	var intercept_arm := _load_part("res://Resources/Parts/arm_l/arm_l_gdclaw.tres")
+	var damaged_arm := _load_part("res://Resources/Parts/arm_r/arm_r_gr21.tres")
+	if field_pack == null or drone_pack == null or shield_pack == null or absorb_leg == null or intercept_arm == null or damaged_arm == null:
+		_dispose_node(mecha)
+		_dispose_node(enemy)
+		return
+
+	damaged_arm.set("durability", 1)
+	_set_equipped_part(SLOT_ARM_R, damaged_arm)
+	_set_equipped_part(SLOT_BACK, field_pack)
+	mecha.call("setup")
+	mecha.call("use_skill", field_pack.get("parts_skills")[0], damaged_arm)
+	_assert_true(int(damaged_arm.get("durability")) == int(damaged_arm.get("max_durability")), "Field repair did not restore selected part to max")
+
+	damaged_arm.set("durability", 1)
+	_set_equipped_part(SLOT_BACK, drone_pack)
+	mecha.call("setup")
+	mecha.call("use_skill", drone_pack.get("parts_skills")[0], mecha)
+	_assert_true(int(damaged_arm.get("durability")) == 3, "Drone repair did not restore all equipped parts by +2")
+	_assert_true(int(damaged_arm.get("durability")) <= int(damaged_arm.get("max_durability")), "Drone repair exceeded max durability")
+
+	_game_state().set("current_shield", 0.0)
+	_set_equipped_part(SLOT_BACK, shield_pack)
+	mecha.call("setup")
+	mecha.call("use_skill", shield_pack.get("parts_skills")[0], mecha)
+	mecha.call("on_player_turn_started")
+	_assert_true(is_equal_approx(float(_game_state().get("current_shield")), 12.0), "Shield regen buff did not add shield on turn start")
+
+	_game_state().set("current_shield", 0.0)
+	_game_state().set("current_hp", 100.0)
+	_set_equipped_part(SLOT_LEG, absorb_leg)
+	mecha.call("setup")
+	mecha.call("use_skill", absorb_leg.get("parts_skills")[0], mecha)
+	mecha.call("take_damage", 10.0)
+	_assert_true(is_equal_approx(float(_game_state().get("current_hp")), 92.0), "Damage reduction buff did not reduce incoming damage by 20%")
+
+	_game_state().set("current_hp", 100.0)
+	_set_equipped_part(SLOT_ARM_L, intercept_arm)
+	mecha.call("setup")
+	mecha.call("use_skill", intercept_arm.get("parts_skills")[0], mecha)
+	var enemy_hp_before: float = float(enemy.get("current_hp"))
+	mecha.call("take_damage", 10.0, 0.0, enemy)
+	_assert_true(is_equal_approx(float(_game_state().get("current_hp")), 100.0), "Intercept did not block incoming damage")
+	_assert_true(float(enemy.get("current_hp")) < enemy_hp_before, "Intercept did not counterattack")
+
+	_dispose_node(mecha)
+	_dispose_node(enemy)
+	await process_frame
+	print("P0 OK: selected/all repair and buff block/reduction states")
+
+
+func _check_debuff_effects() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	var burn_enemy := _new_combat_dummy("화상 검증 적", 100.0)
+	var ap_enemy := _new_combat_dummy("AP 감소 검증 적", 100.0)
+	var attack_enemy := _new_combat_dummy("공격 감소 검증 적", 100.0)
+	for node in [mecha, burn_enemy, ap_enemy, attack_enemy]:
+		root.add_child(node)
+
+	var heat := _load_resource("res://Resources/Skills/skill_heat_slash.tres")
+	var shock := _load_resource("res://Resources/Skills/skill_shock_wire.tres")
+	var scatter := _load_resource("res://Resources/Skills/skill_scatter_shot.tres")
+	var enemy_hit := _load_resource("res://Resources/Skills/skill_junk_crash.tres").duplicate(true) as SkillData
+	if heat == null or shock == null or scatter == null or enemy_hit == null:
+		for node in [mecha, burn_enemy, ap_enemy, attack_enemy]:
+			_dispose_node(node)
+		return
+	enemy_hit.skill_damage = 10.0
+	enemy_hit.skill_action_cost = 1
+
+	mecha.call("setup")
+	mecha.call("use_skill", heat, burn_enemy)
+	burn_enemy.set("next_actions", [])
+	burn_enemy.call("execute_actions", mecha)
+	_assert_true(is_equal_approx(float(burn_enemy.get("current_hp")), 65.0), "BURN did not deal 5 damage at enemy turn start")
+
+	mecha.call("use_skill", shock, ap_enemy)
+	ap_enemy.set("enemy_action_count", 2)
+	var ap_actions: Array[SkillData] = [enemy_hit, enemy_hit]
+	ap_enemy.set("next_actions", ap_actions)
+	_game_state().set("current_shield", 0.0)
+	_game_state().set("current_hp", 100.0)
+	ap_enemy.call("execute_actions", mecha)
+	_assert_true(is_equal_approx(float(_game_state().get("current_hp")), 90.0), "AP_DOWN did not remove one enemy action")
+
+	mecha.call("use_skill", scatter, attack_enemy)
+	attack_enemy.set("enemy_action_count", 1)
+	var attack_actions: Array[SkillData] = [enemy_hit]
+	attack_enemy.set("next_actions", attack_actions)
+	_game_state().set("current_shield", 0.0)
+	_game_state().set("current_hp", 100.0)
+	attack_enemy.call("execute_actions", mecha)
+	_assert_true(is_equal_approx(float(_game_state().get("current_hp")), 92.0), "ATTACK_DOWN did not reduce enemy damage by 20%")
+
+	for node in [mecha, burn_enemy, ap_enemy, attack_enemy]:
+		_dispose_node(node)
+	await process_frame
+	print("P0 OK: BURN, AP_DOWN, and ATTACK_DOWN effects")
+
+
+func _check_new_affix_effects() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	root.add_child(mecha)
+
+	var overload_part := _load_part("res://Resources/Parts/arm_l/arm_l_m88.tres")
+	var gambler_part := _load_part("res://Resources/Parts/arm_r/arm_r_yb20.tres")
+	var lifedrain_part := _load_part("res://Resources/Parts/arm_l/arm_l_gdtendril.tres")
+	var mindless_part := _load_part("res://Resources/Parts/arm_r/arm_r_rd9.tres")
+	var serious_part := _load_part("res://Resources/Parts/arm_l/arm_l_m88.tres")
+	var follow_part := _load_part("res://Resources/Parts/arm_r/arm_r_gr21.tres")
+	var zombie_part := _load_part("res://Resources/Parts/arm_r/arm_r_rd9.tres")
+	if overload_part == null or gambler_part == null or lifedrain_part == null or mindless_part == null or serious_part == null or follow_part == null or zombie_part == null:
+		_dispose_node(mecha)
+		return
+
+	var enemy := _new_combat_dummy("Affix 검증 적", 1000.0)
+	root.add_child(enemy)
+
+	_set_part_affixes(overload_part, ["overload"])
+	overload_part.set("durability", 3)
+	_set_equipped_part(SLOT_ARM_L, overload_part)
+	mecha.call("setup")
+	mecha.call("use_skill", overload_part.get("parts_skills")[0], enemy)
+	_assert_true(int(overload_part.get("durability")) == 1, "overload did not consume total durability 2")
+
+	_set_part_affixes(gambler_part, ["gambler"])
+	_set_equipped_part(SLOT_ARM_R, gambler_part)
+	mecha.call("setup")
+	var gambler_skill: SkillData = gambler_part.get("parts_skills")[0]
+	gambler_skill.skill_damage = 100.0
+	var hp_before: float = float(enemy.get("current_hp"))
+	mecha.call("use_skill", gambler_skill, enemy)
+	var dealt: float = hp_before - float(enemy.get("current_hp"))
+	_assert_true(dealt >= 100.0 and dealt <= 150.0, "gambler damage bonus escaped 0~50% range")
+
+	_game_state().set("current_hp", 50.0)
+	_game_state().set("current_shield", 0.0)
+	_set_part_affixes(lifedrain_part, ["lifedrain"])
+	_set_equipped_part(SLOT_ARM_L, lifedrain_part)
+	mecha.call("setup")
+	mecha.call("use_skill", lifedrain_part.get("parts_skills")[0], enemy)
+	_assert_true(float(_game_state().get("current_hp")) > 50.0, "lifedrain did not heal from dealt damage")
+
+	var mindless_a := _new_combat_dummy("무지성 A", 100.0)
+	var mindless_b := _new_combat_dummy("무지성 B", 100.0)
+	root.add_child(mindless_a)
+	root.add_child(mindless_b)
+	_set_part_affixes(mindless_part, ["mindless"])
+	var mindless_skill: SkillData = mindless_part.get("parts_skills")[0]
+	mindless_skill.skill_damage = 10.0
+	mindless_skill.hit_count = 1
+	_set_equipped_part(SLOT_ARM_R, mindless_part)
+	mecha.call("setup")
+	mecha.call("set_current_enemy_targets", [mindless_a, mindless_b])
+	mecha.call("use_skill", mindless_skill, mindless_a)
+	var total_mindless_damage: float = (100.0 - float(mindless_a.get("current_hp"))) + (100.0 - float(mindless_b.get("current_hp")))
+	_assert_true(is_equal_approx(total_mindless_damage, 36.0), "mindless did not apply -10% output and +3 hits")
+
+	_set_part_affixes(serious_part, ["serious_punch"])
+	_set_part_affixes(follow_part, [])
+	var follow_skill: SkillData = follow_part.get("parts_skills")[0]
+	follow_skill.skill_damage = 10.0
+	follow_skill.hit_count = 1
+	_set_equipped_part(SLOT_ARM_L, serious_part)
+	_set_equipped_part(SLOT_ARM_R, follow_part)
+	mecha.call("setup")
+	mecha.call("use_skill", serious_part.get("parts_skills")[0], enemy)
+	hp_before = float(enemy.get("current_hp"))
+	mecha.call("use_skill", follow_skill, enemy)
+	_assert_true(is_equal_approx(hp_before - float(enemy.get("current_hp")), 20.0), "serious_punch did not double next part skill")
+
+	_set_part_affixes(zombie_part, ["zombie_process"])
+	zombie_part.set("durability", 1)
+	_set_equipped_part(SLOT_ARM_R, zombie_part)
+	mecha.call("setup")
+	var zombie_skill: SkillData = zombie_part.get("parts_skills")[0]
+	mecha.call("use_skill", zombie_skill, enemy)
+	_assert_true(bool(zombie_part.call("is_broken")), "zombie_process fixture did not break")
+	mecha.call("on_player_turn_started")
+	_assert_true(bool(mecha.call("can_use_skill", zombie_skill)), "zombie_process did not allow one next-turn use")
+	mecha.call("use_skill", zombie_skill, enemy)
+	_assert_true(not bool(mecha.call("can_use_skill", zombie_skill)), "zombie_process remained usable after one use")
+
+	for node in [mecha, enemy, mindless_a, mindless_b]:
+		_dispose_node(node)
+	await process_frame
+	print("P0 OK: overload, gambler, lifedrain, mindless, serious_punch, and zombie_process")
+
+
+func _check_evolution_lord_extra_arm_slot() -> void:
+	_reset_run()
+	var mecha := _new_mecha()
+	root.add_child(mecha)
+	var provider := _load_part("res://Resources/Parts/back/back_fr1.tres")
+	var extra := _load_part("res://Resources/Parts/arm_r/arm_r_gr21.tres")
+	if provider == null or extra == null:
+		_dispose_node(mecha)
+		return
+	_set_part_affixes(provider, ["evolution_lord"])
+	provider.set("template_path", "res://Resources/Parts/back/back_fr1.tres")
+	provider.set("durability", 3)
+	extra.set("template_path", "res://Resources/Parts/arm_r/arm_r_gr21.tres")
+	_set_equipped_part(SLOT_BACK, provider)
+	mecha.call("setup")
+	_assert_true(bool(_game_state().call("has_extra_arm_slot")), "evolution_lord did not open EXTRA_ARM slot")
+	_game_state().call("equip_part", extra, CoreData.CoreSlot.EXTRA_ARM)
+	_assert_true(_get_equipped_part(CoreData.CoreSlot.EXTRA_ARM) == extra, "EXTRA_ARM did not accept an arm part")
+
+	var ordered: Array = _game_state().call("get_combat_skill_order")
+	var extra_skill = extra.get("parts_skills")[0]
+	var back_skill = provider.get("parts_skills")[0]
+	_assert_true(ordered.find(extra_skill) >= 0 and ordered.find(extra_skill) < ordered.find(back_skill), "EXTRA_ARM skill order is not before BACK")
+
+	var saved: Dictionary = _game_state().call("_save_equipped_parts", _game_state().get("equipped_parts"))
+	var restored: Dictionary = _game_state().call("_load_equipped_parts", saved)
+	_assert_true(restored.get(CoreData.CoreSlot.EXTRA_ARM) != null, "EXTRA_ARM was not restored from save data")
+
+	provider.set("durability", 0)
+	mecha.call("notify_part_broken", provider)
+	_assert_true(_get_equipped_part(CoreData.CoreSlot.EXTRA_ARM) == null, "EXTRA_ARM part stayed equipped after provider broke")
+	_assert_true((_game_state().get("inventory") as Array).has(extra), "Detached EXTRA_ARM part did not move to runtime inventory")
+
+	_dispose_node(mecha)
+	await process_frame
+	print("P0 OK: evolution_lord opens, orders, saves, restores, and detaches EXTRA_ARM")
 
 
 func _check_basic_attack_remains_when_parts_break() -> void:

@@ -11,4 +11,5 @@ skill_description = "내 메카에 활성화된 버프 전체 남은 지속 턴 
 skill_action_cost = 1
 skill_target = 0
 buff_turns = 2
+extends_buffs = true
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

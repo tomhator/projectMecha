@@ -11,5 +11,5 @@ skill_description = "피해를 주고 피해량의 40%를 코어 HP로 회복."
 skill_damage = 22.0
 skill_action_cost = 1
 skill_target = 1
-skill_heal = 0.4
+heal_from_damage_ratio = 0.4
 metadata/_custom_type_script = "uid://dft8b026rx6cu"

@@ -1,7 +1,7 @@
 extends Control
 class_name CombatUI
 
-signal skill_selected(skill: SkillData, target: Node)
+signal skill_selected(skill: SkillData, target: Variant)
 signal end_turn_requested
 
 const BATTLE_H_SEP: float = 32.0
@@ -53,6 +53,7 @@ const MECH_TEXTURE_PATHS: Dictionary = {
 }
 
 var _mech_layers: Dictionary = {}   # CoreData.CoreSlot → TextureRect (slot layers)
+var _mech_slot_buttons: Dictionary = {}  # CoreData.CoreSlot → Button
 var _core_visual_layers: Dictionary = {}  # Core exterior slot -> Panel
 var _hud_icons: Dictionary = {}     # CoreData.CoreSlot → Panel (status HUD)
 var _broken_skills: Dictionary = {}  # SkillData → true (파괴된 파츠 소속 스킬)
@@ -72,6 +73,7 @@ var _combat_log_label: RichTextLabel = null
 var _shake_tween: Tween = null
 var _prev_player_hp: float = 0.0
 var _prev_player_shield: float = 0.0
+var _part_targeting_active: bool = false
 
 
 func _ready() -> void:
@@ -173,6 +175,7 @@ func _build_mech_layers() -> void:
 		[null,                    "core",  Color(0.65, 0.65, 0.70), Vector2(30,  20),  Vector2(75, 90), 2],
 		[CoreData.CoreSlot.ARM_R, "arm_r", Color(0.30, 0.45, 0.70), Vector2(98,  40),  Vector2(40, 72), 3],
 		[CoreData.CoreSlot.ARM_L, "arm_l", Color(0.30, 0.65, 0.65), Vector2(5,   52),  Vector2(30, 58), 4],
+		[CoreData.CoreSlot.EXTRA_ARM, "arm_l", Color(0.36, 0.52, 0.72), Vector2(128, 64), Vector2(34, 58), 5],
 	]
 	for spec in specs:
 		var slot = spec[0]
@@ -192,6 +195,17 @@ func _build_mech_layers() -> void:
 		_mech_illustration.add_child(rect)
 		if slot != null:
 			_mech_layers[slot] = rect
+			var hit := Button.new()
+			hit.flat = true
+			hit.text = ""
+			hit.focus_mode = Control.FOCUS_NONE
+			hit.position = pos
+			hit.size = layer_size
+			hit.z_index = 30
+			hit.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			hit.pressed.connect(_on_part_target_clicked.bind(slot))
+			_mech_illustration.add_child(hit)
+			_mech_slot_buttons[slot] = hit
 	_build_core_visual_layers()
 
 
@@ -215,7 +229,8 @@ func _make_fallback_texture(color: Color, layer_size: Vector2) -> Texture2D:
 func _refresh_all_mech_layers() -> void:
 	for slot: CoreData.CoreSlot in [
 		CoreData.CoreSlot.BACK, CoreData.CoreSlot.LEG,
-		CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.ARM_L
+		CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.ARM_L,
+		CoreData.CoreSlot.EXTRA_ARM
 	]:
 		_refresh_mech_layer(slot)
 	_refresh_core_visual_layers()
@@ -225,7 +240,12 @@ func _refresh_mech_layer(slot: CoreData.CoreSlot) -> void:
 	if slot not in _mech_layers:
 		return
 	var rect: TextureRect = _mech_layers[slot]
-	rect.visible = GameState.equipped_parts.get(slot) != null
+	var part_exists: bool = GameState.equipped_parts.get(slot) != null
+	rect.visible = part_exists
+	if _mech_slot_buttons.has(slot):
+		var hit: Button = _mech_slot_buttons[slot] as Button
+		hit.visible = part_exists
+		hit.mouse_filter = Control.MOUSE_FILTER_STOP if _part_targeting_active and part_exists else Control.MOUSE_FILTER_IGNORE
 	_apply_snipe_highlight()
 
 
@@ -279,7 +299,8 @@ func _build_parts_hud() -> void:
 	container.custom_minimum_size = Vector2(96, 96)
 
 	var grid := GridContainer.new()
-	grid.columns = 3
+	var show_extra: bool = GameState.has_extra_arm_slot() or GameState.equipped_parts.get(CoreData.CoreSlot.EXTRA_ARM) != null
+	grid.columns = 4 if show_extra else 3
 	grid.add_theme_constant_override("h_separation", 0)
 	grid.add_theme_constant_override("v_separation", 0)
 	grid.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -291,6 +312,12 @@ func _build_parts_hud() -> void:
 		CoreData.CoreSlot.ARM_R, HUD_CORE_CELL,           CoreData.CoreSlot.ARM_L,
 		null,                    CoreData.CoreSlot.LEG,   null,
 	]
+	if show_extra:
+		cross = [
+			null,                    CoreData.CoreSlot.BACK,  null,                    null,
+			CoreData.CoreSlot.ARM_R, HUD_CORE_CELL,           CoreData.CoreSlot.ARM_L, CoreData.CoreSlot.EXTRA_ARM,
+			null,                    CoreData.CoreSlot.LEG,   null,                    null,
+		]
 	for key in cross:
 		if key == null:
 			var spacer := Control.new()
@@ -301,7 +328,7 @@ func _build_parts_hud() -> void:
 			var is_core: bool = (typeof(key) == TYPE_INT and int(key) == HUD_CORE_CELL)
 			var panel := Panel.new()
 			panel.custom_minimum_size = Vector2(32, 32)
-			panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			panel.mouse_filter = Control.MOUSE_FILTER_IGNORE if is_core else Control.MOUSE_FILTER_STOP
 			var lbl := Label.new()
 			lbl.text = "코" if is_core else _slot_short(key as CoreData.CoreSlot)
 			lbl.add_theme_font_size_override("font_size", 9)
@@ -312,6 +339,7 @@ func _build_parts_hud() -> void:
 			panel.add_child(lbl)
 			if not is_core:
 				_hud_icons[key as CoreData.CoreSlot] = panel
+				panel.gui_input.connect(_on_hud_part_gui_input.bind(key as CoreData.CoreSlot))
 			grid.add_child(panel)
 
 	var bottom_hbox: HBoxContainer = $BottomBar/BottomHBox
@@ -323,7 +351,8 @@ func _build_parts_hud() -> void:
 func _refresh_all_hud_icons() -> void:
 	for slot: CoreData.CoreSlot in [
 		CoreData.CoreSlot.BACK, CoreData.CoreSlot.LEG,
-		CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.ARM_L
+		CoreData.CoreSlot.ARM_R, CoreData.CoreSlot.ARM_L,
+		CoreData.CoreSlot.EXTRA_ARM
 	]:
 		_refresh_hud_icon(slot)
 
@@ -391,6 +420,7 @@ func _slot_short(slot: CoreData.CoreSlot) -> String:
 	match slot:
 		CoreData.CoreSlot.ARM_L: return "왼"
 		CoreData.CoreSlot.ARM_R: return "오"
+		CoreData.CoreSlot.EXTRA_ARM: return "추"
 		CoreData.CoreSlot.BACK:  return "등"
 		CoreData.CoreSlot.LEG:   return "다"
 	return "?"
@@ -405,6 +435,7 @@ func on_player_action_required(
 	_hover_damage_preview_enemy = null
 	_hover_self_for_preview = false
 	_set_player_self_target_pending(false)
+	_set_part_targeting_pending(false)
 	_set_enemy_targeting_enabled(false)
 	_apply_enemy_targeting_border(false)
 	var typed_enemies: Array[EnemyEntity] = _typed_enemy_list(enemies)
@@ -444,6 +475,7 @@ func _on_end_turn_button_pressed() -> void:
 	_hover_damage_preview_enemy = null
 	_hover_self_for_preview = false
 	_set_player_self_target_pending(false)
+	_set_part_targeting_pending(false)
 	_set_enemy_targeting_enabled(false)
 	_apply_enemy_targeting_border(false)
 	_set_skill_buttons_disabled(false)
@@ -491,7 +523,7 @@ func _rebuild_skill_buttons(available_skills: Array[SkillData]) -> void:
 		var disable_reason: String = _skill_disable_reason(skill)
 		btn.tooltip_text = skill.combat_tooltip_text(disable_reason)
 		btn.set_meta("skill_tooltip", skill.combat_tooltip_text())
-		_add_skill_ap_badge(btn, skill.skill_action_cost)
+		_add_skill_ap_badge(btn, _effective_skill_action_cost(skill))
 		if not disable_reason.is_empty():
 			btn.disabled = true
 			_skill_disable_reasons[skill] = disable_reason
@@ -509,9 +541,19 @@ func _skill_disable_reason(skill: SkillData) -> String:
 		var part_ability_reason: String = mecha.get_part_ability_disable_reason(skill)
 		if not part_ability_reason.is_empty():
 			return part_ability_reason
-	if skill.skill_action_cost > _actions_remaining:
-		return "AP 부족 (%d 필요 / %d 보유)" % [skill.skill_action_cost, _actions_remaining]
+		if not mecha.can_use_skill(skill):
+			return "이번 전투에서 이미 사용됨"
+	var action_cost: int = _effective_skill_action_cost(skill)
+	if action_cost > _actions_remaining:
+		return "AP 부족 (%d 필요 / %d 보유)" % [action_cost, _actions_remaining]
 	return ""
+
+
+func _effective_skill_action_cost(skill: SkillData) -> int:
+	var mecha: MechaEntity = _get_player_mecha()
+	if mecha != null:
+		return mecha.get_skill_action_cost(skill)
+	return skill.skill_action_cost
 
 
 func _add_skill_ap_badge(btn: Button, action_cost: int) -> void:
@@ -553,6 +595,7 @@ func _on_skill_button_pressed(skill: SkillData) -> void:
 			_hover_damage_preview_enemy = null
 			_hover_self_for_preview = false
 			_set_player_self_target_pending(false)
+			_set_part_targeting_pending(false)
 			_set_enemy_targeting_enabled(false)
 			_apply_enemy_targeting_border(false)
 			_set_selection_status("타겟 가능한 적이 없습니다.")
@@ -563,6 +606,7 @@ func _on_skill_button_pressed(skill: SkillData) -> void:
 		_hover_damage_preview_enemy = null
 		_hover_self_for_preview = false
 		_set_player_self_target_pending(false)
+		_set_part_targeting_pending(false)
 		_set_enemy_targeting_enabled(false)
 		_apply_enemy_targeting_border(false)
 		_set_selection_status("「%s」 — 전체 공격" % skill.skill_name)
@@ -574,9 +618,23 @@ func _on_skill_button_pressed(skill: SkillData) -> void:
 		_pending_skill = skill
 		_hover_self_for_preview = false
 		_set_player_self_target_pending(false)
+		_set_part_targeting_pending(false)
 		_set_selection_status("「%s」 — 대상 적을 클릭하세요" % skill.skill_name)
 		_set_enemy_targeting_enabled(true)
 		_apply_enemy_targeting_border(true)
+		_set_skill_buttons_disabled(true, skill)
+		_refresh_player_preview_label()
+		return
+
+	if skill.repairs_selected_part:
+		_pending_skill = skill
+		_hover_damage_preview_enemy = null
+		_hover_self_for_preview = false
+		_set_enemy_targeting_enabled(false)
+		_apply_enemy_targeting_border(false)
+		_set_player_self_target_pending(false)
+		_set_part_targeting_pending(true)
+		_set_selection_status("「%s」 — 수리할 장착 파츠를 클릭하세요" % skill.skill_name)
 		_set_skill_buttons_disabled(true, skill)
 		_refresh_player_preview_label()
 		return
@@ -587,6 +645,7 @@ func _on_skill_button_pressed(skill: SkillData) -> void:
 		_hover_self_for_preview = false
 		_set_enemy_targeting_enabled(false)
 		_apply_enemy_targeting_border(false)
+		_set_part_targeting_pending(false)
 		_set_selection_status("「%s」 — 내 메카(왼쪽 패널)을 클릭하세요" % skill.skill_name)
 		_set_skill_buttons_disabled(true, skill)
 		_set_player_self_target_pending(true)
@@ -627,6 +686,7 @@ func _on_enemy_target_clicked(enemy: EnemyEntity) -> void:
 	_pending_skill = null
 	_hover_damage_preview_enemy = null
 	_set_player_self_target_pending(false)
+	_set_part_targeting_pending(false)
 	_set_enemy_targeting_enabled(false)
 	_apply_enemy_targeting_border(false)
 	_set_selection_status("「%s」 → %s" % [sk.skill_name, enemy.enemy_name])
@@ -853,6 +913,45 @@ func _set_player_self_target_pending(on: bool) -> void:
 		_player_target_catcher.flat = true
 		_player_target_catcher.text = ""
 		_clear_player_target_catcher_style()
+
+
+func _set_part_targeting_pending(on: bool) -> void:
+	_part_targeting_active = on
+	for slot: CoreData.CoreSlot in _hud_icons.keys():
+		var panel: Panel = _hud_icons[slot] as Panel
+		if panel != null:
+			panel.mouse_filter = Control.MOUSE_FILTER_STOP if on and GameState.equipped_parts.get(slot) != null else Control.MOUSE_FILTER_IGNORE
+	for slot: CoreData.CoreSlot in _mech_slot_buttons.keys():
+		var hit: Button = _mech_slot_buttons[slot] as Button
+		if hit != null:
+			hit.mouse_filter = Control.MOUSE_FILTER_STOP if on and GameState.equipped_parts.get(slot) != null else Control.MOUSE_FILTER_IGNORE
+	_refresh_all_mech_layers()
+	_refresh_all_hud_icons()
+
+
+func _on_hud_part_gui_input(event: InputEvent, slot: CoreData.CoreSlot) -> void:
+	if not _part_targeting_active:
+		return
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.pressed and mb.button_index == MOUSE_BUTTON_LEFT:
+			_on_part_target_clicked(slot)
+
+
+func _on_part_target_clicked(slot: CoreData.CoreSlot) -> void:
+	if _pending_skill == null or not _pending_skill.repairs_selected_part:
+		return
+	var part: PartsData = GameState.equipped_parts.get(slot)
+	if part == null:
+		return
+	var sk: SkillData = _pending_skill
+	_pending_skill = null
+	_hover_self_for_preview = false
+	_set_player_self_target_pending(false)
+	_set_part_targeting_pending(false)
+	_set_selection_status("「%s」 → %s 수리" % [sk.skill_name, part.display_name()])
+	skill_selected.emit(sk, part)
+	_refresh_player_preview_label()
 
 
 func _set_player_column_highlight(on: bool) -> void:

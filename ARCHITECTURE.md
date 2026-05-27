@@ -10,7 +10,7 @@
 
 ### 1.2 상속보다는 조합 (Composition over Inheritance)
 - 복잡한 상속 계층 대신 작고 명확한 책임을 가진 컴포넌트를 사용합니다.
-- 메카는 코어(Core)를 중심으로 4개의 부품 슬롯(팔 2, 등 1, 다리 1)이 조합되는 구조입니다.
+- 메카는 코어(Core)를 중심으로 기본 4개 부품 슬롯(팔 2, 등 1, 다리 1)과 `evolution_lord` 조건부 추가 팔 슬롯이 조합되는 구조입니다.
 
 ### 1.3 신호 기반 통신 (Signals & Events)
 - 시스템 간 결합도를 낮추기 위해 Godot의 신호(Signal)와 전역 `EventBus`를 활용합니다.
@@ -25,6 +25,7 @@
 - `Docs/`: 기획서 및 기술 문서.
     - `AI-COLLABORATION.md`: IDE/AI 도구 독립 협업 규칙 및 검증 하네스 사용법.
     - `BaseSystem.md`: 외곽 은신처 거점 시스템, 건물형 구역, 영구 파츠 창고/런 인벤토리 분리, 크레딧+고철 경제, 성공/실패 정산 규칙.
+    - `CombatSpecification.md`: 현재 전투 구조, 데모 기준, 스킬/Affix 처리 규칙의 단일 기준 문서.
     - `UI/`: UI 마스터 스펙 (`HUD.md` 등).
     - `WorkNote/`: 작업 일지 (`YYYY-MM-DD.md`).
     - `TODO/`: 활성 backlog (`TODO-NEXT.md`). 완료·이월 목록은 `TODO/old/`.
@@ -49,7 +50,7 @@
         - `PartCardUI.gd`: 인벤토리 파츠 카드 컴포넌트. 드래그 발신 및 등급별 색상 표시.
     - `Base/`: 런 사이 외곽 은신처 거점 씬.
         - `HubScene.tscn` / `HubScene.gd`: 프로젝트 메인 씬. 거점 재화/최근 런 요약, 건물형 버튼 5개(격납고·코어 연구대·작전 단말·출격 게이트·시스템 콘솔), 기록/옵션 스텁.
-        - `HangarScene.tscn` / `HangarScene.gd`: 영구 파츠 창고, 출격 장착 슬롯 4개, 런 인벤토리 16칸, 수리/분해/되돌리기 서비스.
+        - `HangarScene.tscn` / `HangarScene.gd`: 영구 파츠 창고, 출격 장착 슬롯 4개+조건부 추가 팔 슬롯, 런 인벤토리 16칸, 수리/분해/되돌리기 서비스.
     - `Combat/`: 전투 씬 및 턴 매니저.
     - `CoreSelect/`: 어빌리티 트리 씬 (런 시작 전 트리 노드 선택 UI).
     - `Dungeon/`: 던전 맵, 보상, 런 종료 씬.
@@ -70,8 +71,8 @@
 ## 3. 핵심 시스템 (Core Systems)
 
 ### 3.1 메카 조립 시스템 (Mecha Assembly)
-메카는 하나의 **코어(CoreData)**와 4개의 **부품(PartsData)** 슬롯으로 구성됩니다.
-- **슬롯 구성:** 팔(Arm) 2개, 등(Back) 1개, 다리(Leg) 1개.
+메카는 하나의 **코어(CoreData)**와 기본 4개의 **부품(PartsData)** 슬롯, 조건부 `EXTRA_ARM` 슬롯으로 구성됩니다.
+- **슬롯 구성:** 팔(Arm) 2개, 등(Back) 1개, 다리(Leg) 1개. `evolution_lord`가 붙은 정상 ARM/BACK 파츠가 있으면 추가 팔 슬롯 1개가 열린다.
 - **능력치 합산:** 장착된 부품의 무게, 공격력, 방어력 등의 스탯이 코어의 기본 스탯에 합산되어 메카의 최종 성능을 결정합니다.
 - **드래그앤드롭 UI:** `PartCardUI`(인벤토리 카드)를 `PartSocketUI`(소켓)에 드롭하여 장착. Godot 4의 `_get_drag_data` / `_can_drop_data` / `_drop_data` 사용. 소켓 클릭으로 해제.
 
@@ -96,7 +97,7 @@
 현재 프로젝트에서 사용 중인 핵심 데이터 구조는 다음과 같습니다:
 - **CoreData:** 메카의 기본 HP, 하중 제한, 행동 횟수 등을 정의.
 - **PartsData:** 슬롯 타입·템플릿 등급·`drop_weight`/`affix_pool`·저장 복원용 `template_path`·롤 결과(`stat_multiplier`, `rolled_affixes`)·`max_durability`/`durability`·`is_worn()`/`is_broken()`/`grade()` 및 스킬 참조.
-- **SkillData:** 피해량, AP 비용, 대상 지정(자기/적), 부가 효과(버프/디버프), 특수 동작을 정의.
+- **SkillData:** 피해량, AP 비용, 대상 지정(자기/적/선택 파츠), 부가 효과(버프/디버프), 수리·무료 스킬·AP 부여 같은 특수 동작을 정의.
 - **EnemyData:** 적의 HP, 쉴드, 공격 배율, 티어, 스킬 목록을 정의.
 
 ---
