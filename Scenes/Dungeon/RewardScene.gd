@@ -155,9 +155,9 @@ func _determine_credits(room: RoomData) -> int:
 	if room == null:
 		return 0
 	match room.room_type:
-		RoomData.RoomType.BATTLE_NORMAL: return randi_range(20, 40)
-		RoomData.RoomType.BATTLE_ELITE: return randi_range(50, 80)
-		RoomData.RoomType.BOSS: return randi_range(80, 100)
+		RoomData.RoomType.BATTLE_NORMAL: return randi_range(15, 25)
+		RoomData.RoomType.BATTLE_ELITE: return randi_range(45, 65)
+		RoomData.RoomType.BOSS: return randi_range(85, 105)
 		_: return 0
 
 

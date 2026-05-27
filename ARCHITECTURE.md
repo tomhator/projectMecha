@@ -63,7 +63,7 @@
         - `CombatUi.tscn` / `CombatUI.gd`: 전투 UI(좌 플레이어/우 적·행동력·스킬·다중 적 타겟팅·수집가 formation).
 - `Scripts/`: 전역 유틸리티, 검증 스크립트 및 싱글톤(AutoLoad).
     - `Autoload/`: `EventBus`, `GameState`, `DungeonManager`, `PartsFactory`, `RewardManager` 등 전역 시스템.
-    - `Validation/`: Godot 4 문법 패턴, 프로젝트 문서, `gdparse`, Godot headless 로드, 리소스 무결성, 주요 씬 스모크, 거점 상태 계약 검사 스크립트.
+    - `Validation/`: Godot 4 문법 패턴, 프로젝트 문서, `gdparse`, Godot headless 로드, 리소스 무결성, 주요 씬 스모크, 거점 상태 계약, 최근 작업 회귀 계약 검사 스크립트.
 
 ---
 
