@@ -34,14 +34,14 @@
 - `.cursor/`: Cursor AI 에이전트 관련 설정 및 규칙.
     - `rules/`: AI 에이전트 동작 및 커밋 규칙 (`.mdc`).
 - `.claude/`: Claude Code 에이전트 훅 및 설정.
+    - `commands/`: 반복 작업 커맨드 가이드 (`new-skill`, `new-enemy`, `combat-debug`, `parts-update`).
     - `hooks/`: gstack 확인 및 프로젝트 검증 훅.
 - `Resources/`: 데이터 모델 스크립트(`.gd`) 및 인스턴스(`.tres`).
     - `Cores/`: 코어 데이터 리소스 (`.tres`). 단일 코어 `core_base.tres`만 사용.
     - `AbilityTree/`: 어빌리티 트리 노드 리소스 (`.tres`). 5티어×공격/방어/유틸 3선택.
     - `Parts/`: 부품 데이터 리소스 (`.tres`).
-    - `Skills/`: 스킬 데이터 리소스 (`.tres`).
     - `Enemies/`: 적 데이터 리소스 (`.tres`). 매립지 일반 역할 병종 4종, 매립지 엘리트 2종, Caller 호출 전용 고철 잡졸, 수집가 보스 포함.
-    - `Skills/`: 스킬 데이터 리소스 (`.tres`). 기본 코어 공격·파츠 활용 어빌리티·매립지 일반/엘리트 병종·저격·수집가 전용 스킬 포함.
+    - `Skills/`: 스킬 데이터 리소스 (`.tres`). 기본 코어 공격·파츠 활용 어빌리티·매립지 일반/엘리트 병종·저격·수집가 전용 스킬 포함. `CLAUDE.md`에 스킬 리소스 도메인 작업 규칙 정리.
     - `Test/`: 개발용 테스트 리소스.
 - `Scenes/`: 게임의 각 화면 및 시스템 씬.
     - `Assembly/`: 메카 조립 씬.
@@ -51,10 +51,10 @@
     - `Base/`: 런 사이 외곽 은신처 거점 씬.
         - `HubScene.tscn` / `HubScene.gd`: 프로젝트 메인 씬. 거점 재화/최근 런 요약, 건물형 버튼 5개(격납고·코어 연구대·작전 단말·출격 게이트·시스템 콘솔), 기록/옵션 스텁.
         - `HangarScene.tscn` / `HangarScene.gd`: 영구 파츠 창고, 출격 장착 슬롯 4개+조건부 추가 팔 슬롯, 런 인벤토리 16칸, 수리/분해/되돌리기 서비스.
-    - `Combat/`: 전투 씬 및 턴 매니저.
+    - `Combat/`: 전투 씬 및 턴 매니저. `CLAUDE.md`에 전투 도메인 작업 규칙 정리.
     - `CoreSelect/`: 어빌리티 트리 씬 (런 시작 전 트리 노드 선택 UI).
     - `Dungeon/`: 던전 맵, 보상, 런 종료 씬.
-    - `Entities/`: 메카 및 적 엔티티 관련 스크립트.
+    - `Entities/`: 메카 및 적 엔티티 관련 스크립트. `CLAUDE.md`에 Entity 도메인 작업 규칙 정리.
         - `MechaEntity.gd`: 플레이어 스킬·affix·`get_part_at_slot`·`steal_part_at_slot`.
         - `EnemyEntity.gd`: 적 행동·저격 내구도·예고 슬롯 발행.
         - `CollectorArmEntity.gd`: 수집가 보스 팔 서브 엔티티(방어 팔 보호 역할 포함).
@@ -63,7 +63,7 @@
         - `RunStatusStrip.tscn` / `RunStatusStrip.gd`: 런 상단 HUD(층·HP/쉴드 바+현재값·크레딧·설정 스텁). 주요 런 씬에 인스턴스.
         - `CombatUi.tscn` / `CombatUI.gd`: 전투 UI(좌 플레이어/우 적·행동력·스킬·다중 적 타겟팅·수집가 formation).
 - `Scripts/`: 전역 유틸리티, 검증 스크립트 및 싱글톤(AutoLoad).
-    - `Autoload/`: `EventBus`, `GameState`, `DungeonManager`, `PartsFactory`, `RewardManager` 등 전역 시스템.
+    - `Autoload/`: `EventBus`, `GameState`, `DungeonManager`, `PartsFactory`, `RewardManager` 등 전역 시스템. `CLAUDE.md`에 AutoLoad 도메인 작업 규칙 정리.
     - `Validation/`: Godot 4 문법 패턴, 프로젝트 문서, `gdparse`, Godot headless 로드, 리소스 무결성, 주요 씬 스모크, 거점 상태 계약, 최근 작업 회귀 계약 검사 스크립트.
 
 ---

@@ -101,8 +101,8 @@ status: active
 - [x] 자동 검증 v2 — 리소스 무결성 + 주요 씬 스모크 검사 (2026-05-22)
 - [x] 현재 작업 회귀 계약 검증 — 거점 로드아웃, 보상 범위, 파츠 롤링, 어빌리티 트리 런 적용 테스트 추가 (2026-05-27)
 - [x] `Docs/CombatSpecification.md` 복구 — 현재 전투 구조, 스킬/Affix 구현 기준, `EXTRA_ARM` 슬롯 규칙을 단일 기준 문서로 정리 (2026-05-27)
-- [ ] 도메인 `CLAUDE.md` 4종 (Combat, Entities, Autoload, Skills)
-- [ ] `.claude/commands/` 4종 (new-skill, new-enemy, combat-debug, parts-update)
+- [x] 도메인 `CLAUDE.md` 4종 (Combat, Entities, Autoload, Skills) (2026-05-27)
+- [x] `.claude/commands/` 4종 (new-skill, new-enemy, combat-debug, parts-update) (2026-05-27)
 
 ---
 
