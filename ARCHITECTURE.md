@@ -27,6 +27,7 @@
     - `BaseSystem.md`: 외곽 은신처 거점 시스템, 건물형 구역, 영구 파츠 창고/런 인벤토리 분리, 크레딧+고철 경제, 성공/실패 정산 규칙.
     - `CombatSpecification.md`: 현재 전투 구조, 데모 기준, 스킬/Affix 처리 규칙의 단일 기준 문서.
     - `UI/`: UI 마스터 스펙 (`HUD.md` 등).
+        - `Screenshots/current/`: UI/UX 개편 스케치 참고용 현재 구현 화면 캡처 PNG와 contact sheet.
     - `WorkNote/`: 작업 일지 (`YYYY-MM-DD.md`).
     - `TODO/`: 활성 backlog (`TODO-NEXT.md`). 완료·이월 목록은 `TODO/old/`.
     - `DEV-GUIDE/`: 구현 가이드 아카이브 (`DEV-GUIDE/old/`).

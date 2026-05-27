@@ -319,7 +319,7 @@ func _make_sortie_node_button(node: AbilityTreeNode) -> Button:
 	]
 	button.disabled = level <= 0
 	button.pressed.connect(_on_sortie_node_pressed.bind(node))
-	if GameState.active_tree_node_ids.get(node.tier, "") == node.node_id:
+	if str(GameState.active_tree_node_ids.get(node.tier, "")) == node.node_id:
 		button.modulate = Color(0.8, 1.0, 0.82)
 	return button
 
