@@ -5,7 +5,29 @@
       "Bash(touch ~/.claude/skills/gstack/.feature-prompted-continuous-checkpoint)",
       "Bash(touch ~/.claude/skills/gstack/.feature-prompted-model-overlay)",
       "WebFetch(domain:api.github.com)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(bash Scripts/Validation/check_project_docs.sh)",
+      "Bash(git commit *)",
+      "Bash(C:/Users/theoe/gameDev/Godot_v4.6.2-stable_win64.exe *)",
+      "Bash(ls Resources/Parts/arm_r/)",
+      "Bash(dir Resources/Parts/arm_r/)",
+      "Bash(bash *)",
+      "Bash(git show *)",
+      "Bash(node -e ' *)",
+      "Bash(git diff *)",
+      "Bash(git rev-parse *)",
+      "Bash(git checkout *)",
+      "Bash(git merge *)",
+      "Bash(git branch *)",
+      "Bash(git cherry-pick *)",
+      "Bash(git reset *)",
+      "Bash(GODOT_BIN=\"C:/Users/theoe/gameDev/Godot_v4.6.2-stable_win64.exe\" bash Scripts/Validation/validate.sh)",
+      "Bash(git push *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(git fetch *)",
+      "Bash(git rev-list *)"
     ]
   }
 }
