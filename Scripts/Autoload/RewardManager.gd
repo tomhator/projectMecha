@@ -8,6 +8,8 @@ const PARTS_DIRS: Array[String] = [
 ]
 const DROP_COUNT_ZERO_CHANCE := 0.4
 const DROP_COUNT_ONE_CHANCE := 0.5
+# 온보딩 오른팔 전용 디렉터리. PARTS_DIRS의 arm_r 항목과 동일 경로지만, 명시적 상수로 유지한다.
+const ARM_R_DIR: String = "res://Resources/Parts/arm_r"
 
 var _all_parts: Array[String] = []
 var _all_weights: Array[float] = []
@@ -30,6 +32,30 @@ func generate_choices(grade: PartsData.PartsGrade, count: int = 3) -> Array[Part
 		if template != null:
 			result.append(PartsFactory.generate(template, grade))
 	return result
+
+
+# 첫 런 온보딩 전용: 오른팔 소켓 유도용 COMMON 오른팔 파츠 1개를 생성한다.
+# ARM_R 타입은 오른팔 소켓에만 장착되므로(EXTRA_ARM은 첫 런에 잠김)
+# 1층=채움 / 2층=강제 교체 딜레마가 성립한다.
+func generate_onboarding_arm_drop() -> PartsData:
+	var paths: Array[String] = []
+	var dir := DirAccess.open(ARM_R_DIR)
+	if dir != null:
+		dir.list_dir_begin()
+		var file_name := dir.get_next()
+		while file_name != "":
+			if not dir.current_is_dir() and file_name.ends_with(".tres"):
+				paths.append("%s/%s" % [ARM_R_DIR, file_name])
+			file_name = dir.get_next()
+		dir.list_dir_end()
+	if paths.is_empty():
+		push_warning("RewardManager: 온보딩 오른팔 템플릿을 찾을 수 없습니다")
+		return null
+	var template: PartsData = load(paths[randi() % paths.size()]) as PartsData
+	if template == null:
+		push_warning("RewardManager: 온보딩 오른팔 템플릿 로드 실패")
+		return null
+	return PartsFactory.generate(template, PartsData.PartsGrade.COMMON)
 
 
 func generate_combat_drops(grade: PartsData.PartsGrade, defeated_enemy_count: int) -> Array[PartsData]:

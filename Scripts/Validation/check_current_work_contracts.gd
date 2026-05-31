@@ -24,6 +24,7 @@ func _initialize() -> void:
 	_reset_state()
 	_check_base_sortie_runtime_contracts()
 	_check_reward_scene_contracts()
+	_check_onboarding_arm_guarantee()
 	_check_parts_factory_contracts()
 	_check_ability_tree_contracts()
 	_restore_snapshot(_snapshot)
@@ -192,6 +193,21 @@ func _check_base_sortie_runtime_contracts() -> void:
 	_assert_true(int((_gs.get("last_run_summary") as Dictionary).get("recovered_part_count", -1)) == 1, "Failure settlement did not recover only runtime inventory parts")
 	_assert_true(int((_gs.get("last_run_summary") as Dictionary).get("lost_part_count", -1)) == 3, "Failure settlement did not lose runtime equipped parts")
 	print("Current OK: base sortie runtime duplication and failure settlement")
+
+
+func _check_onboarding_arm_guarantee() -> void:
+	var reward_manager: Node = root.get_node_or_null("RewardManager")
+	if reward_manager == null:
+		_fail("Missing RewardManager autoload")
+		return
+	for _i: int in range(40):
+		var arm: PartsData = reward_manager.call("generate_onboarding_arm_drop") as PartsData
+		_assert_true(arm != null, "Onboarding arm drop returned null")
+		if arm == null:
+			return
+		_assert_true(arm.parts_type == PartsData.PartsType.ARM_R, "Onboarding drop is not an ARM_R part")
+		_assert_true(arm.grade() == PartsData.PartsGrade.COMMON, "Onboarding arm drop is not COMMON grade")
+	print("Current OK: onboarding ARM_R drop generation")
 
 
 func _check_reward_scene_contracts() -> void:
