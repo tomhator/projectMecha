@@ -207,6 +207,36 @@ func _check_onboarding_arm_guarantee() -> void:
 			return
 		_assert_true(arm.parts_type == PartsData.PartsType.ARM_R, "Onboarding drop is not an ARM_R part")
 		_assert_true(arm.grade() == PartsData.PartsGrade.COMMON, "Onboarding arm drop is not COMMON grade")
+	var script: GDScript = load(REWARD_SCENE_SCRIPT) as GDScript
+	if script == null:
+		_fail("RewardScene script failed to load (onboarding)")
+		return
+	var scene: Node = script.new() as Node
+	_reset_state()
+	# 첫 런 1층: ARM_R 없는 드롭에 주입돼야 함
+	_gs.set("total_runs", 0)
+	_gs.set("current_floor", 1)
+	_assert_true(bool(scene.call("_is_onboarding_arm_floor")), "Floor 1 of first run not recognized as onboarding floor")
+	var empty_drops: Array[PartsData] = []
+	var injected: Array = scene.call("_maybe_inject_onboarding_arm", empty_drops)
+	_assert_true(injected.size() == 1, "Onboarding injection did not add an arm to empty drops")
+	_assert_true(injected.size() > 0 and (injected[0] as PartsData).parts_type == PartsData.PartsType.ARM_R, "Injected onboarding part is not ARM_R")
+	# 첫 런 2층: 동일하게 주입
+	_gs.set("current_floor", 2)
+	_assert_true(bool(scene.call("_is_onboarding_arm_floor")), "Floor 2 of first run not recognized as onboarding floor")
+	# 이미 ARM_R가 있으면 중복 주입 안 함
+	var has_arm: Array[PartsData] = [_scene_make_arm_r()]
+	var unchanged: Array = scene.call("_maybe_inject_onboarding_arm", has_arm)
+	_assert_true(unchanged.size() == 1, "Onboarding injection duplicated an existing ARM_R drop")
+	# 3층은 온보딩 대상 아님
+	_gs.set("current_floor", 3)
+	_assert_true(not bool(scene.call("_is_onboarding_arm_floor")), "Floor 3 wrongly treated as onboarding floor")
+	# 이미 런을 1회 마친 플레이어는 온보딩 대상 아님
+	_gs.set("total_runs", 1)
+	_gs.set("current_floor", 2)
+	_assert_true(not bool(scene.call("_is_onboarding_arm_floor")), "Veteran run wrongly treated as onboarding floor")
+	scene.free()
+	_reset_state()
 	print("Current OK: onboarding ARM_R drop generation")
 
 
@@ -402,3 +432,8 @@ func _affixes_are_unique_and_from_pool(part: PartsData, pool: Array[String]) -> 
 			return false
 		seen[affix_id] = true
 	return true
+
+
+func _scene_make_arm_r() -> PartsData:
+	var part: PartsData = _make_part(ARM_R_PATH)
+	return part

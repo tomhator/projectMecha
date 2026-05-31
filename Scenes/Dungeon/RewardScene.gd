@@ -61,6 +61,7 @@ func _short_card_title(part: PartsData) -> String:
 func _show_combat_rewards(grade: PartsData.PartsGrade, credit_amount: int, scrap_amount: int) -> void:
 	var defeated_count: int = DungeonManager.get_last_combat_defeated_enemy_count()
 	var drops: Array[PartsData] = RewardManager.generate_combat_drops(grade, defeated_count)
+	drops = _maybe_inject_onboarding_arm(drops)
 	var acquired_count: int = 0
 	var lost_count: int = 0
 	title_label.text = "전투 보상 — 격파 %d기  |  드롭 %d개  |  크레딧 +%d  |  고철 +%d" % [
@@ -126,6 +127,24 @@ func _set_buttons_disabled(disabled: bool) -> void:
 	for child: Node in reward_container.get_children():
 		if child is Button:
 			(child as Button).disabled = disabled
+
+
+# 첫 런 1·2층 전투 보상에 오른팔이 없으면 COMMON 오른팔을 주입한다.
+# 1층=오른팔 소켓 채움, 2층=강제 교체 딜레마(파손)를 보장한다.
+func _maybe_inject_onboarding_arm(drops: Array[PartsData]) -> Array[PartsData]:
+	if not _is_onboarding_arm_floor():
+		return drops
+	for part: PartsData in drops:
+		if part != null and part.parts_type == PartsData.PartsType.ARM_R:
+			return drops
+	var arm: PartsData = RewardManager.generate_onboarding_arm_drop()
+	if arm != null:
+		drops.insert(0, arm)
+	return drops
+
+
+func _is_onboarding_arm_floor() -> bool:
+	return GameState.total_runs == 0 and (GameState.current_floor == 1 or GameState.current_floor == 2)
 
 
 func _determine_grade(room: RoomData) -> PartsData.PartsGrade:
