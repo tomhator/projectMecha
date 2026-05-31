@@ -151,6 +151,7 @@ run_check "Base state contracts" run_godot_script res://Scripts/Validation/check
 run_check "CoreSelect layout" run_godot_script res://Scripts/Validation/check_core_select_layout.gd
 run_check "Current work contracts" run_godot_script res://Scripts/Validation/check_current_work_contracts.gd
 run_check "P0 combat flows" run_godot_script res://Scripts/Validation/check_p0_combat_flows.gd
+run_check "Swap dilemma frequency (V5)" run_godot_script res://Scripts/Validation/check_swap_dilemma_frequency.gd
 
 if [ "$failed" -eq 0 ]; then
   echo "Validation complete: PASS"
