@@ -125,6 +125,8 @@ func assembly_tooltip_text() -> String:
 		for affix_id: String in rolled_affixes:
 			names.append(AFFIX_NAMES.get(affix_id, affix_id))
 		lines.append("Affix: %s" % ", ".join(names))
+	if rolled_affixes.has("evolution_lord"):
+		lines.append("「진화 군주」 — 장착 시 추가 팔 슬롯 개방")
 	return "\n".join(lines)
 
 

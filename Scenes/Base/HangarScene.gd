@@ -223,12 +223,14 @@ func _refresh_equipped() -> void:
 	for child: Node in _equipped_grid.get_children():
 		child.queue_free()
 	for slot: CoreData.CoreSlot in SLOT_ORDER:
+		# 추가 팔 슬롯은 「진화 군주」 제공 파츠가 있을 때만 노출 (없으면 숨김 — 조립/전투와 동일 규칙)
+		if slot == CoreData.CoreSlot.EXTRA_ARM and not GameState.has_sortie_extra_arm_slot():
+			continue
 		var part: PartsData = GameState.sortie_equipped_parts.get(slot)
 		var button := Button.new()
 		button.custom_minimum_size = CELL_SIZE
 		button.focus_mode = Control.FOCUS_NONE
-		var empty_text: String = "잠김" if slot == CoreData.CoreSlot.EXTRA_ARM and not GameState.has_sortie_extra_arm_slot() else "비어 있음"
-		button.text = "%s\n%s" % [_slot_display_name(slot), part.display_name() if part != null else empty_text]
+		button.text = "%s\n%s" % [_slot_display_name(slot), part.display_name() if part != null else "비어 있음"]
 		button.disabled = part == null
 		if part != null:
 			button.tooltip_text = part.assembly_tooltip_text()
