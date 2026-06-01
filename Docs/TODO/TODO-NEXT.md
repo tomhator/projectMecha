@@ -26,8 +26,10 @@ status: active
 - [ ] **전투 UI 수동 QA** — 현장 수리 파츠 선택, `EXTRA_ARM` 표시/잠금, 추가 팔 파츠 탈착 로그를 실제 Godot 화면에서 확인한다. (체크리스트 §D)
 
 ### 3순위 — 세션 잔여 정리
-- [~] **untracked 파일 정리 결정** — `Docs/인디게임_개발_준비_체크리스트.txt`(사용자 문서) 커밋 여부와 스크린샷 `*.png.import`·`*.gd.uid` 저장소 추적 정책을 확정한다.
-  - (2026-06-01 확인) 현재 작업 트리는 clean(추적 대상 untracked 없음) → **정리할 untracked 없음**. 단, `*.import`는 추적 중이라 Godot 버전 차이로 import 재생성 시 churn 발생 — **추적 정책 결정은 미정(남은 작업)**.
+- [x] **untracked 파일 정리 결정** — (2026-06-01 확정) 현재 설정이 Godot 4 공식 권장과 일치하므로 **현행 유지**로 결정.
+  - **정책:** `.godot/`는 ignore(import 캐시). `*.import`(16) · `*.gd.uid`(38) · 에셋 `*.png`(15)는 **계속 추적/커밋**. 근거: `.import`는 에셋과 함께 있어야 재import 설정·UID 일관, `.gd.uid`는 Godot 4.4+ 공식 가이드상 스크립트 UID 안정화 위해 커밋 권장.
+  - **churn 주의:** `.import` 변동은 **프로젝트 버전(4.6.x)이 아닌 다른 Godot로 열 때만** 발생. 항상 4.6.x로 열면 churn 없음. (untrack은 협업/CI 재import 불일치 유발하므로 안 함)
+  - 작업 트리 clean — 정리 대상 untracked 없음. `Docs/인디게임_개발_준비_체크리스트.txt`는 이미 추적 중.
 
 ### 여유 시 — 폴리시/에셋 (P1·P2, NOT DOING 해제 아님)
 - [ ] **UI/UX 전면 개편 스케치 반영 계획** — `Docs/UI/Screenshots/current/` 캡처 기준으로 사용자 스케치를 수집하고 화면별 재배치 범위를 확정한다.
