@@ -26,8 +26,8 @@ status: active
 - [ ] **전투 UI 수동 QA** — 현장 수리 파츠 선택, `EXTRA_ARM` 표시/잠금, 추가 팔 파츠 탈착 로그를 실제 Godot 화면에서 확인한다. (체크리스트 §D)
 
 ### 3순위 — 세션 잔여 정리
-- [ ] **untracked 파일 정리 결정** — `Docs/인디게임_개발_준비_체크리스트.txt`(사용자 문서) 커밋 여부와 스크린샷 `*.png.import`·`*.gd.uid` 저장소 추적 정책을 확정한다.
-  - (2026-06-01 확인) 현재 작업 트리는 clean(추적 대상 untracked 없음). 단, `*.import`는 추적 중이라 Godot 버전 차이로 import 재생성 시 churn 발생 — 추적 정책 재검토 시 참고.
+- [~] **untracked 파일 정리 결정** — `Docs/인디게임_개발_준비_체크리스트.txt`(사용자 문서) 커밋 여부와 스크린샷 `*.png.import`·`*.gd.uid` 저장소 추적 정책을 확정한다.
+  - (2026-06-01 확인) 현재 작업 트리는 clean(추적 대상 untracked 없음) → **정리할 untracked 없음**. 단, `*.import`는 추적 중이라 Godot 버전 차이로 import 재생성 시 churn 발생 — **추적 정책 결정은 미정(남은 작업)**.
 
 ### 여유 시 — 폴리시/에셋 (P1·P2, NOT DOING 해제 아님)
 - [ ] **UI/UX 전면 개편 스케치 반영 계획** — `Docs/UI/Screenshots/current/` 캡처 기준으로 사용자 스케치를 수집하고 화면별 재배치 범위를 확정한다.
